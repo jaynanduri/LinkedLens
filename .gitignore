@@ -1,0 +1,5 @@
+/data-generation/gen_env
+/data-generation/.env
+/data-generation/src/credentials/
+*pyc
+__pycache__
