@@ -1,6 +1,7 @@
 import firebase_admin
 from firebase_admin import credentials, firestore
-from config.config import config
+# from src.config.config import Config
+from src.config.config import settings
 import os
 
 class FirestoreClient:
@@ -8,11 +9,13 @@ class FirestoreClient:
         """
         Initialize Firestore client with the given service account credentials.
         """
+        # config = Config()
+        print("ENV PATH: ", settings.DB_CREDENTIALS_PATH)
         try:
-            print(os.path.join(os.getcwd(), config.DB_CREDENTIALS_PATH))
-            self.cred = credentials.Certificate(config.DB_CREDENTIALS_PATH)
+            # print(os.path.join(os.getcwd(), config.DB_CREDENTIALS_PATH))
+            self.cred = credentials.Certificate(settings.DB_CREDENTIALS_PATH)
             firebase_admin.initialize_app(self.cred)
-            self.db = firestore.client(database_id=config.DB_NAME)
+            self.db = firestore.client(database_id=settings.DB_NAME)
         except Exception as e:
             raise RuntimeError(f"Error initializing Firestore client: {e}")
         

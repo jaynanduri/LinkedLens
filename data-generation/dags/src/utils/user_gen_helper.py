@@ -1,15 +1,15 @@
-from utils.prompts import PROMTPS
+from src.utils.prompts import PROMTPS
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.output_parsers import PydanticOutputParser
-from schema.user_list import UserList
-from llm.llm_client import get_open_router_llm
+from src.schema.user_list import UserList
+from src.llm.llm_client import get_open_router_llm
 import time
 import json
 from pydantic import ValidationError
 import uuid
-from utils.db import FirestoreClient
-from utils.rate_limit import RateLimiter
-from config.config import config
+from src.utils.db import FirestoreClient
+from src.utils.rate_limit import RateLimiter
+from src.config.config import settings
 
 def get_llm_chain(chain_type):
     # prompt, llm, parser
@@ -134,8 +134,11 @@ def fetch_existing_user_details(users, company_user_map):
                 del company_user_map[company]
     return seen_names, ids, company_user_map
 
-def user_recruiter_generation(company_user_map, db_client, req_rate_limiter, chain, format_instructions, user_type):
+def user_recruiter_generation(company_user_map, chain_type, user_type):
     try:
+        req_rate_limiter = get_request_limiter()
+        db_client = connect_to_db()
+        chain, format_instructions = get_llm_chain(chain_type)
         while len(company_user_map)>0:
             # get all users 
             curr_users = db_client.get_all_docs("users")
@@ -183,8 +186,8 @@ def create_company_user_map(input_df):
         company_user_map = {
             "Microsoft": 2,
             "Google": 2,
-            "Meta": 2,
-            "Amazon": 2
+            "Meta": 3,
+            "Amazon": 3
         }
         return company_user_map
     except Exception as e:
@@ -203,7 +206,7 @@ def connect_to_db():
     
 def get_request_limiter():
     try:
-        request_limiter = RateLimiter(config.MAX_OPEN_AI_REQUEST_PER_MIN, config.MAX_OPEN_AI_REQUEST_PER_DAY)
+        request_limiter = RateLimiter(settings.MAX_OPEN_AI_REQUEST_PER_MIN, settings.MAX_OPEN_AI_REQUEST_PER_DAY)
         return request_limiter
     except Exception as e:
         print(f"Error creating request limiter: {e}")

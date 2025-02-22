@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import List
-from schema.user import User
+from src.schema.user import User
 
 class UserList(BaseModel):
     users: List[User]

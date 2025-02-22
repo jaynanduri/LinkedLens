@@ -1,5 +1,10 @@
 /data-generation/gen_env
+/data-generation/logs/
+/data-generation/plugins
+/data-generation/working_data
+/data-generation/config/
 /data-generation/.env
-/data-generation/src/credentials/
+/data-generation/dags/src/credentials/
 *pyc
 __pycache__
+*.log
