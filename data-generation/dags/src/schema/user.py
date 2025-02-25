@@ -1,12 +1,10 @@
 from pydantic import BaseModel, Field, field_validator, ValidationInfo
-# import time_uuid
-# import uuid_utils as uuid
 import uuid
 import re
 
 class User(BaseModel):
+    """Schema for response validation of user data."""
     user_id: uuid.UUID = Field(default_factory=uuid.uuid1)
-    # user_id: int = Field(..., gt=0, description="Unique numeric identifier starting from 1")
     first_name: str
     last_name: str
     company: str
@@ -15,15 +13,17 @@ class User(BaseModel):
 
     @property
     def full_name(self):
+        """Returns the full name by combining first and last name."""
         return f"{self.first_name} {self.last_name}"
     
     @field_validator("user_id", mode="before")
     def validate_user_id(cls, value, info: ValidationInfo):
+        """Generates a new UUID for the user_id field."""
         return uuid.uuid1()
-        # return time_uuid.TimeUUID()
     
     @field_validator("account_type", mode="before")
     def validate_account_type(cls, value, info: ValidationInfo):
+        """Validates that account_type is either 'recruiter' or 'user'."""
         valid_types = ["recruiter", "user"]
         if value not in valid_types:
             raise ValueError(f"Invalid account type: {value}.")

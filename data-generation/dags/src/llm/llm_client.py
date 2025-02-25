@@ -1,8 +1,22 @@
 from src.llm.llm_config import LLM_CONFIGS
 from src.config.config import settings
 from langchain_openai import ChatOpenAI
+from src.logger import logger
 
 def get_open_router_llm(config_key):
+
+    """Retrieves and initializes an LLM model using OpenRouter settings.
+    
+    Args:
+        config_key (str): The key to fetch model configuration from LLM_CONFIGS.
+
+    Returns:
+        ChatOpenAI: An instance of the ChatOpenAI model with the specified configuration.
+
+    Raises:
+        ValueError: If the configuration key or model name is missing.
+    """
+
     open_router_base_url = settings.OPEN_ROUTER_BASE_URL
     llm_params = LLM_CONFIGS[config_key]
     if not settings:
@@ -19,7 +33,7 @@ def get_open_router_llm(config_key):
         openai_api_key = settings.OPENAI_API_KEY,
         **model_params
     )
-    print("\nLLm Used: \n", llm)
+    logger.info("\nLLm: \n", llm)
     return llm
 
 
