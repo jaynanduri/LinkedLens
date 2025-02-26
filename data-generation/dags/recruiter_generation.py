@@ -1,8 +1,11 @@
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from datetime import datetime, timedelta
+from airflow.utils.trigger_rule import TriggerRule
+
 
 from src.utils.user_gen_helper import read_input_file, create_company_user_map, user_recruiter_generation
+from src.utils.send_email import send_failure_email, send_success_email
 from airflow import configuration as conf
 
 conf.set('core', 'enable_xcom_pickling', 'True')
@@ -47,5 +50,21 @@ generate_recruiters = PythonOperator(
     dag=dag,
 )
 
+success_email = PythonOperator(
+    task_id='send_success_email',
+    python_callable=send_success_email,
+    trigger_rule=TriggerRule.ALL_SUCCESS,  # Runs only if last_task succeeds
+    provide_context = True,
+    dag=dag
+)
+
+failure_email = PythonOperator(
+    task_id='send_failure_email',
+    python_callable=send_failure_email,
+    trigger_rule=TriggerRule.ONE_FAILED,  # Runs only if last_task fails
+    provide_context = True,
+    dag=dag
+)
+
 # task dependencies
-load_data_task >> create_company_map >> generate_recruiters
+load_data_task >> create_company_map >> generate_recruiters >> [success_email, failure_email]
