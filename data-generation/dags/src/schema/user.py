@@ -39,7 +39,8 @@ class User(BaseModel):
             raise ValueError("First and last name must be provided to generate a username.")
 
         # Generate username if not provided
-        username = f"{first_name[0]}_{last_name}"
+        clean_last = re.sub(r'[^a-zA-Z]', '', last_name)
+        username = f"{first_name[0]}_{clean_last}"
 
         # Validate username format
         if not re.match(r"^[a-z0-9_]+$", username):

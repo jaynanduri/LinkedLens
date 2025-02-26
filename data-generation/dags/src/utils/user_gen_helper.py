@@ -123,7 +123,8 @@ def generate_recruiter_for_companies(company_usr_map, seen_names, ids, chain, fo
         return valid_users
     except Exception as e:
         logger.error(f"Error generating users for companies: {e}")
-        raise RuntimeError(f"Error generating users for companies: {e}")
+        return valid_users
+        # raise RuntimeError(f"Error generating users for companies: {e}")
 
 
 def fetch_existing_user_details(users, company_user_map):
@@ -136,12 +137,14 @@ def fetch_existing_user_details(users, company_user_map):
         seen_names.add(full_name)
         ids.add(user['user_id'])
 
-        company = user['company']
+        company = user['company'].strip()
         if company in company_user_map:
             company_user_map[company] -= 1
 
             if company_user_map[company] == 0:
                 del company_user_map[company]
+    logger.info("Count of User IDS in DB: ", len(ids))
+    logger.info("Companies to generated for: ", len(company_user_map))
     return seen_names, ids, company_user_map
 
 def user_recruiter_generation(company_user_map, chain_type, user_type):
@@ -154,6 +157,8 @@ def user_recruiter_generation(company_user_map, chain_type, user_type):
         while len(company_user_map)>0:
             curr_users = db_client.get_all_docs("users")
             seen_names, ids, company_user_map = fetch_existing_user_details(curr_users, company_user_map)
+            if not req_rate_limiter.request():
+                break
             valid_users = generate_recruiter_for_companies(company_user_map, seen_names, ids, chain, format_instructions, req_rate_limiter, user_type)
             if len(valid_users)==0:
                 break
@@ -162,7 +167,7 @@ def user_recruiter_generation(company_user_map, chain_type, user_type):
             logger.info(f"Saved {len(valid_users)} to DB")
         
         if len(company_user_map) == 0:
-            logger.info("All Recruiter profile generation already completed.")
+            logger.info("All Recruiter profile generation completed.")
         else:
             logger.info("Failed to generate some/all recruiter profiles")
 
@@ -186,8 +191,10 @@ def read_input_file(filepath, column_name):
         file_data = blob.download_as_bytes()
         table = pq.read_table(BytesIO(file_data), columns=[column_name])
         df = table.to_pandas()
+        df[column_name] = df[column_name].str.strip()
         # Filter data 
-        df_subset = df.iloc[:4]
+        df_subset = df.iloc[:60]
+        logger.info("Input data to generate data for: ", len(df_subset))
         return df_subset
     
     except Exception as e:

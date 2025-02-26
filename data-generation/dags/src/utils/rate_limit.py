@@ -36,7 +36,7 @@ class RateLimiter:
         
         if len(self.timestamps) >= self.max_requests_per_minute:
             # reached the limit, wait until the next minute
-            wait_time = 60 - (current_time - self.timestamps[0])
+            wait_time = 60
             logger.warning(f"Rate limit exceeded for OpenRouter API. Waiting for {wait_time:.2f} seconds.")
             time.sleep(wait_time)
         

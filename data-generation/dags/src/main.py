@@ -11,4 +11,4 @@ if __name__ == '__main__':
         user_recruiter_generation(company_user_map, chain_type, user_type)
         logger.info("Completed Recruiter profile generation.")
     except Exception as e:
-        print(f"Error in main: {e}")
+        logger.error(f"Failed: {e}")

@@ -3,6 +3,7 @@ from email.mime.text import MIMEText
 from jinja2 import Template  
 from email.mime.multipart import MIMEMultipart
 import smtplib
+from src.logger import logger
 
 
 def send_success_email(**kwargs):
@@ -39,7 +40,7 @@ def send_email(email_message):
         recipients = [email.strip() for email in  settings.SMTP_RECIPIENT_EMAILS.split(',') if email.strip()]
         email_message['To'] = ', '.join(recipients)
         server.sendmail(settings.SMTP_EMAIL, recipients, email_message.as_string())
-        print("Successfully sent to all recipients: ", settings.SMTP_RECIPIENT_EMAILS)
+        logger.info("Successfully sent to all recipients: ", settings.SMTP_RECIPIENT_EMAILS)
         server.quit()
     except Exception as e:
         raise Exception(f"Email failed: {e}")
