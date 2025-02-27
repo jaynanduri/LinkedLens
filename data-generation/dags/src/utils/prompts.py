@@ -44,7 +44,7 @@ PROMTPS = {
     }}}}
 
     📩 How to Apply:
-    - Include clear call-to-action
+    - Include clear call-to-action(**Do NOT mention links**): Encourage online applications, direct messages, or replies to the post.
     - Add relevant hashtags (3-5)
 
     Job Description Context: {job_description}
@@ -56,20 +56,28 @@ PROMTPS = {
     - Avoid markdown formatting
     - Maintain corporate tone with personality""",
 
-    "linkedin-user-profiles": """You are an AI that generates realistic and diverse user profiles linkedIn.
 
-        Given a list user ids {user_ids}, generate a list of unique user profiles.
+    "linkedin-user-profiles": """
+You are an AI that generates realistic and diverse user profiles for a tech company for {num_users} users.  
 
-        Return a JSON list strictly in the following format:
+**Return a JSON list strictly in the following format**  
+{format_instructions}  
 
-        {format_instructions}
+Ensure the following:  
+- Gender balance (equal male and female names).  
+- Ethnic diversity.  
+- No duplicate first and last name combinations.  
+- Account type should be {user_type}.  
+- User IDs should be taken sequentially from 1.  
+- The generated names (first and last) should not repeat any previous names. 
+- Set username blank. 
+- The company should be randomly selected from the tech industry.  
+""",
+    
+    "basic-user-details": """Generate a unique name pair ensuring diversity in gender and ethnicity. The name should be realistic and culturally appropriate, representing various backgrounds such as European, African, Asian, Hispanic, Middle Eastern, and Indigenous origins.
 
-        Ensure the following:
-        - Gender balance (equal male and female names).
-        - Ethnic diversity.
-        - give a random company name.
-        - No duplicate first and last name combinations.
-        - Account type should be {user_type}.
-        - The generated names (first and last) should not repeat any of the names**.
-        **Previously Generated Names**: {existing_users}"""
+**Return a JSON object exactly in the following format:**  
+{format_instructions}
+
+""",
 }

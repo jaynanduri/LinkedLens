@@ -23,14 +23,14 @@ class FirestoreClient:
         Insert a single entry into the specified Firestore collection.
         """
         try:
-            doc_ref = self.db.collection(collection_name).document(data_id).add(data)
-            logger.info(f"Document inserted with ID: {doc_ref[1].id}")
+            doc_ref = self.db.collection(collection_name).document(data_id).set(data)
+            logger.info(f"1 document inserted in {collection_name} collection")
         except Exception as e:
             logger.error(f"Error performing insert into {collection_name}: {e}")
             raise RuntimeError(f"Error performing insert into {collection_name}: {e}")
     
     
-    def bulk_insert(self, collection_name, data_list, id_field):
+    def bulk_insert(self, collection_name: str, data_list, id_field: str):
         """
         Insert multiple entries into the specified Firestore collection.
         """
@@ -47,7 +47,7 @@ class FirestoreClient:
             raise RuntimeError(f"Error performing bulk insert into {collection_name}: {e}")
     
     
-    def get_all_docs(self, collection_name):
+    def get_all_docs(self, collection_name: str):
         """
         Retrieve all user document IDs and first_name, last_name fields from the 'users' collection.
         """
@@ -57,3 +57,15 @@ class FirestoreClient:
         except Exception as e:
             logger.error(f"Error retrieving users: {e}")
             raise RuntimeError(f"Error retrieving users: {e}")
+        
+    def filter_docs_equal(self, collection_name: str, field_name: str, value: str):
+        """
+        Retrieve documents from a collection where the specified field equals the given value.
+        """
+        try:
+            docs = self.db.collection(collection_name).where(field_name, "==", value).get()
+            logger.info(f"Retrieved {len(docs)} documents where {field_name} == {value}.")
+            return docs
+        except Exception as e:
+            logger.error(f"Error filtering documents in {collection_name} by {field_name} == {value}: {e}")
+            raise RuntimeError(f"Error filtering documents in {collection_name} by {field_name} == {value}: {e}")

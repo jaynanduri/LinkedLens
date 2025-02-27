@@ -33,7 +33,7 @@ def get_open_router_llm(config_key):
         openai_api_key = settings.OPENAI_API_KEY,
         **model_params
     )
-    logger.info("\nLLm: \n", llm)
+    logger.info(f"\nLLm: \n {llm}")
     return llm
 
 

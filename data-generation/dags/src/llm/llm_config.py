@@ -21,7 +21,7 @@ LLM_CONFIGS = {
             "request_timeout": 60
         }
     },
-    'user-post': {
+    'basic-user-details': {
         "model_name": "meta-llama/llama-3.3-70b-instruct:free",
         "params": {
             "temperature":1.2,

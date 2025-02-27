@@ -33,7 +33,7 @@ class ReactionType(str, Enum):
  
 # Reaction model for items in the likes array.
 class Reaction(BaseModel):
-    user_id: str
+    user_id: uuid.UUID = Field(default_factory=uuid.uuid1)
     reaction_type: ReactionType
     created_at: int  # using datetime for the timestamp
  
@@ -66,16 +66,16 @@ class Post(BaseModel):
     def enforce_empty_comments(cls, v):
         return []
  
-    @field_validator("timestamp", mode="before")
-    @classmethod
-    def validate_timestamp(cls, v):
-        start_date = datetime(2025, 2, 17).timestamp()  # Feb 17, 2025
-        end_date = datetime(2025, 2, 25).timestamp()  # Feb 25, 2025
+    # @field_validator("timestamp", mode="before")
+    # @classmethod
+    # def validate_timestamp(cls, v):
+    #     start_date = datetime(2025, 2, 17).timestamp()  # Feb 17, 2025
+    #     end_date = datetime(2025, 2, 25).timestamp()  # Feb 25, 2025
  
-        if not (start_date <= v <= end_date):
-            return random.randint(int(start_date), int(end_date))  # Pick a random valid timestamp
+    #     if not (start_date <= v <= end_date):
+    #         return random.randint(int(start_date), int(end_date))  # Pick a random valid timestamp
  
-        return v
+    #     return v
  
  
     @field_validator('ttl', mode='before')

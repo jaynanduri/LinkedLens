@@ -8,3 +8,5 @@
 *pyc
 __pycache__
 *.log
+*.csv
+test.py

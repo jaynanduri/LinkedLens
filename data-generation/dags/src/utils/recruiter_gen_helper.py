@@ -1,40 +1,30 @@
-from src.utils.prompts import PROMTPS
-from langchain_core.prompts import ChatPromptTemplate
-from langchain.output_parsers import PydanticOutputParser
-from src.schema.user_list import UserList
-from src.llm.llm_client import get_open_router_llm
 import time
 import json
 from pydantic import ValidationError
 import uuid
-from src.utils.db import FirestoreClient
-from src.utils.rate_limit import RateLimiter
-from src.config.config import settings
-from io import BytesIO
-from google.cloud import storage
-import pyarrow.parquet as pq
 from src.logger import logger
+from src.utils.gen_helper import *
 
 
 
-def get_llm_chain(chain_type):
-    """Creates and returns an LLM processing chain and response format instructions."""
-    try:
-        messages = [
-            ("system", PROMTPS[chain_type])
-        ]
-        prompt = ChatPromptTemplate.from_messages(messages)
+# def get_llm_chain(chain_type):
+#     """Creates and returns an LLM processing chain and response format instructions."""
+#     try:
+#         messages = [
+#             ("system", PROMTPS[chain_type])
+#         ]
+#         prompt = ChatPromptTemplate.from_messages(messages)
 
-        parser = PydanticOutputParser(pydantic_object=UserList)
-        format_instructions = parser.get_format_instructions()
-        logger.info("\nFormat Instructions:\n", format_instructions)
-        llm = get_open_router_llm(chain_type)
-        chain = prompt | llm | parser
+#         parser = PydanticOutputParser(pydantic_object=UserList)
+#         format_instructions = parser.get_format_instructions()
+#         logger.info("\nFormat Instructions:\n", format_instructions)
+#         llm = get_open_router_llm(chain_type)
+#         chain = prompt | llm | parser
 
-        return chain, format_instructions
-    except Exception as e:
-        logger.error(f"Error creating chain: {e}")
-        raise Exception(f"Error creating chain: {e}")
+#         return chain, format_instructions
+#     except Exception as e:
+#         logger.error(f"Error creating chain: {e}")
+#         raise Exception(f"Error creating chain: {e}")
 
 
 def generate_recruiter(company, num_users, seen_names, ids, chain, format_instructions, rate_limiter, user_type):
@@ -78,7 +68,7 @@ def generate_recruiter(company, num_users, seen_names, ids, chain, format_instru
                     # print(company_valid_users)
                     seen_names.add(user.full_name)
                 
-                    # check for unique ids 
+                    # check for unique ids
                     # print("Old user id:", user.user_id)
                     if user.user_id in ids:
                         while user.user_id in ids:
@@ -130,12 +120,11 @@ def generate_recruiter_for_companies(company_usr_map, seen_names, ids, chain, fo
 def fetch_existing_user_details(users, company_user_map):
     """Extracts existing user details and updates the company user map."""
     seen_names = set()
-    ids = set()
+    ids = get_docs_list_by_field(users, 'user_id')
     for doc in users:
         user = doc.to_dict()
         full_name = user['first_name'] + " " + user['last_name']
         seen_names.add(full_name)
-        ids.add(user['user_id'])
 
         company = user['company'].strip()
         if company in company_user_map:
@@ -143,6 +132,7 @@ def fetch_existing_user_details(users, company_user_map):
 
             if company_user_map[company] == 0:
                 del company_user_map[company]
+
     logger.info("Count of User IDS in DB: ", len(ids))
     logger.info("Companies to generated for: ", len(company_user_map))
     return seen_names, ids, company_user_map
@@ -174,31 +164,32 @@ def user_recruiter_generation(company_user_map, chain_type, user_type):
     except Exception as e:
         raise RuntimeError(f"Error generating users : {e}")
  
-def read_input_file(filepath, column_name):
-    """Reads specific column file from GCP bucket(filepath) """
-    try:
-        client = storage.Client.from_service_account_json(settings.DB_CREDENTIALS_PATH)
+# def read_input_file(filepath: str, column_names: List[str]):
+#     """Reads specific column file from GCP bucket(filepath) """
+#     try:
+#         client = storage.Client.from_service_account_json(settings.DB_CREDENTIALS_PATH)
         
-        bucket_name = filepath.split("/")[0]
-        object_name = "/".join(filepath.split("/")[1:])
+#         bucket_name = filepath.split("/")[0]
+#         object_name = "/".join(filepath.split("/")[1:])
 
-        bucket = client.bucket(bucket_name)
-        # object_name = 'job_postings/tech_postings.praquet'
-        blob = bucket.blob(object_name)
-        if not blob.exists():
-            raise FileNotFoundError(f"File '{object_name}' not found in bucket '{bucket_name}'.")
+#         bucket = client.bucket(bucket_name)
+#         # object_name = 'job_postings/tech_postings.praquet'
+#         blob = bucket.blob(object_name)
+#         if not blob.exists():
+#             raise FileNotFoundError(f"File '{object_name}' not found in bucket '{bucket_name}'.")
 
-        file_data = blob.download_as_bytes()
-        table = pq.read_table(BytesIO(file_data), columns=[column_name])
-        df = table.to_pandas()
-        df[column_name] = df[column_name].str.strip()
-        # Filter data 
-        df_subset = df.iloc[:60]
-        logger.info("Input data to generate data for: ", len(df_subset))
-        return df_subset
+#         file_data = blob.download_as_bytes()
+#         table = pq.read_table(BytesIO(file_data), columns=column_names)
+#         df = table.to_pandas()
+#         if column_names:
+#             df[column_names] = df[column_names].str.strip()
+#         # Filter data 
+#         df_subset = df.iloc[:60]
+#         logger.info("Input data to generate data for: ", len(df_subset))
+#         return df_subset
     
-    except Exception as e:
-        raise RuntimeError(f"Error reading input file: {e}")
+#     except Exception as e:
+#         raise RuntimeError(f"Error reading input file: {e}")
     
 def create_company_user_map(input_df, column_name):
     try:
@@ -208,18 +199,18 @@ def create_company_user_map(input_df, column_name):
     except Exception as e:
         raise RuntimeError(f"Error creating company user map: {e}")
     
-def connect_to_db():
-    """Establishes and returns a connection to the Firestore database."""
-    try:
-        db_client = FirestoreClient()
-        return db_client
-    except Exception as e:
-        raise RuntimeError(f"Error connecting to DB: {e}")
+# def connect_to_db():
+#     """Establishes and returns a connection to the Firestore database."""
+#     try:
+#         db_client = FirestoreClient()
+#         return db_client
+#     except Exception as e:
+#         raise RuntimeError(f"Error connecting to DB: {e}")
     
-def get_request_limiter():
-    """Creates and returns a RateLimiter object for managing API request limits.""" 
-    try:
-        request_limiter = RateLimiter(settings.MAX_OPEN_AI_REQUEST_PER_MIN, settings.MAX_OPEN_AI_REQUEST_PER_DAY)
-        return request_limiter
-    except Exception as e:
-        raise RuntimeError(f"Error creating request limiter: {e}")
+# def get_request_limiter():
+#     """Creates and returns a RateLimiter object for managing API request limits.""" 
+#     try:
+#         request_limiter = RateLimiter(settings.MAX_OPEN_AI_REQUEST_PER_MIN, settings.MAX_OPEN_AI_REQUEST_PER_DAY)
+#         return request_limiter
+#     except Exception as e:
+#         raise RuntimeError(f"Error creating request limiter: {e}")

@@ -2,6 +2,11 @@ from pydantic import BaseModel, Field, field_validator, ValidationInfo
 import uuid
 import re
 
+class BasicUser(BaseModel):
+    first_name: str
+    last_name: str
+    company: str
+
 class User(BaseModel):
     """Schema for response validation of user data."""
     user_id: uuid.UUID = Field(default_factory=uuid.uuid1)
@@ -19,7 +24,12 @@ class User(BaseModel):
     @field_validator("user_id", mode="before")
     def validate_user_id(cls, value, info: ValidationInfo):
         """Generates a new UUID for the user_id field."""
+        # if isinstance(value, int):
+        #     print("Generating uuid for user")
         return uuid.uuid1()
+        # else:
+        #     print(f"Returning the value {value}")
+        #     return value
     
     @field_validator("account_type", mode="before")
     def validate_account_type(cls, value, info: ValidationInfo):
