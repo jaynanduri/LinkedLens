@@ -14,7 +14,7 @@ PROMTPS = {
     - No duplicate first and last name combinations.
     - Account type should be {user_type}.
     - User IDs should be sequential from 1.
-    - The generated names (first and last) should not repeat any of the names **Previously Generated Names**.
+    - The generated names (first and last) should not repeat any of the names.
 
     **Previously Generated Names**: {existing_users}""",
 
@@ -67,8 +67,9 @@ PROMTPS = {
         Ensure the following:
         - Gender balance (equal male and female names).
         - Ethnic diversity.
+        - give a random company name.
         - No duplicate first and last name combinations.
         - Account type should be {user_type}.
-        - User IDs should be sequential from 1.
-        - The generated names (first and last) should not repeat any of the names"""
+        - The generated names (first and last) should not repeat any of the names**.
+        **Previously Generated Names**: {existing_users}"""
 }
