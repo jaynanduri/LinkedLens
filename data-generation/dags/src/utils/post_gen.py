@@ -48,18 +48,19 @@ def generate_recruiter_post(job_title: str, job_description: str, user_id: str, 
     return valid_post.model_dump_json()
 
 
-def generate_interview_exp_post(user_ids, post_ids, post_chain, user_chain, user_format_instructions, rate_limiter):
+def generate_interview_exp_post(user_ids, company, job_title, post_ids, post_chain, user_chain, user_format_instructions, rate_limiter):
 
     if not rate_limiter.request():
         logger.info(f"Reached Open Router API limit")
         return None, None
 
     response = post_chain.invoke({
-
+        "position_role": job_title,
+        "company": company,
     })
 
     post_content = response.content
-    company = response.company
+    # company = response.company
 
 
     logger.info(f"Generated post content for {company}")

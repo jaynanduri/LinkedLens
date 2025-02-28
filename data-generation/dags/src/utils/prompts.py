@@ -80,4 +80,34 @@ Ensure the following:
 {format_instructions}
 
 """,
+
+    "user-post-generation": """Create a professional LinkedIn post about a software engineering interview experience at {company_name} for the {position_role} position. 
+    Include these elements:
+    1. Engaging title with emoji
+    2. Positive opening about learning/growth
+    3. Brief interview process description (3-4 rounds)
+    4. Technical/behavioral challenges faced
+    5. Key learnings/takeaways
+    6. Motivational closing advice
+    7. Relevant hashtags
+    
+    Format like this example:
+    "🚀 My {company_name} {position_role} Interview Experience
+    
+    [Positive opening] Though challenging, my interview journey with {company_name} taught me valuable lessons about [specific skills].
+    
+    Process Breakdown:
+    - Round 1: [Technical/coding challenge description]
+    - Round 2: [System design/behavioral focus]
+    - Round 3: [Final evaluation details]
+    
+    Key Learnings:
+    ▸ [Learning 1: e.g., importance of clear communication]
+    ▸ [Learning 2: e.g., system design patterns]
+    ▸ [Learning 3: e.g., time management]
+    
+    [Encouraging closing message] Remember: [brief motivational statement]! 
+    
+    #{company_name}Interview #{position_role} #TechCareerGrowth #CodingJourney"
+    """,
 }
