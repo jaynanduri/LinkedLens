@@ -95,6 +95,12 @@ def get_llm_chain(chain_type):
             post_template = PromptTemplate.from_template(PROMTPS[chain_type])
             chain = post_template | llm
             return chain
+        elif chain_type == 'user-post-generation':
+            llm = get_open_router_llm(chain_type)
+            logger.info(f"\nLLM for posts: \n {llm}")
+            post_template = PromptTemplate.from_template(PROMTPS[chain_type])
+            chain = post_template | llm
+            return chain
         elif chain_type == 'basic-user-details':
             llm = get_open_router_llm(chain_type)
             user_template = PromptTemplate.from_template(PROMTPS[chain_type])
