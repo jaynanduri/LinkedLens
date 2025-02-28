@@ -1,0 +1,54 @@
+name: Push DAGs changes to VM and Restart Airflow
+
+on:
+  #push:
+    # branches:
+    #   - main
+    #   - dev-data-generation
+    # paths:
+    #  - "data-generation/**"
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: execute remote ssh commands with password
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_KEY }}
+          script: |
+            #Navigate to repo
+            cd "$(find /home -type d -name "LinkedLens" 2>/dev/null | head -n 1)"
+
+            #Verifying PWD
+            if [-d "./data-generation"]; then
+              echo "Correct directory"
+            else
+              echo "Repository not found. Exiting.."
+              exit 1
+            fi
+
+            #Pull latest changes
+            git pull
+            cd ./data-generation
+
+            #Re-write env file
+            echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" > ./env
+            echo "DB_NAME=${{ secrets.DB_NAME }}" >> ./env
+            echo "DB_CREDENTIALS_PATH=${{ secrets.DB_CREDENTIALS_PATH }}" >> ./env
+            echo "AIRFLOW_UID=${{ secrets.AIRFLOW_UID }}" >> ./env
+            echo "MAX_OPEN_AI_REQUEST_PER_MIN=${{ secrets.MAX_REQ_PER_MIN }}" >> ./env
+            echo "MAX_OPEN_AI_REQUEST_PER_DAY=${{ secrets.MAX_REQ_PER_DAY }}" >> ./env
+            echo "OPEN_ROUTER_BASE_URL=${{ secrets.OPEN_ROUTER_BASE_URL }}" >> ./env
+
+            #Restart Airflow
+            docker-compose down &&
+            docker-compose up -d
