@@ -4,6 +4,7 @@ from src.schema.job_posting import JobPosting
 import json
 
 def load_jobs(input_df):
+    """Loads job postings from a DataFrame into the database after validation."""
     # get current job ids from DB
     db_client = connect_to_db()
     docs_job = db_client.get_all_docs('jobs')

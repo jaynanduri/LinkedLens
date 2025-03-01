@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
+    """Configuration settings loaded from environment variables."""
     OPENAI_API_KEY: str
     DB_NAME: str
     DB_CREDENTIALS_PATH:str

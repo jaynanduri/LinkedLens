@@ -10,6 +10,7 @@ from enum import Enum
 import re
 
 class ExperienceLevel(str, Enum):
+    """Enum representing different experience levels for job postings."""
     MID_SENIOR = "Mid-Senior level"
     ASSOCIATE = "Associate"
     ENTRY = "Entry level"
@@ -18,25 +19,33 @@ class ExperienceLevel(str, Enum):
     EXECUTIVE = "Executive"
 
 class PayPeriod(str, Enum):
+    """Enum representing different pay periods for job compensation."""
     HOURLY = "HOURLY"
     YEARLY = "YEARLY"
     MONTHLY = "MONTHLY"
     WEEKLY = "WEEKLY"
 
 class CompensationType(str, Enum):
+    """Enum representing different types of job compensation."""
     BASE_SALARY = "BASE_SALARY"
 
 class Currency(str, Enum):
+    """Enum representing supported currencies for job salaries."""
     USD = "USD"
     CAD = "CAD"
 
 class FormattedWorkType(str, Enum):
+    """Enum representing different work types for job postings."""
     CONTRACT = "Contract"
     PART_TIME = "Part-Time"
     FULL_TIME = "Full-Time"
     VOLUNTEER = "Volunteer"
 
 class JobPosting(BaseModel):
+    """
+    Model representing a job posting with various attributes 
+    including company details, salary, job type, and timestamps.
+    """
     job_id: str
     company_id: str
     company_name: str
@@ -64,8 +73,6 @@ class JobPosting(BaseModel):
     views: Optional[int] = None
     applies: Optional[int] = None
 
-
-    # **Zip Code Validator**
     @field_validator("zip_code", mode="before")
     def validate_zip_code(cls, value):
         if pd.isna(value) or not value:
@@ -77,7 +84,7 @@ class JobPosting(BaseModel):
             raise ValueError(f"Invalid ZIP code: {value}")
         return value
 
-    # **Enum Fields Validator**
+
     @field_validator("pay_period", "compensation_type", "currency", "formatted_experience_level", "formatted_work_type", mode="before")
     def validate_enum_fields(cls, value, info):
         if pd.isna(value) or not value:
@@ -118,7 +125,7 @@ class JobPosting(BaseModel):
 
         raise ValueError(f"Invalid value '{value}' for field '{field_name}'. Expected one of {list(field_enum_map[field_name].__members__.values())}.")
 
-    # **Datetime Fields Validator (ONLY Supports MM/DD/YYYY h:mm:ss AM/PM)**
+    # Datetime Fields Validator - MM/DD/YYYY h:mm:ss AM/PM)
     @field_validator("original_listed_time", "listed_time", "expiry", "closed_time", mode="before")
     def validate_datetime_fields(cls, value):
         if pd.isna(value) or not value:
@@ -132,7 +139,6 @@ class JobPosting(BaseModel):
         except ValueError:
             raise ValueError(f"Invalid datetime format: {value}. Expected format: MM/DD/YYYY h:mm:ss AM/PM.")
 
-    # **General String Cleanup for Object Fields**
     @field_validator("job_id", "company_id", "company_name", "title", "description", 
                      "skills_desc", "location", "job_posting_url", "application_url",
                      mode="before")

@@ -7,6 +7,7 @@ import json
 
 
 def prepare_recruiter_ids_by_company(recruiters):
+    """Groups recruiter user IDs by company from a list of recruiter documents."""
     try:
         company_user_dict = defaultdict(list)
         for doc in recruiters:
@@ -24,6 +25,7 @@ def prepare_recruiter_ids_by_company(recruiters):
 
 
 def create_hiring_posts(post_df: pd.DataFrame, post_chain_type: str):
+    """Generates and inserts hiring posts into the database based on job listings."""
     try:
         req_rate_limiter = get_request_limiter()
         db_client = connect_to_db()
@@ -73,6 +75,7 @@ def create_hiring_posts(post_df: pd.DataFrame, post_chain_type: str):
     
 
 def create_interview_exp_posts(input_df, post_chain_type, user_chain_type):
+    """Generates and inserts interview experience posts along with user profiles into the database."""
     try:
         # input_df with company name and title
         req_rate_limiter = get_request_limiter()

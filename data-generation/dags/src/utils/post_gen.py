@@ -49,7 +49,9 @@ def generate_recruiter_post(job_title: str, job_description: str, user_id: str, 
 
 
 def generate_interview_exp_post(user_ids, company, job_title, post_ids, post_chain, user_chain, user_format_instructions, rate_limiter):
-
+    
+    """Generates an interview experience post and a user profile, ensuring unique IDs."""
+    
     if not rate_limiter.request():
         logger.info(f"Reached Open Router API limit")
         return None, None
