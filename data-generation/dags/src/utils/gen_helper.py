@@ -34,10 +34,8 @@ def read_input_file(filepath: str, column_names: List[str]):
         print("DF Types:\n",df.dtypes)
         if column_names:
             df = df.astype(str).apply(lambda x: x.str.strip())
-            # df[column_names] = df[column_names].str.strip()
         # Filter data 
-        df_subset = df.iloc[:60] # Continue for User posts - use this
-        # df_subset = df.iloc[:60]
+        df_subset = df.iloc[:60] 
         logger.info(f"Input data to generate data for: {len(df_subset)}")
 
         return df_subset

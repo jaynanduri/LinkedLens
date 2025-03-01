@@ -35,7 +35,7 @@ load_data_task = PythonOperator(
     dag=dag,
 )
 
-# Task 2 Create company user map
+# Task 2 Load job data to DB
 load_jobs_to_db = PythonOperator(
     task_id='load_job_to_db',
     python_callable=load_jobs,

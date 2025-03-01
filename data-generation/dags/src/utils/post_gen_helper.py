@@ -100,8 +100,7 @@ def create_interview_exp_posts(input_df, post_chain_type, user_chain_type):
             post_data_json, user_data_json = generate_interview_exp_post(user_ids, row['company_name'], row['title'], post_ids, post_chain, user_chain, user_format_instructions, req_rate_limiter)
             if not post_data_json:
                 raise RuntimeError(f"Failed to generate post")
-            print(f"Converting post to json: {post_data_json}")
-            print(f"Converting user to json: {user_data_json}")
+
             post_data = json.loads(post_data_json)
             user_data = json.loads(user_data_json)
             

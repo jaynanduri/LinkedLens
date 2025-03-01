@@ -35,7 +35,7 @@ load_data_task = PythonOperator(
     dag=dag,
 )
 
-# Task 2 Create company user map
+# Task 2 Create user posts - interview experience
 create_user_posts = PythonOperator(
     task_id='create_user_posts',
     python_callable=create_interview_exp_posts,
