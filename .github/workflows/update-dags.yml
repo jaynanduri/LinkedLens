@@ -28,22 +28,23 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_KEY }}
-          port: 22
+          port: ${{ secrets.SSH_PORT }}
           debug: true
           script: |
               # Define repo path
               REPO_PATH="$(find /home -type d -name "LinkedLens" 2>/dev/null | head -n 1)"
+              
               echo "Repo path is: $REPO_PATH"
+              
               if [ ! -d "$REPO_PATH" ]; then
                 echo "Repo not found, cloning..."
                 cd /home/${{ secrets.SERVER_USERNAME }}/mlops
                 git clone https://github.com/jaynanduri/LinkedLens.git
               fi
               echo "Did not clone repo"
+              
               cd "$REPO_PATH"
   
-              # #Navigate to repo
-              # cd "$(find /home -type d -name "LinkedLens" 2>/dev/null | head -n 1)"
               echo "Updating code from git.."
               git fetch origin dev-data-generation
               git reset --hard origin/dev-data-generation
@@ -87,7 +88,7 @@ jobs:
               mkdir -p dags/src/credentials
           
               echo "Creating/Re-writing linkedlens-firestore-srvc-acc.json..."
-              echo '${{ secrets.GCP_CREDENTIALS_JSON }}' > dags/src/credentials/linkedlens-firestore-srvc-acc.json
+              echo '${{ secrets.GCP_CREDENTIALS_JSON }}' > ${{ secrets.DB_CREDENTIALS_PATH }}
 
               echo "Check if docker is running.."
               if docker compose ps | grep "Up"; then
