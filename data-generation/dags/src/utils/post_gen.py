@@ -54,14 +54,14 @@ def generate_interview_exp_post(user_ids, company, job_title, post_ids, post_cha
         logger.info(f"Reached Open Router API limit")
         return None, None
 
-    response = post_chain.invoke({
+    post_content = post_chain.invoke({
         "position_role": job_title,
-        "company": company,
+        "company_name": company,
     })
 
-    post_content = response.content
+    # post_content = response.content
     # company = response.company
-
+    logger.info(f"Generated post: \n {post_content.content}")
 
     logger.info(f"Generated post content for {company}")
 
@@ -75,9 +75,11 @@ def generate_interview_exp_post(user_ids, company, job_title, post_ids, post_cha
 
     user_details = json.loads(basic_user.model_dump_json())
 
+    logger.info(f"Basic user details: {user_details}")
+
     while True:
         post_uuid = uuid.uuid1()
-        if post_uuid not in post_ids:
+        if str(post_uuid) not in post_ids:
             break
     if not post_uuid:
         raise ValueError("Invalid post_id: ", post_uuid)
@@ -94,19 +96,23 @@ def generate_interview_exp_post(user_ids, company, job_title, post_ids, post_cha
 
     while True:
         user_uuid = uuid.uuid1()
-        if user_uuid not in user_ids:
+        if str(user_uuid) not in user_ids:
             break
     if not user_uuid:
         raise ValueError("Invalid user_id: ", user_uuid)
     
+    logger.info(f"Valid user: {valid_user}")
+
     valid_user.user_id = user_uuid
+
+    logger.info(f"Updated Valid user: {valid_user}")
     
     valid_post = Post(
         post_id = post_uuid,
         job_id="",
         timestamp=int(datetime.datetime.now().timestamp()),
-        author=user_uuid,
-        content=post_content.content,
+        author=str(user_uuid),
+        content=str(post_content.content),
         ttl=0,  # Will be auto-calculated
         views=random.randint(0, 1000),
         comments=[],
@@ -114,7 +120,7 @@ def generate_interview_exp_post(user_ids, company, job_title, post_ids, post_cha
         repost={"timestamp": "", "count": 0},
     )
 
-
+    logger.info(f"Post Object: \n {valid_post}")
     logger.info(f"Created post object for company: {company}")
     
     return valid_post.model_dump_json(), valid_user.model_dump_json()

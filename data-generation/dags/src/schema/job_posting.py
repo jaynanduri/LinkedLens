@@ -1,0 +1,142 @@
+import pandas as pd
+from pydantic import BaseModel, field_validator
+from typing import Optional
+from datetime import datetime
+import pandas as pd
+from pydantic import BaseModel, field_validator
+from typing import Optional
+from datetime import datetime
+from enum import Enum
+import re
+
+class ExperienceLevel(str, Enum):
+    MID_SENIOR = "Mid-Senior level"
+    ASSOCIATE = "Associate"
+    ENTRY = "Entry level"
+    DIRECTOR = "Director"
+    INTERNSHIP = "Internship"
+    EXECUTIVE = "Executive"
+
+class PayPeriod(str, Enum):
+    HOURLY = "HOURLY"
+    YEARLY = "YEARLY"
+    MONTHLY = "MONTHLY"
+    WEEKLY = "WEEKLY"
+
+class CompensationType(str, Enum):
+    BASE_SALARY = "BASE_SALARY"
+
+class Currency(str, Enum):
+    USD = "USD"
+    CAD = "CAD"
+
+class FormattedWorkType(str, Enum):
+    CONTRACT = "Contract"
+    PART_TIME = "Part-Time"
+    FULL_TIME = "Full-Time"
+    VOLUNTEER = "Volunteer"
+
+class JobPosting(BaseModel):
+    job_id: str
+    company_id: str
+    company_name: str
+    title: str
+    description: str
+    skills_desc: Optional[str] = ""
+    formatted_experience_level: Optional[ExperienceLevel] = None
+    formatted_work_type: Optional[FormattedWorkType] = None
+    remote_allowed: Optional[bool] = None
+    location: Optional[str] = ""
+    zip_code: Optional[str] = ""
+    pay_period: Optional[PayPeriod] = None
+    compensation_type: Optional[CompensationType] = None
+    min_salary: Optional[float] = None
+    med_salary: Optional[float] = None
+    max_salary: Optional[float] = None
+    currency: Optional[Currency] = None
+    normalized_salary: Optional[float] = None
+    original_listed_time: Optional[datetime] = None
+    listed_time: Optional[datetime] = None
+    expiry: Optional[datetime] = None
+    closed_time: Optional[datetime] = None
+    job_posting_url: Optional[str] = ""
+    application_url: Optional[str] = ""
+    views: Optional[int] = None
+    applies: Optional[int] = None
+
+
+    # **Zip Code Validator**
+    @field_validator("zip_code", mode="before")
+    def validate_zip_code(cls, value):
+        if pd.isna(value) or not value:
+            return ""
+        if isinstance(value, float):
+            value = int(value)
+        value = str(value).strip()
+        if not re.match(r"^\d{4,5}(-\d{4})?$", value):
+            raise ValueError(f"Invalid ZIP code: {value}")
+        return value
+
+    # **Enum Fields Validator**
+    @field_validator("pay_period", "compensation_type", "currency", "formatted_experience_level", "formatted_work_type", mode="before")
+    def validate_enum_fields(cls, value, info):
+        if pd.isna(value) or not value:
+            return None
+        value = str(value).strip()
+
+        field_enum_map = {
+            "pay_period": PayPeriod,
+            "compensation_type": CompensationType,
+            "currency": Currency,
+            "formatted_experience_level": ExperienceLevel,
+            "formatted_work_type": FormattedWorkType,
+        }
+
+        field_name = info.field_name
+
+        # Special handling for formatted_work_type - convert to lowercase and match
+        if field_name == "formatted_work_type":
+            lowercase_value = value.lower()
+            mapping = {
+                "contract": "Contract",
+                "part-time": "Part-Time",
+                "full-time": "Full-Time",
+                "volunteer": "Volunteer",
+            }
+            if lowercase_value in mapping:
+                return FormattedWorkType(mapping[lowercase_value])
+            raise ValueError(f"Invalid value '{value}' for field '{field_name}'. Expected one of {list(mapping.values())}.")
+        
+
+
+        # Convert all other enums to uppercase for validation
+        if field_name != 'formatted_experience_level':
+            value = value.upper()
+
+        if value in field_enum_map[field_name].__members__.values():
+            return field_enum_map[field_name](value)
+
+        raise ValueError(f"Invalid value '{value}' for field '{field_name}'. Expected one of {list(field_enum_map[field_name].__members__.values())}.")
+
+    # **Datetime Fields Validator (ONLY Supports MM/DD/YYYY h:mm:ss AM/PM)**
+    @field_validator("original_listed_time", "listed_time", "expiry", "closed_time", mode="before")
+    def validate_datetime_fields(cls, value):
+        if pd.isna(value) or not value:
+            return None
+        if isinstance(value, datetime):
+            return value
+        
+        value = str(value).strip()
+        try:
+            return datetime.strptime(value, "%m/%d/%Y %I:%M:%S %p")
+        except ValueError:
+            raise ValueError(f"Invalid datetime format: {value}. Expected format: MM/DD/YYYY h:mm:ss AM/PM.")
+
+    # **General String Cleanup for Object Fields**
+    @field_validator("job_id", "company_id", "company_name", "title", "description", 
+                     "skills_desc", "location", "job_posting_url", "application_url",
+                     mode="before")
+    def clean_strings(cls, value):
+        if pd.isna(value) or not value:
+            return ""
+        return str(value).strip()

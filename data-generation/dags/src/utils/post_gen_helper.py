@@ -72,8 +72,9 @@ def create_hiring_posts(post_df: pd.DataFrame, post_chain_type: str):
         raise RuntimeError(f"Failed to create hiring posts : {e}")
     
 
-def create_interview_exp_posts(post_count, post_chain_type, user_chain_type):
+def create_interview_exp_posts(input_df, post_chain_type, user_chain_type):
     try:
+        # input_df with company name and title
         req_rate_limiter = get_request_limiter()
         db_client = connect_to_db()
         # get post chain
@@ -91,15 +92,22 @@ def create_interview_exp_posts(post_count, post_chain_type, user_chain_type):
         user_ids = get_docs_list_by_field(curr_users, 'user_id')
         logger.info(f"Existing user ids: {len(user_ids)}")
 
-        for i in range(post_count):
-            logger.info(f"Generating post : {i+1}")
-            post_data_json, user_data_json = generate_interview_exp_post(user_ids, post_ids, post_chain, user_chain, user_format_instructions, req_rate_limiter)
+        logger.info(f"User Ids: \n {user_ids}")
+        logger.info(f"Post Ids: \n {post_ids}")
+
+        for i, row in input_df.iterrows():
+            logger.info(f"Generating post : {i+1}, Company: {row['company_name']}; Title: {row['title']}")
+            post_data_json, user_data_json = generate_interview_exp_post(user_ids, row['company_name'], row['title'], post_ids, post_chain, user_chain, user_format_instructions, req_rate_limiter)
             if not post_data_json:
                 raise RuntimeError(f"Failed to generate post")
-
+            print(f"Converting post to json: {post_data_json}")
+            print(f"Converting user to json: {user_data_json}")
             post_data = json.loads(post_data_json)
-            user_data = json.load(user_data_json)
+            user_data = json.loads(user_data_json)
             
+            logger.info(f"\nPost Data: \n {post_data}")
+            logger.info(f"\nUser Data: \n {user_data}")
+
             db_client.insert_entry('users', user_data, user_data['user_id'])
             logger.info(f"Inserted user data to DB for post: {i+1}")
             db_client.insert_entry('posts', post_data, post_data['post_id'])
