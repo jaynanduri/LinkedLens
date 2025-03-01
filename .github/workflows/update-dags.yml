@@ -44,7 +44,10 @@ jobs:
   
               # #Navigate to repo
               # cd "$(find /home -type d -name "LinkedLens" 2>/dev/null | head -n 1)"
-              echo "running git pull.."
+              echo "Updating code from git.."
+              git fetch origin dev-data-generation
+              git reset --hard origin/dev-data-generation
+              git clean -fd
               git pull origin dev-data-generation
   
               
@@ -100,8 +103,12 @@ jobs:
               echo "Waiting for services to be ready..."
               while [[ $(docker compose ps | grep -c "healthy") -lt 1 ]]; do
                 echo "Waiting for containers to become healthy..."
-                sleep 5
+                sleep 10
               done
 
               echo "All services are up and healthy!"
+              while ! curl -sSf "http://${{ secrets.SERVER_IP }}:8080" > /dev/null; do
+                echo "Airflow UI not ready yet..."
+                sleep 10
+              done
               echo "Airflow UI is available at: http://${{ secrets.SERVER_IP }}:8080"
