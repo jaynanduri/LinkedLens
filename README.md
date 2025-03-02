@@ -26,7 +26,9 @@ We process a [Kaggle dataset](https://www.kaggle.com/datasets/arshkon/linkedin-j
 
 #### DAG Execution Flow
 
-[images]
+![alt text](images/image_9.png)
+
+![alt text](images/image_8.png)
 
 ### Data Generation and Loading Pipeline
 
@@ -76,6 +78,12 @@ The duration of the `create_user_posts` step varies based on the number of users
 - Logs are generated at each step and for all functions.
 
 - Errors are captured and logged for easy debugging and resolution.
+
+#### Notification
+All DAGs send an email notification updating the status.
+
+![alt text](images/image_10.png)
+
 
 #### LLM and API Used
 We utilize the OpenRouter API via the LangChain OpenAI package to generate text-based content. The responses are validated using Pydantic to maintain structure and consistency.

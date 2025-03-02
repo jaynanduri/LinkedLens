@@ -39,7 +39,7 @@ def read_input_file(filepath: str, column_names: List[str], filter=False):
                 if column_names:
                     df = df.astype(str).apply(lambda x: x.str.strip())
                 # Filter data 
-                df_subset = df.iloc[:60] 
+                df_subset = df.iloc[:10] 
                 logger.info(f"Input data to generate data for: {len(df_subset)}")
 
                 return df_subset

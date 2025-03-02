@@ -11,3 +11,4 @@ __pycache__
 *.csv
 test.py
 *.json
+.env
