@@ -11,15 +11,6 @@ This system connects Firestore with Pinecone Vector Database, maintaining a sync
 3. Stores those embeddings in Pinecone
 4. Provides mapping between Firestore documents and their corresponding vectors
 
-## Features
-
-- 🔄 **Real-time Synchronization**: Automatically detects and processes new or updated documents
-- 🔍 **Vector Search**: Query similar documents across collections
-- 🧠 **Sentence Transformers Integration**: High-quality embeddings without API dependencies
-- 🔌 **Modular Architecture**: Clean, modular Python implementation
-- 🔄 **Bidirectional References**: Store vector IDs in Firestore and document IDs in Pinecone
-- 📊 **Document Processing**: Intelligent document transformation for optimal embedding generation
-
 ## Setup
 
 ### Prerequisites
@@ -48,58 +39,32 @@ This system connects Firestore with Pinecone Vector Database, maintaining a sync
 Before syncing data, you need to initialize the Pinecone index:
 
 ```bash
-python scripts/init_pinecone.py
+python src/main.py init 
 ```
 
-This creates a new index in Pinecone with the appropriate configuration.
+This creates a new index or (retrieves the existing) in Pinecone with the appropriate configuration.
 
-### Running Data Sync
+### Testing Conections
 
-To sync all collections:
+To Test Pinecone, FireStore and Embedding connections
 
 ```bash
-python scripts/sync_data.py
+python src/main.py test
 ```
 
-To sync only a specific collection:
+To sync:
 
 ```bash
-python scripts/sync_data.py --collection users  # Sync users
-python scripts/sync_data.py --collection jobs    # Sync jobs
-python scripts/sync_data.py --collection posts   # Sync posts
+python src/main.py sync
 ```
 
-To sync only new documents (not already vectorized):
+To search from VectorDB:
 
 ```bash
-python scripts/sync_data.py --only-new
+python src/main.py search "Python developer" --type job
 ```
 
 ## Architecture
-
-### Directory Structure
-
-```
-linkedlens-vector-integration/
-├── config/                 # Configuration files
-│   ├── settings.py         # Settings using Pydantic
-│   └── db-credentials.json # Firestore credentials
-├── src/                    # Source code
-│   ├── clients/            # API clients
-│   │   ├── firestore_client.py
-│   │   ├── pinecone_client.py
-│   │   └── embedding_client.py
-│   ├── processors/         # Document processing
-│   │   └── document_processor.py
-│   ├── utils/              # Utilities
-│   │   └── logger.py
-│   └── main.py             # Main entry point
-├── scripts/                # Utility scripts
-│   ├── init_pinecone.py    # Initialize Pinecone
-│   ├── test_connections.py # Test connections
-│   └── sync_data.py        # Sync data
-└── README.md
-```
 
 ### Data Flow
 
@@ -111,20 +76,12 @@ linkedlens-vector-integration/
 
 ## Configuration
 
-All configuration is in `config/settings.py`:
-
 - **Pinecone Settings**: API configuration, index settings, collection mappings
 - **Firestore Settings**: Collection names, batch sizes
 - **Embedding Settings**: Model selection, input limits
 - **Processing Options**: Concurrent operations, update strategies
 
 ## Troubleshooting
-
-### Common Issues
-
-- **Missing Credentials**: Ensure all environment variables and credential files are in place
-- **API Limits**: Pinecone has rate limits that might be hit during large sync operations
-- **Memory Issues**: Large batch sizes may cause memory problems, adjust as needed
 
 ### Logs
 
@@ -133,33 +90,3 @@ Logs are written to the console and optionally to a file. To increase log verbos
 ```
 LOG_LEVEL=DEBUG python scripts/sync_data.py
 ```
-
-## Extending
-
-### Adding New Collections
-
-1. Add the collection name to `settings.firestore.collections`
-2. Add the mapping in `settings.pinecone.collections`
-3. Add relevant fields to `settings.pinecone.metadata_fields`
-4. Add text extraction logic in `document_processor.py`
-
-## License
-
-MIT
-   git clone <repository-url>
-   cd linkedlens-vector-integration
-   ```
-
-2. Create a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. Set up environment variables:
-   ```bash
