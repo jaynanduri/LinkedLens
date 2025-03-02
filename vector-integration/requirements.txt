@@ -1,0 +1,12 @@
+# Main dependencies
+pinecone-client
+firebase-admin
+sentence-transformers
+python-dotenv
+pydantic
+loguru
+
+# Development dependencies
+pytest
+black
+isort

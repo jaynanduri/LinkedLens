@@ -18,12 +18,12 @@ We process a [Kaggle dataset](https://www.kaggle.com/datasets/arshkon/linkedin-j
 ### Data Generation and Loading Pipeline
 
 #### DAGS Overview
-| DAG Name                            | Description                                                                                             |
-| ----------------------------------- | --------------------------------------------------------------------------------------------------- |
-| **Recruiter_Generator**              | Generates recruiter profiles using LLMs and validates them with Pydantic. `User` and `UserList`  |
-| **Recruiter_Post_Generator**    | Creates recruiter job posts using the preprocessed job dataset as input. `Post`                            |
-| **User_Post_Generator**      | Generates interview experience posts based on job postings (company name and title).  `Post`             |
-| **Job_Post_Loader**              | Loads validated job data into Firestore DB. `JobPosting`                                                       |
+| DAG Name                     | Description                                                                                     |
+| ---------------------------- | ----------------------------------------------------------------------------------------------- |
+| **Recruiter_Generator**      | Generates recruiter profiles using LLMs and validates them with Pydantic. `User` and `UserList` |
+| **Recruiter_Post_Generator** | Creates recruiter job posts using the preprocessed job dataset as input. `Post`                 |
+| **User_Post_Generator**      | Generates interview experience posts based on job postings (company name and title).  `Post`    |
+| **Job_Post_Loader**          | Loads validated job data into Firestore DB. `JobPosting`                                        |
 
 #### DAG Execution Flow
 
