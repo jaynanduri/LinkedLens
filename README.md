@@ -13,7 +13,20 @@ We process a [Kaggle dataset](https://www.kaggle.com/datasets/arshkon/linkedin-j
 
 ### Data Preprocessing Pipeline
 
-- Stores the cleaned dataset in a GCP bucket for downstream processing.
+- Handling Missing Values: Rows are removed if any of the mandatory columns (`description`, `title`, `company_name`, `company_id`, `job_id`) contain NaN values.
+- Basic Text Cleaning: Remove leading and trailing whitespaces.
+- Removing Duplicates
+- Filter for Tech Industry
+- Stores the cleaned and filtered dataset in a GCP bucket for downstream processing.
+
+#### DAG Overview
+| DAG Name                            | Description                                                                                             |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------- |
+| **Preprocess_Data**              | Reads raw data from GCS, performs data cleaning (handling missing values, stripping text, removing duplicates, and filtering for the tech industry), and writes the cleaned data back to GCS.  |
+
+#### DAG Execution Flow
+
+[images]
 
 ### Data Generation and Loading Pipeline
 
@@ -25,18 +38,44 @@ We process a [Kaggle dataset](https://www.kaggle.com/datasets/arshkon/linkedin-j
 | **User_Post_Generator**      | Generates interview experience posts based on job postings (company name and title).  `Post`             |
 | **Job_Post_Loader**              | Loads validated job data into Firestore DB. `JobPosting`                                                       |
 
+
 #### DAG Execution Flow
 
- [insert images]
- [gantt chart images]
+- Recruiter_generator
+
+![alt text](images/image-1.png)
+
+![alt text](images/image-2.png)
+
+The duration of the `user_recruiter_generation` step varies based on the number of users being created.
+
+- Recruiter_Post_Generator:
+
+![alt text](images/image-3.png)
+
+![alt text](images/image-4.png)
+
+The duration of the `create_hiring_posts` step varies based on the number of users being created.
+
+- User_Post_Generator
+
+![alt text](images/image-5.png)
+
+![alt text](images/image-6.png)
+
+The duration of the `create_user_posts` step varies based on the number of users being created.
+
+- Job_Post_Loader
+
+![alt text](images/image.png)
+
+![alt text](images/image-7.png)
+
 
 #### Logging and Tracking
 - Logs are generated at each step and for all functions.
 
 - Errors are captured and logged for easy debugging and resolution.
-
-[insert images]
-[email image]
 
 #### LLM and API Used
 We utilize the OpenRouter API via the LangChain OpenAI package to generate text-based content. The responses are validated using Pydantic to maintain structure and consistency.
@@ -56,7 +95,7 @@ OpenRouter Models: https://openrouter.ai/models
 
     - **Infrastructure Management**: `Editor` (to create Firestore DB, VM, and bucket)
 
-- Create Firestore DB and GCP Bucket
+- Create Firestore DB
 
     - Create VM Instance
 
@@ -77,6 +116,10 @@ OpenRouter Models: https://openrouter.ai/models
     - Ensure network tags are assigned to the VM.
 
     - Install Docker on VM: Follow Docker installation guide: [Docker Docs](https://docs.docker.com/engine/install/debian/)
+
+- Create GCS Bucket:
+    - Bucket Name: `linkedlens_data`
+    - Purpose: Stored raw and preprocessed data.
 
 #### Workflow Automation
 - GitHub Actions workflow (`update_dags_vm.yml`) that automates the following steps:

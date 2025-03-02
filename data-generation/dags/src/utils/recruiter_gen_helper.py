@@ -110,8 +110,8 @@ def fetch_existing_user_details(users, company_user_map):
             if company_user_map[company] == 0:
                 del company_user_map[company]
 
-    logger.info("Count of User IDS in DB: ", len(ids))
-    logger.info("Companies to generated for: ", len(company_user_map))
+    logger.info(f"Count of User IDS in DB: {len(ids)}")
+    logger.info(f"Companies to generated for: {len(company_user_map)}")
     return seen_names, ids, company_user_map
 
 def user_recruiter_generation(company_user_map, chain_type, user_type):

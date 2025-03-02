@@ -31,7 +31,7 @@ dag = DAG(
 load_data_task = PythonOperator(
     task_id='load_input_data',
     python_callable=read_input_file,
-    op_args=["linkedlens_processed_data/job_postings/tech_postings.parquet", None],
+    op_args=["linkedlens_data/filtered_data/tech_postings.parquet", None, True],
     dag=dag,
 )
 
