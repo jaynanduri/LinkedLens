@@ -42,8 +42,11 @@ def generate_recruiter(company, num_users, seen_names, ids, chain, format_instru
                 # check for unique names
                 if user.full_name not in seen_names:
                     user_json = user.model_dump_json()
+                    
+                    user_dict = json.loads(user_json)
+                    user_dict['vectorized'] = True
                     # print("User json:", user_json)
-                    company_valid_users.append(json.loads(user_json))
+                    company_valid_users.append(user_dict)
                     # print(company_valid_users)
                     seen_names.add(user.full_name)
                 
