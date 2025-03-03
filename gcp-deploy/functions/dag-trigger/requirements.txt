@@ -1,0 +1,7 @@
+functions-framework==3.*
+requests
+google-api-python-client
+google-cloud-eventarc
+google.events
+google-api-core
+cloudevents

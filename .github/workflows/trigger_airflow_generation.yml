@@ -1,0 +1,82 @@
+name: Trigger Data Generation DAGs
+
+on:
+  workflow_run:
+    workflows: ["Push DAGs changes to VM"]
+    types: [completed]
+    branches:
+      - 'main/**'
+      - 'dev-data-generation/**'
+  # workflow_dispatch:
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Verify Changed Path
+        uses: tj-actions/changed-files@v45
+        id: verify-changed-path
+        with:
+          files: 'data-generation/**'
+
+      - name: Test Network Connection
+        run: |
+          nslookup ${{ secrets.SERVER_IP }} || echo "DNS Lookup Failed"
+          
+      - name: execute remote ssh commands with password
+        if: steps.verify-changed-path.outputs.any_changed == 'true'
+        uses: appleboy/ssh-action@v1.2.1
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          debug: true
+          script: |
+              # Define repo path
+              REPO_PATH="$(find /home -type d -name "LinkedLens" 2>/dev/null | head -n 1)"
+              echo "Repo path is: $REPO_PATH"
+              
+              cd "$REPO_PATH"
+              
+              # navigate to data-generation folder
+              #Verifying PWD
+              if [ -d "./data-generation" ]; then
+                echo "Correct directory"
+              else
+                echo "Repository not found. Exiting.."
+                exit 1
+              fi
+              
+              cd data-generation
+              echo "Current directory: $(pwd)"
+
+              echo "Check if docker is running.."
+              
+              if docker compose ps | grep "Up"; then
+                echo "Stopping running containers..."
+                docker compose down
+              else
+                echo "No running containers found."
+              fi
+
+              echo "Starting Docker Compose..."
+              docker compose up -d
+
+              echo "Waiting for services to be ready..."
+              while [[ $(docker compose ps | grep -c "healthy") -lt 1 ]]; do
+                echo "Waiting for containers to become healthy..."
+                sleep 5
+              done
+
+              echo "All services are up and healthy!"
+              while ! curl -sSf "http://${{ secrets.SERVER_IP }}:8080" > /dev/null; do
+                echo "Airflow UI not ready yet..."
+                sleep 10
+              done
+              echo "Airflow UI is available at: http://${{ secrets.SERVER_IP }}:8080"
