@@ -187,9 +187,25 @@ OpenRouter Models: https://openrouter.ai/models
     - Structured output for LLM-generated content.
 - The gcp-deploy folder contains code for any Cloud Run functions or services.
 
-#
-### Testing
+#### Testing
 
+##### Data Preprocessing & Validation
+1. Type Conversion & Cleaning: Ensuring numeric/string company IDs are standardized, NaN handling, and dtype consistency.
+2. Schema Enforcement: Validation of JobPosting Pydantic models with edge cases like epoch timestamp handling.
+3. Data Integrity: Testing dataframe operations (merges, drops, enrichment) in enrich_and_clean_postings to ensure valid titles, locations, and company mappings.
+4. Company-User Mapping: Verifying correct user allocation ratios with create_company_user_map.
+5. ID Generation Workflows: Testing UUID generation, rate limiting, and uniqueness checks for user/post creation.
+6. External Service Simulation: Mocking LLM chains (e.g., DummyPostChain, DummyUserChain) to validate structured JSON outputs without real API calls.
+7. Rate Limiter Behavior: Simulating allowed/blocked states to test conditional logic in data generation pipelines.
+8. Deterministic UUIDs: Using patched UUIDs to verify ID assignment and relational integrity between users and posts.
+9. Empty/missing data, invalid types, and schema violations (e.g., testing ValidationError for malformed job postings).
+10. Stress-testing functions with mixed data types, zero values, and unexpected NaN propagation.
+
+Test suite combines pandas-based assertions, Pydantic model validation, and unittest.mock to isolate components, ensuring reliability across data pipelines, model hydration, and synthetic data generation workflows.
+
+The results of a test run for all the files in data-generation/dags/src/
+
+![alt text](images/test-cases.png)
 
 The results of a test run for all the files in data-generation/dags/src/
 
