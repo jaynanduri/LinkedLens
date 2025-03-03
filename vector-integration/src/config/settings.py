@@ -94,3 +94,4 @@ class Settings(BaseModel):
 
 # Create settings instance
 settings = Settings()
+_all_ = ["settings"]
