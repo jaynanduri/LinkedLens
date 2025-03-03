@@ -9,9 +9,6 @@ This project aims to aid job seekers and recruiters in job searching. The projec
 ### Overview 
 We process a [Kaggle dataset](https://www.kaggle.com/datasets/arshkon/linkedin-job-postings) containing job postings, preprocess the data, and store it in a GCP bucket. Using this preprocessed data, we generate synthetic user profiles, recruiter job posts, and interview experience posts using LLM APIs. The generated data is validated using Pydantic before loading it into Firestore DB.
 
-
-### Data Preprocessing Pipeline
-
 To get an overview of our data exploratory analysis and data bias, refer [link](data-pipeline/)
 
 ### 1. Data Preprocessing Pipeline
@@ -33,9 +30,6 @@ To get an overview of our data exploratory analysis and data bias, refer [link](
 ![alt text](images/image_9.png)
 
 ![alt text](images/image_8.png)
-
-
-### Data Generation and Loading Pipeline
 
 ### 2. Data Generation and Loading Pipeline
 
@@ -81,14 +75,6 @@ The duration of the `create_user_posts` step varies based on the number of users
 
 ![alt text](images/image-7.png)
 
-
-#### Logging and Tracking
-- Logs are generated at each step and for all functions.
-
-- Errors are captured and logged for easy debugging and resolution.
-
-#### Notification
-All DAGs send an email notification updating the status.
 #### Logging and Tracking
 - Logs are generated at each step and for all functions.
 - The logs are currently collected using the in-built Airflow logger
@@ -108,8 +94,6 @@ We utilize the OpenRouter API via the LangChain OpenAI package to generate text-
 - Model used: LLaMA- **meta-llama/llama-3.3-70b-instruct:free**
 
 OpenRouter Models: https://openrouter.ai/models
-
-#### GCP Setup (For Data Preprocessing and Generation)
 
 ### GCP Setup (For Data Preprocessing and Generation)
 
@@ -221,10 +205,6 @@ OpenRouter Models: https://openrouter.ai/models
 
     - Structured output for LLM-generated content.
 
-#### Testing
-The results of a test run for all the files in data-generation/dags/src/
-
-[add result]
 - The gcp-deploy folder contains code for any Cloud Run functions or services.
 
 #### Testing
