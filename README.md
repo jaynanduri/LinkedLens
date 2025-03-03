@@ -82,27 +82,19 @@ The duration of the `create_user_posts` step varies based on the number of users
 
 #### Logging and Tracking
 - Logs are generated at each step and for all functions.
-
-- Errors are captured and logged for easy debugging and resolution.
-
-#### Notification
-All DAGs send an email notification updating the status.
-=======
-#
-
-#### Logging and Tracking
-- Logs are generated at each step and for all functions.
 - The logs are currently collected using the in-built Airflow logger
 - Errors are captured and logged for easy debugging and resolution.
 - Any errors during the pipeline runs result in a failed run, and appropriate notifications are sent to alert about the status.
 
 #### Notification
+
 All DAGs send an email notification updating the status. The email notifications are sent for both failed/successful runs of the data pipelines. An example of the email notification is attached below.
 
 ![alt text](images/image_10.png)
 
 
 #### LLM and API Used
+
 We utilize the OpenRouter API via the LangChain OpenAI package to generate text-based content. The responses are validated using Pydantic to maintain structure and consistency.
 
 - Model used: LLaMA- **meta-llama/llama-3.3-70b-instruct:free**
