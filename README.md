@@ -207,8 +207,4 @@ The results of a test run for all the files in data-generation/dags/src/
 
 ![alt text](images/test-cases.png)
 
-The results of a test run for all the files in data-generation/dags/src/
-
-![alt text](images/test-cases.png)
-
 
