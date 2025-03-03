@@ -296,57 +296,57 @@ def search_similar(
         raise
 
 
-def main():
+def main(action: str):
     """Main function for the script."""
-    parser = argparse.ArgumentParser(description="LinkedLens Vector Integration")
-    subparsers = parser.add_subparsers(dest="command", help="Command to run")
+    # parser = argparse.ArgumentParser(description="LinkedLens Vector Integration")
+    # subparsers = parser.add_subparsers(dest="command", help="Command to run")
     
     # Init Pinecone command
-    init_parser = subparsers.add_parser("init", help="Initialize Pinecone index")
+    # init_parser = subparsers.add_parser("init", help="Initialize Pinecone index")
     
     # Sync command
-    sync_parser = subparsers.add_parser("sync", help="Sync data between Firestore and Pinecone")
-    sync_parser.add_argument(
-        "--collection", "-c",
-        help="Collection to process (if not specified, process all collections)"
-    )
-    sync_parser.add_argument(
-        "--only-new", "-n",
-        action="store_true",
-        help="Only process new documents (not already vectorized)"
-    )
+    # sync_parser = subparsers.add_parser("sync", help="Sync data between Firestore and Pinecone")
+    # sync_parser.add_argument(
+    #     "--collection", "-c",
+    #     help="Collection to process (if not specified, process all collections)"
+    # )
+    # sync_parser.add_argument(
+    #     "--only-new", "-n",
+    #     action="store_true",
+    #     help="Only process new documents (not already vectorized)"
+    # )
     
     # Search command
-    search_parser = subparsers.add_parser("search", help="Search for similar documents")
-    search_parser.add_argument(
-        "query",
-        help="Query text"
-    )
-    search_parser.add_argument(
-        "--type", "-t",
-        required=True,
-        choices=["user", "job", "post"],
-        help="Collection type to search"
-    )
-    search_parser.add_argument(
-        "--limit", "-l",
-        type=int,
-        default=10,
-        help="Maximum number of results to return"
-    )
+    # search_parser = subparsers.add_parser("search", help="Search for similar documents")
+    # search_parser.add_argument(
+    #     "query",
+    #     help="Query text"
+    # )
+    # search_parser.add_argument(
+    #     "--type", "-t",
+    #     required=True,
+    #     choices=["user", "job", "post"],
+    #     help="Collection type to search"
+    # )
+    # search_parser.add_argument(
+    #     "--limit", "-l",
+    #     type=int,
+    #     default=10,
+    #     help="Maximum number of results to return"
+    # )
     
     # Test command
-    test_parser = subparsers.add_parser("test", help="Test connections")
+    # test_parser = subparsers.add_parser("test", help="Test connections")
     
-    args = parser.parse_args()
+    # args = parser.parse_args()
     
     try:
-        if args.command == "init":
+        if action == "init":
             # Initialize Pinecone index
             result = init_pinecone()
             logger.info("Pinecone initialization completed", extra=result)
         
-        elif args.command == "sync":
+        elif action== "sync":
             # Check if Pinecone is initialized
             pinecone_client = PineconeClient()
             try:
@@ -357,29 +357,29 @@ def main():
                 )
                 sys.exit(1)
             
-            # Process collections
-            if args.collection:
-                # Check if collection is valid
-                if args.collection not in settings.firestore.collections:
-                    logger.error(f"Invalid collection: {args.collection}")
-                    logger.info(f"Valid collections: {', '.join(settings.firestore.collections)}")
-                    sys.exit(1)
+            # # Process collections
+            # if args.collection:
+            #     # Check if collection is valid
+            #     if args.collection not in settings.firestore.collections:
+            #         logger.error(f"Invalid collection: {args.collection}")
+            #         logger.info(f"Valid collections: {', '.join(settings.firestore.collections)}")
+            #         sys.exit(1)
                 
-                # Get document type
-                doc_type = settings.pinecone.collections.get(args.collection)
-                if not doc_type:
-                    logger.error(f"No type mapping found for collection: {args.collection}")
-                    sys.exit(1)
+            #     # Get document type
+            #     doc_type = settings.pinecone.collections.get(args.collection)
+            #     if not doc_type:
+            #         logger.error(f"No type mapping found for collection: {args.collection}")
+            #         sys.exit(1)
                 
-                # Process the collection
-                result = process_collection(args.collection, doc_type, args.only_new)
-                logger.info(f"Collection {args.collection} sync completed", extra=result)
-            else:
+            #     # Process the collection
+            #     result = process_collection(args.collection, doc_type, args.only_new)
+            #     logger.info(f"Collection {args.collection} sync completed", extra=result)
+            # else:
                 # Process all collections
-                results = process_all_collections(args.only_new)
-                logger.info("All collections sync completed", extra={"results": results})
+            results = process_all_collections()
+            logger.info("All collections sync completed", extra={"results": results})
         
-        elif args.command == "search":
+        elif action == "search":
             # Perform search
             results = search_similar(args.query, args.type, args.limit)
             
@@ -399,7 +399,7 @@ def main():
                             print(f"   {key}: {value}")
                 print()
         
-        elif args.command == "test":
+        elif action == "test":
             # Import the test connections module and run tests
             from src.scripts.test_connections import test_firestore, test_pinecone, test_embedding
             
@@ -437,7 +437,3 @@ def main():
     except Exception as e:
         logger.error(f"Error: {str(e)}")
         sys.exit(1)
-
-
-if __name__ == "__main__":
-    main()

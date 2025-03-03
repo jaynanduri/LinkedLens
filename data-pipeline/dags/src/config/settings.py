@@ -90,6 +90,15 @@ class Settings(BaseModel):
     embedding: EmbeddingSettings = EmbeddingSettings()
     processing: ProcessingSettings = ProcessingSettings()
     logging: LoggingSettings = LoggingSettings()
+    SMTP_SERVER: str = os.getenv("SMTP_SERVER")
+    SMTP_STARTTLS: bool = os.getenv("SMTP_STARTTLS")
+    SMTP_USER: str = os.getenv("SMTP_USER")
+    SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD")
+    SMTP_PORT: int = os.getenv("SMTP_PORT")
+    SMTP_EMAIL: str = os.getenv("SMTP_EMAIL")
+    SMTP_TIMEOUT: int = os.getenv("SMTP_TIMEOUT")
+    SMTP_RETRY_LIMIT: int = os.getenv("SMTP_RETRY_LIMIT")
+    SMTP_RECIPIENT_EMAILS: str = os.getenv("SMTP_RECIPIENT_EMAILS")    
 
 
 # Create settings instance

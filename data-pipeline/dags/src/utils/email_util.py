@@ -1,9 +1,9 @@
-from src.config.config import settings
+from src.config.settings import settings
 from email.mime.text import MIMEText
 from jinja2 import Template  
 from email.mime.multipart import MIMEMultipart
 import smtplib
-from src.logger import logger
+from src.utils.logger import logger
 
 
 def send_success_email(**kwargs):
@@ -29,8 +29,7 @@ def send_failure_email(**kwargs):
     email_message['From'] = settings.SMTP_EMAIL
     email_message.attach(MIMEText(body, 'plain'))
     send_email(email_message)
-
-
+    
 
 def send_email(email_message):
     try:
