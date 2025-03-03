@@ -437,3 +437,8 @@ def main(action: str):
     except Exception as e:
         logger.error(f"Error: {str(e)}")
         sys.exit(1)
+
+from src.config.config import settings
+
+def load_env():
+    print("Success")
