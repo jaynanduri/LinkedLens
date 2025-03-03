@@ -102,8 +102,9 @@ We utilize the OpenRouter API via the LangChain OpenAI package to generate text-
 OpenRouter Models: https://openrouter.ai/models
 
 #
-
 ### GCP Setup (For Data Preprocessing and Generation)
+
+
 #### One-Time Setup
 
 - Create a GCP Project - Name: LinkedLens
@@ -144,15 +145,20 @@ OpenRouter Models: https://openrouter.ai/models
     - Cloud Run is used to trigger DAG runs on the Compute Engine.
     - Follow the [steps](gcp-deploy/functions/dag-trigger/README.md) to set up and run functions
 
+#
 ### Workflow Automation
+
+
 - There are three GitHub Action workflows currently set up:
     - `update_code_vm.yml`: Ensure git repo changes are synced to VM
     - `trigger_airflow_generation.yml`: Restarts the airflow container for the data generation pipeline
     - `trigger_airflow_data_pipeline.yml`: Restarts the airflow container for the data pipeline
 - The `update_code_vm.yml` workflow is triggered when there are changes to the respective pipeline folders (`data-generation/**` and `data-pipeline/**`) on the main branch or when using manual dispatch.
 - The remaining two workflows are triggered on completion of workflow runs of `update_code_vm.yml`. There are additional checks to ensure that the containers are only restarted when required.
-  
+
+#  
 ### Folder Structure
+
 
 - The data preprocessing pipeline and data generation pipeline follow a similar structure as follows:
     - data-generation/
@@ -181,7 +187,10 @@ OpenRouter Models: https://openrouter.ai/models
     - Structured output for LLM-generated content.
 - The gcp-deploy folder contains code for any Cloud Run functions or services.
 
+#
 ### Testing
+
+
 The results of a test run for all the files in data-generation/dags/src/
 
 ![alt text](images/test-cases.png)
