@@ -4,12 +4,13 @@
 
 This project aims to aid job seekers and recruiters in job searching. The project would integrate a conversational chatbot with Retrieval Augmented Generation (RAG) to allow users to enter natural language queries that retrieve and summarize related information from company job listings, recruiter posts, and other relevant user posts. Continuous data integration and tracking Time-To-Live would ensure that users would receive the latest insights and job openings. By creating a chatbot that implements these features, the goal of this project is to enhance and streamline existing job search portals and professional social media platforms.
 
-#
-
 ## Data Preprocessing and Generation Pipeline
 
 ### Overview 
 We process a [Kaggle dataset](https://www.kaggle.com/datasets/arshkon/linkedin-job-postings) containing job postings, preprocess the data, and store it in a GCP bucket. Using this preprocessed data, we generate synthetic user profiles, recruiter job posts, and interview experience posts using LLM APIs. The generated data is validated using Pydantic before loading it into Firestore DB.
+
+
+### Data Preprocessing Pipeline
 
 To get an overview of our data exploratory analysis and data bias, refer [link](data-pipeline/)
 
@@ -26,7 +27,6 @@ To get an overview of our data exploratory analysis and data bias, refer [link](
 | ----------------------------------- | --------------------------------------------------------------------------------------------------- |
 | **Preprocess_Data**              | Reads raw data from GCS, performs data cleaning (handling missing values, stripping text, removing duplicates, and filtering for the tech industry), and writes the cleaned data back to GCS.  |
 
-#
 
 #### DAG Execution Flow
 
@@ -34,7 +34,8 @@ To get an overview of our data exploratory analysis and data bias, refer [link](
 
 ![alt text](images/image_8.png)
 
-#
+
+### Data Generation and Loading Pipeline
 
 ### 2. Data Generation and Loading Pipeline
 
@@ -46,7 +47,7 @@ To get an overview of our data exploratory analysis and data bias, refer [link](
 | **User_Post_Generator**      | Generates interview experience posts based on job postings (company name and title).  `Post`    |
 | **Job_Post_Loader**          | Loads validated job data into Firestore DB. `JobPosting`                                        |
 
-#
+
 
 #### DAG Execution Flow
 
@@ -80,6 +81,14 @@ The duration of the `create_user_posts` step varies based on the number of users
 
 ![alt text](images/image-7.png)
 
+
+#### Logging and Tracking
+- Logs are generated at each step and for all functions.
+
+- Errors are captured and logged for easy debugging and resolution.
+
+#### Notification
+All DAGs send an email notification updating the status.
 #### Logging and Tracking
 - Logs are generated at each step and for all functions.
 - The logs are currently collected using the in-built Airflow logger
@@ -94,14 +103,14 @@ All DAGs send an email notification updating the status. The email notifications
 
 
 #### LLM and API Used
-
 We utilize the OpenRouter API via the LangChain OpenAI package to generate text-based content. The responses are validated using Pydantic to maintain structure and consistency.
 
 - Model used: LLaMA- **meta-llama/llama-3.3-70b-instruct:free**
 
 OpenRouter Models: https://openrouter.ai/models
 
-#
+#### GCP Setup (For Data Preprocessing and Generation)
+
 ### GCP Setup (For Data Preprocessing and Generation)
 
 
@@ -117,7 +126,9 @@ OpenRouter Models: https://openrouter.ai/models
 
 - Create Firestore DB
 
-- Create VM Instance
+    - Create VM Instance
+    
+    - Create VM Instance
 
     - Debian-based VM
 
@@ -129,7 +140,11 @@ OpenRouter Models: https://openrouter.ai/models
 
     - Add firewall rules to allow:
         - **allow-ssh** (Ingress) → `tcp:22`  
+
+        - **airflow-port** (Ingress) → `tcp:8080`  
+
         - **airflow-port** (Ingress) → `tcp:8080` and `tcp:9090`  
+
         - **allow-dns** (Egress) → `tcp:53, udp:53`  
         - **smtp-outbound-vm** (Egress) → `tcp:587`
 
@@ -140,12 +155,33 @@ OpenRouter Models: https://openrouter.ai/models
 - Create GCS Bucket:
     - Bucket Name: `linkedlens_data`
     - Purpose: Stored raw and preprocessed data.
-      
+
+#### Workflow Automation
+- GitHub Actions workflow (`update_dags_vm.yml`) that automates the following steps:
+    - Clone or update the repository on the VM.
+    - Restart Airflow using Docker Compose
+    - Ensure all services are healthy before proceeding.
+
+#### Folder Structure
+- data-generation/
+    - dags/ - Contains DAG Definitions for data preprocessing and generation
+        - src/
+            - config/ (`config.py` Manages environment variables)
+            - credentials/ (`linkedlens-firestore-srvc-acc.json` GCP credentials for authentication)
+            - experiments/ (`test.ipynb` - Testing LLM prompts)
+            - llm/
+            - schema/ (Contains all Pydantic validation schemas)
+            - utils/ (Helper functions for data processing) 
+        - job_data_generation.py
+        - recruiter_generation.py
+        - recruiter_post_generation.py
+        - user_post_generation.py
+    - .env_template
+
 - Create Cloud Run Function
     - Cloud Run is used to trigger DAG runs on the Compute Engine.
     - Follow the [steps](gcp-deploy/functions/dag-trigger/README.md) to set up and run functions
 
-#
 ### Workflow Automation
 
 
@@ -155,8 +191,7 @@ OpenRouter Models: https://openrouter.ai/models
     - `trigger_airflow_data_pipeline.yml`: Restarts the airflow container for the data pipeline
 - The `update_code_vm.yml` workflow is triggered when there are changes to the respective pipeline folders (`data-generation/**` and `data-pipeline/**`) on the main branch or when using manual dispatch.
 - The remaining two workflows are triggered on completion of workflow runs of `update_code_vm.yml`. There are additional checks to ensure that the containers are only restarted when required.
-
-#  
+  
 ### Folder Structure
 
 
@@ -185,6 +220,11 @@ OpenRouter Models: https://openrouter.ai/models
     - Required fields are present.
 
     - Structured output for LLM-generated content.
+
+#### Testing
+The results of a test run for all the files in data-generation/dags/src/
+
+[add result]
 - The gcp-deploy folder contains code for any Cloud Run functions or services.
 
 #### Testing
@@ -206,5 +246,4 @@ Test suite combines pandas-based assertions, Pydantic model validation, and unit
 The results of a test run for all the files in data-generation/dags/src/
 
 ![alt text](images/test-cases.png)
-
 

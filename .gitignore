@@ -1,4 +1,3 @@
-
 /data-generation/gen_env
 /data-generation/logs/
 /data-generation/plugins
@@ -9,6 +8,12 @@
 __pycache__
 *.log
 *.csv
+
+test.py
+secrets/
+*.json
+.env
+
 secrets/
 *.json
 .env
