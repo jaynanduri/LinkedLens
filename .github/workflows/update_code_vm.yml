@@ -12,7 +12,6 @@ on:
 jobs:
   build:
     name: Build
-    environment: prod
     runs-on: ubuntu-latest
 
     steps:
