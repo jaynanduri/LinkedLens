@@ -105,7 +105,7 @@ OpenRouter Models: https://openrouter.ai/models
 
 - Create Firestore DB
 
-    - Create VM Instance
+- Create VM Instance
 
     - Debian-based VM
 
@@ -117,7 +117,7 @@ OpenRouter Models: https://openrouter.ai/models
 
     - Add firewall rules to allow:
         - **allow-ssh** (Ingress) → `tcp:22`  
-        - **airflow-port** (Ingress) → `tcp:8080`  
+        - **airflow-port** (Ingress) → `tcp:8080` and `tcp:9090`  
         - **allow-dns** (Egress) → `tcp:53, udp:53`  
         - **smtp-outbound-vm** (Egress) → `tcp:587`
 
