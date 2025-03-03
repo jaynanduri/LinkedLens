@@ -12,6 +12,7 @@ This project aims to aid job seekers and recruiters in job searching. The projec
 We process a [Kaggle dataset](https://www.kaggle.com/datasets/arshkon/linkedin-job-postings) containing job postings, preprocess the data, and store it in a GCP bucket. Using this preprocessed data, we generate synthetic user profiles, recruiter job posts, and interview experience posts using LLM APIs. The generated data is validated using Pydantic before loading it into Firestore DB.
 
 To get an overview of our data exploratory analysis and data bias, refer [link](data-pipeline/)
+
 ### Data Preprocessing Pipeline
 
 - Handling Missing Values: Rows are removed if any of the mandatory columns (`description`, `title`, `company_name`, `company_id`, `job_id`) contain NaN values.
@@ -79,6 +80,14 @@ The duration of the `create_user_posts` step varies based on the number of users
 
 ![alt text](images/image-7.png)
 
+#### Logging and Tracking
+- Logs are generated at each step and for all functions.
+
+- Errors are captured and logged for easy debugging and resolution.
+
+#### Notification
+All DAGs send an email notification updating the status.
+=======
 #
 
 #### Logging and Tracking
@@ -183,5 +192,6 @@ OpenRouter Models: https://openrouter.ai/models
 #### Testing
 The results of a test run for all the files in data-generation/dags/src/
 
-[add result]
+![alt text](images/test-cases.png)
+
 
