@@ -9,7 +9,6 @@
 __pycache__
 *.log
 *.csv
-test.py
 secrets/
 *.json
 .env
