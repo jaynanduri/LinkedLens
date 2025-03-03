@@ -75,6 +75,19 @@ The duration of the `create_user_posts` step varies based on the number of users
 
 ![alt text](images/image-7.png)
 
+### 3. Data Loading Pipeline
+
+#### DAGs Overview
+| DAG Name                     | Description                                                                                     |
+| ---------------------------- | ----------------------------------------------------------------------------------------------- |
+| **Update_VectorDB**      |Initializes Pinecone (vector store), tests connectivity to Firestore and Vector DB, and ingests/syncs data to vector store   |
+ 
+#### DAG Execution Flow
+
+![alt text](images/image11.png)
+
+![alt text](images/image12.png)
+
 #### Logging and Tracking
 - Logs are generated at each step and for all functions.
 - The logs are currently collected using the in-built Airflow logger
