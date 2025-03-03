@@ -11,6 +11,7 @@ This project aims to aid job seekers and recruiters in job searching. The projec
 ### Overview 
 We process a [Kaggle dataset](https://www.kaggle.com/datasets/arshkon/linkedin-job-postings) containing job postings, preprocess the data, and store it in a GCP bucket. Using this preprocessed data, we generate synthetic user profiles, recruiter job posts, and interview experience posts using LLM APIs. The generated data is validated using Pydantic before loading it into Firestore DB.
 
+To get an overview of our data exploratory analysis and data bias, refer [link](data-pipeline/)
 ### Data Preprocessing Pipeline
 
 - Handling Missing Values: Rows are removed if any of the mandatory columns (`description`, `title`, `company_name`, `company_id`, `job_id`) contain NaN values.
@@ -24,11 +25,15 @@ We process a [Kaggle dataset](https://www.kaggle.com/datasets/arshkon/linkedin-j
 | ----------------------------------- | --------------------------------------------------------------------------------------------------- |
 | **Preprocess_Data**              | Reads raw data from GCS, performs data cleaning (handling missing values, stripping text, removing duplicates, and filtering for the tech industry), and writes the cleaned data back to GCS.  |
 
+#
+
 #### DAG Execution Flow
 
 ![alt text](images/image_9.png)
 
 ![alt text](images/image_8.png)
+
+#
 
 ### Data Generation and Loading Pipeline
 
@@ -40,6 +45,7 @@ We process a [Kaggle dataset](https://www.kaggle.com/datasets/arshkon/linkedin-j
 | **User_Post_Generator**      | Generates interview experience posts based on job postings (company name and title).  `Post`    |
 | **Job_Post_Loader**          | Loads validated job data into Firestore DB. `JobPosting`                                        |
 
+#
 
 #### DAG Execution Flow
 
@@ -73,14 +79,16 @@ The duration of the `create_user_posts` step varies based on the number of users
 
 ![alt text](images/image-7.png)
 
+#
 
 #### Logging and Tracking
 - Logs are generated at each step and for all functions.
-
+- The logs are currently collected using the in-built Airflow logger
 - Errors are captured and logged for easy debugging and resolution.
+- Any errors during the pipeline runs result in a failed run, and appropriate notifications are sent to alert about the status.
 
 #### Notification
-All DAGs send an email notification updating the status.
+All DAGs send an email notification updating the status. The email notifications are sent for both failed/successful runs of the data pipelines. An example of the email notification is attached below.
 
 ![alt text](images/image_10.png)
 
@@ -91,6 +99,8 @@ We utilize the OpenRouter API via the LangChain OpenAI package to generate text-
 - Model used: LLaMA- **meta-llama/llama-3.3-70b-instruct:free**
 
 OpenRouter Models: https://openrouter.ai/models
+
+#
 
 #### GCP Setup (For Data Preprocessing and Generation)
 #### One-Time Setup
@@ -128,28 +138,36 @@ OpenRouter Models: https://openrouter.ai/models
 - Create GCS Bucket:
     - Bucket Name: `linkedlens_data`
     - Purpose: Stored raw and preprocessed data.
+      
+- Create Cloud Run Function
+    - Cloud Run is used to trigger DAG runs on the Compute Engine.
+    - Follow the [steps](gcp-deploy/functions/dag-trigger/README.md) to set up and run functions
 
 #### Workflow Automation
-- GitHub Actions workflow (`update_dags_vm.yml`) that automates the following steps:
-    - Clone or update the repository on the VM.
-    - Restart Airflow using Docker Compose
-    - Ensure all services are healthy before proceeding.
-
+- There are three GitHub Action workflows currently set up:
+    - `update_code_vm.yml`: Ensure git repo changes are synced to VM
+    - `trigger_airflow_generation.yml`: Restarts the airflow container for the data generation pipeline
+    - `trigger_airflow_data_pipeline.yml`: Restarts the airflow container for the data pipeline
+- The `update_code_vm.yml` workflow is triggered when there are changes to the respective pipeline folders (`data-generation/**` and `data-pipeline/**`) on the main branch or when using manual dispatch.
+- The remaining two workflows are triggered on completion of workflow runs of `update_code_vm.yml`. There are additional checks to ensure that the containers are only restarted when required.
+  
 #### Folder Structure
-- data-generation/
-    - dags/ - Contains DAG Definitions for data preprocessing and generation
-        - src/
-            - config/ (`config.py` Manages environment variables)
-            - credentials/ (`linkedlens-firestore-srvc-acc.json` GCP credentials for authentication)
-            - experiments/ (`test.ipynb` - Testing LLM prompts)
-            - llm/
-            - schema/ (Contains all Pydantic validation schemas)
-            - utils/ (Helper functions for data processing) 
-        - job_data_generation.py
-        - recruiter_generation.py
-        - recruiter_post_generation.py
-        - user_post_generation.py
-    - .env_template
+
+- The data preprocessing pipeline and data generation pipeline follow a similar structure as follows:
+    - data-generation/
+        - dags/ - Contains DAG Definitions for data preprocessing and generation
+            - src/
+                - config/ (`config.py` Manages environment variables)
+                - credentials/ (`linkedlens-firestore-srvc-acc.json` GCP credentials for authentication)
+                - experiments/ (`test.ipynb` - Testing LLM prompts)
+                - llm/
+                - schema/ (Contains all Pydantic validation schemas)
+                - utils/ (Helper functions for data processing) 
+            - job_data_generation.py
+            - recruiter_generation.py
+            - recruiter_post_generation.py
+            - user_post_generation.py
+        - .env_template
 
 - All Pydantic validation classes are stored in the schema/ directory. These classes ensure data integrity before inserting records into Firestore DB.
 
@@ -160,6 +178,7 @@ OpenRouter Models: https://openrouter.ai/models
     - Required fields are present.
 
     - Structured output for LLM-generated content.
+- The gcp-deploy folder contains code for any Cloud Run functions or services.
 
 #### Testing
 The results of a test run for all the files in data-generation/dags/src/
