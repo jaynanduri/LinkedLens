@@ -44,7 +44,7 @@ def generate_recruiter(company, num_users, seen_names, ids, chain, format_instru
                     user_json = user.model_dump_json()
                     
                     user_dict = json.loads(user_json)
-                    user_dict['vectorized'] = True
+                    user_dict['vectorized'] = False
                     # print("User json:", user_json)
                     company_valid_users.append(user_dict)
                     # print(company_valid_users)

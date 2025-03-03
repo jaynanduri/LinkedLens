@@ -8,6 +8,5 @@
 __pycache__
 *.log
 *.csv
-test.py
 *.json
 .env
