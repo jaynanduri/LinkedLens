@@ -1,4 +1,4 @@
-name: Push DAGs changes to VM and Restart Airflow
+name: Push DAGs changes to VM
 
 on:
   #push:
@@ -33,37 +33,23 @@ jobs:
           script: |
               # Define repo path
               REPO_PATH="$(find /home -type d -name "LinkedLens" 2>/dev/null | head -n 1)"
-              
               echo "Repo path is: $REPO_PATH"
-              
               if [ ! -d "$REPO_PATH" ]; then
                 echo "Repo not found, cloning..."
                 cd /home/${{ secrets.SERVER_USERNAME }}/mlops
                 git clone https://github.com/jaynanduri/LinkedLens.git
               fi
               echo "Did not clone repo"
-              
               cd "$REPO_PATH"
   
+
               echo "Updating code from git.."
               git fetch origin dev-data-generation
               git reset --hard origin/dev-data-generation
               git clean -fd
               git pull origin dev-data-generation
   
-              
-              #Verifying PWD
-              if [ -d "./data-generation" ]; then
-                echo "Correct directory"
-              else
-                echo "Repository not found. Exiting.."
-                exit 1
-              fi
-              
-              cd data-generation
-              echo "Current directory: $(pwd)"
-              
-              #Re-write env file
+              # Rewrite .env file
               echo "Creating/Re-writing .env file"
               cat > .env <<EOF
               OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
@@ -82,34 +68,23 @@ jobs:
               SMTP_TIMEOUT=${{ secrets.SMTP_TIMEOUT }}
               SMTP_RETRY_LIMIT=${{ secrets.SMTP_RETRY_LIMIT }}
               SMTP_RECIPIENT_EMAILS=${{ secrets.SMTP_RECIPIENT_EMAILS }}
+              AIRFLOW_WWW_USER_USERNAME=${{ secrets.AIRFLOW_WWW_USER_USERNAME }}
+              AIRFLOW_WWW_USER_PASSWORD=${{ secrets.AIRFLOW_WWW_USER_PASSWORD }}
               EOF
               echo ".env file created"
+
+              #Verifying PWD
+              if [ -d "./data-generation" ]; then
+                echo "Correct directory"
+              else
+                echo "Repository not found. Exiting.."
+                exit 1
+              fi
+              
+              cd data-generation
+              echo "Current directory: $(pwd)"
               
               mkdir -p dags/src/credentials
           
               echo "Creating/Re-writing linkedlens-firestore-srvc-acc.json..."
-              echo '${{ secrets.GCP_CREDENTIALS_JSON }}' > ${{ secrets.DB_CREDENTIALS_PATH }}
-
-              echo "Check if docker is running.."
-              if docker compose ps | grep "Up"; then
-                echo "Stopping running containers..."
-                docker compose down
-              else
-                echo "No running containers found."
-              fi
-
-              echo "Starting Docker Compose..."
-              docker compose up -d
-
-              echo "Waiting for services to be ready..."
-              while [[ $(docker compose ps | grep -c "healthy") -lt 1 ]]; do
-                echo "Waiting for containers to become healthy..."
-                sleep 10
-              done
-
-              echo "All services are up and healthy!"
-              while ! curl -sSf "http://${{ secrets.SERVER_IP }}:8080" > /dev/null; do
-                echo "Airflow UI not ready yet..."
-                sleep 10
-              done
-              echo "Airflow UI is available at: http://${{ secrets.SERVER_IP }}:8080"
+              echo '${{ secrets.GCP_CREDENTIALS_JSON }}' > dags/src/credentials/linkedlens-firestore-srvc-acc.json
