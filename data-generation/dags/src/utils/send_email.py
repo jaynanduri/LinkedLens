@@ -40,7 +40,7 @@ def send_email(email_message):
         recipients = [email.strip() for email in  settings.SMTP_RECIPIENT_EMAILS.split(',') if email.strip()]
         email_message['To'] = ', '.join(recipients)
         server.sendmail(settings.SMTP_EMAIL, recipients, email_message.as_string())
-        logger.info("Successfully sent to all recipients: ", settings.SMTP_RECIPIENT_EMAILS)
+        logger.info(f"Successfully sent to all recipients: {settings.SMTP_RECIPIENT_EMAILS}")
         server.quit()
     except Exception as e:
         raise Exception(f"Email failed: {e}")

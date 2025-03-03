@@ -13,8 +13,10 @@ from langchain.output_parsers import PydanticOutputParser
 from src.schema.user_list import UserList
 from src.schema.user import BasicUser
 from src.llm.llm_client import get_open_router_llm
+import pandas as pd
+from io import StringIO
 
-def read_input_file(filepath: str, column_names: List[str]):
+def read_input_file(filepath: str, column_names: List[str], filter=False):
     """Reads specific column file from GCP bucket(filepath) """
     try:
         client = storage.Client.from_service_account_json(settings.DB_CREDENTIALS_PATH)
@@ -29,17 +31,25 @@ def read_input_file(filepath: str, column_names: List[str]):
             raise FileNotFoundError(f"File '{object_name}' not found in bucket '{bucket_name}'.")
 
         file_data = blob.download_as_bytes()
-        table = pq.read_table(BytesIO(file_data), columns=column_names)
-        df = table.to_pandas()
-        print("DF Types:\n",df.dtypes)
-        if column_names:
-            df = df.astype(str).apply(lambda x: x.str.strip())
-        # Filter data 
-        df_subset = df.iloc[:60] 
-        logger.info(f"Input data to generate data for: {len(df_subset)}")
 
-        return df_subset
-    
+        if object_name.endswith('.parquet'):
+            table = pq.read_table(BytesIO(file_data), columns=column_names)
+            df = table.to_pandas()
+            if filter:
+                if column_names:
+                    df = df.astype(str).apply(lambda x: x.str.strip())
+                # Filter data 
+                df_subset = df.iloc[:10] 
+                logger.info(f"Input data to generate data for: {len(df_subset)}")
+
+                return df_subset
+            return df
+        elif object_name.endswith(".csv"):
+            df = pd.read_csv(BytesIO(file_data), usecols=column_names)
+            return df
+        else: 
+            raise ValueError("Unsupported file format: Must be CSV or Parquet.")
+
     except Exception as e:
         raise RuntimeError(f"Error reading input file: {e}")
     
@@ -114,3 +124,31 @@ def get_llm_chain(chain_type):
     except Exception as e:
         logger.error(f"Error creating chain: {e}")
         raise Exception(f"Error creating chain: {e}")
+    
+
+
+def upload_file_to_gcs(data, bucket_path):
+    try:
+        # csv_buffer = StringIO()
+        # data.to_csv(csv_buffer, index=False)
+        # csv_buffer.seek(0)
+        client = storage.Client.from_service_account_json(settings.DB_CREDENTIALS_PATH)
+        
+        bucket_name = bucket_path.split("/")[0]
+        object_name = "/".join(bucket_path.split("/")[1:])
+        print(f"Output bucket name: {bucket_name}")
+        print(f"Object path: {object_name}")
+        
+        bucket = client.bucket(bucket_name)
+        blob = bucket.blob(object_name)
+        print(f"Created blob for {object_name}")
+
+
+        buffer = BytesIO()
+        data.to_parquet(buffer, engine="pyarrow")
+        blob.upload_from_string(buffer.getvalue(), content_type="application/octet-stream")
+
+        # blob.upload_from_string(data, content_type="text/csv")
+        print(f"File uploaded to gs://{bucket_name}/{object_name}")
+    except Exception as e:
+        logger.error(f"Failed to upload data to bucket: {e}")

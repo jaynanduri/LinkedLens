@@ -67,6 +67,7 @@ def create_hiring_posts(post_df: pd.DataFrame, post_chain_type: str):
                 post_data_json = generate_recruiter_post(job_title, job_description, author_id, job_id, post_chain, post_ids)
                 logger.info(f"Post data Json : \n\n {post_data_json}")
                 post_data = json.loads(post_data_json)
+                post_data['vectorized'] = False
                 logger.info(f"Post content: \n{post_data['content']}")
                 db_client.insert_entry('posts', post_data, post_data['post_id'])
 
@@ -106,7 +107,8 @@ def create_interview_exp_posts(input_df, post_chain_type, user_chain_type):
 
             post_data = json.loads(post_data_json)
             user_data = json.loads(user_data_json)
-            
+            post_data['vectorized'] = False
+            user_data['vectorized'] = False
             logger.info(f"\nPost Data: \n {post_data}")
             logger.info(f"\nUser Data: \n {user_data}")
 
