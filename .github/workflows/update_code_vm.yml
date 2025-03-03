@@ -70,6 +70,11 @@ jobs:
               SMTP_RECIPIENT_EMAILS=${{ secrets.SMTP_RECIPIENT_EMAILS }}
               AIRFLOW_WWW_USER_USERNAME=${{ secrets.AIRFLOW_WWW_USER_USERNAME }}
               AIRFLOW_WWW_USER_PASSWORD=${{ secrets.AIRFLOW_WWW_USER_PASSWORD }}
+              PINECONE_API_KEY=${{ secrets.PINECONE_API_KEY }}
+              PINECONE_ENVIRONMENT=${{ secrets.PINECONE_ENVIRONMENT }}
+              GOOGLE_APPLICATION_CREDENTIALS=${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+              LOG_LEVEL=${{ secrets.LOG_LEVEL }}
+              HUGGINGFACE_API_KEY=${{ secrets.HUGGINGFACE_API_KEY }}
               EOF
               echo ".env file created"
 
