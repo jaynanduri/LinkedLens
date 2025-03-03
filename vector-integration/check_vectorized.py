@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3 Temp file - not needed in prod
 
 from src.clients.firestore_client import FirestoreClient
 from src.utils.logger import logger

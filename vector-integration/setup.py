@@ -8,7 +8,7 @@ setup(
     name="linkedlens-vector-integration",
     version="1.0.0",
     description="Integration between Firestore and Pinecone Vector DB for LinkedLens",
-    author="LinkedLens Team",
+    author="Akshay",
     packages=find_packages(),
     install_requires=[
         "pinecone>=6.0.0",
@@ -27,7 +27,8 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "linkedlens=src.main:main",
+            "vector-sync=src.main:main",
+            "vector-test=scripts.test_connections:main",
         ],
     },
     python_requires=">=3.8",
