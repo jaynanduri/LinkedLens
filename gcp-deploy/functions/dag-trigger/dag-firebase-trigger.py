@@ -5,14 +5,19 @@ import functions_framework
 from google.events.cloud import firestore
 
 @functions_framework.cloud_event
-def hello_firestore(cloud_event: CloudEvent) -> None:
-    """Triggers by a change to a Firestore document.
+def trigger_firestore(cloud_event: CloudEvent) -> None:
+    """
+    Triggers by a change to a Firestore document.
 
     Args:
         cloud_event: cloud event with information on the firestore event trigger
     """
     firestore_payload = firestore.DocumentEventData()
-    make_airflow_request()
+    response = make_airflow_request()
+    if response is None:
+        print(f"DAG not triggered successfully")
+    else:
+        print(f"DAG triggered successfully")
 
 def make_airflow_request() -> requests.Response:
 
