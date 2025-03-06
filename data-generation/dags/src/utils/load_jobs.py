@@ -18,7 +18,8 @@ def load_jobs(input_df):
             logger.info("Created job posting object")
             job_data = json.loads(job_posting.model_dump_json())
             job_data['vectorized'] = False
-            db_client.insert_entry('jobs', job_data, job_data['job_id'])
-            logger.info(f"Inserted job data to DB for job id : {job_data['job_id']}")
+            logger.info(f"Added job")
+            # db_client.insert_entry('jobs', job_data, job_data['job_id'])
+            # logger.info(f"Inserted job data to DB for job id : {job_data['job_id']}")
 
 
