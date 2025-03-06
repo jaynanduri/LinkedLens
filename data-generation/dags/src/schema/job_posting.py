@@ -24,6 +24,7 @@ class PayPeriod(str, Enum):
     YEARLY = "YEARLY"
     MONTHLY = "MONTHLY"
     WEEKLY = "WEEKLY"
+    BIWEEKLY = "BIWEEKLY"
 
 class CompensationType(str, Enum):
     """Enum representing different types of job compensation."""
@@ -33,6 +34,9 @@ class Currency(str, Enum):
     """Enum representing supported currencies for job salaries."""
     USD = "USD"
     CAD = "CAD"
+    BBD="BBD"
+    EUR="EUR"
+    GBP="GBP"
 
 class FormattedWorkType(str, Enum):
     """Enum representing different work types for job postings."""
@@ -40,6 +44,9 @@ class FormattedWorkType(str, Enum):
     PART_TIME = "Part-Time"
     FULL_TIME = "Full-Time"
     VOLUNTEER = "Volunteer"
+    INTERNSHIP = "Internship"
+    TEMPORARY="Temporary"
+    OTHER="Other"
 
 class JobPosting(BaseModel):
     """
