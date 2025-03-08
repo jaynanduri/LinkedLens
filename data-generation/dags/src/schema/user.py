@@ -5,7 +5,6 @@ import re
 class BasicUser(BaseModel):
     first_name: str
     last_name: str
-    company: str
 
 class User(BaseModel):
     """Schema for response validation of user data."""
@@ -15,18 +14,19 @@ class User(BaseModel):
     company: str
     username: str
     account_type: str
+    vectorized: bool = False
 
     @property
     def full_name(self):
         """Returns the full name by combining first and last name."""
         return f"{self.first_name} {self.last_name}"
     
-    @field_validator("user_id", mode="before")
-    def validate_user_id(cls, value, info: ValidationInfo):
-        """Generates a new UUID for the user_id field."""
-        # if isinstance(value, int):
-        #     print("Generating uuid for user")
-        return uuid.uuid1()
+    # @field_validator("user_id", mode="before")
+    # def validate_user_id(cls, value, info: ValidationInfo):
+    #     """Generates a new UUID for the user_id field."""
+    #     # if isinstance(value, int):
+    #     #     print("Generating uuid for user")
+    #     return uuid.uuid1()
         # else:
         #     print(f"Returning the value {value}")
         #     return value

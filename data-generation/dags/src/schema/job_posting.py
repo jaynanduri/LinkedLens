@@ -1,6 +1,6 @@
 import pandas as pd
 from pydantic import BaseModel, field_validator
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 import pandas as pd
 from pydantic import BaseModel, field_validator
@@ -34,9 +34,9 @@ class Currency(str, Enum):
     """Enum representing supported currencies for job salaries."""
     USD = "USD"
     CAD = "CAD"
-    BBD="BBD"
-    EUR="EUR"
-    GBP="GBP"
+    BBD = "BBD"
+    EUR = "EUR"
+    GBP = "GBP"
 
 class FormattedWorkType(str, Enum):
     """Enum representing different work types for job postings."""
@@ -45,8 +45,8 @@ class FormattedWorkType(str, Enum):
     FULL_TIME = "Full-Time"
     VOLUNTEER = "Volunteer"
     INTERNSHIP = "Internship"
-    TEMPORARY="Temporary"
-    OTHER="Other"
+    TEMPORARY = "Temporary"
+    OTHER = "Other"
 
 class JobPosting(BaseModel):
     """
@@ -79,6 +79,7 @@ class JobPosting(BaseModel):
     application_url: Optional[str] = ""
     views: Optional[int] = None
     applies: Optional[int] = None
+    vectorized: bool = False
 
     @field_validator("zip_code", mode="before")
     def validate_zip_code(cls, value):
@@ -94,7 +95,7 @@ class JobPosting(BaseModel):
 
     @field_validator("pay_period", "compensation_type", "currency", "formatted_experience_level", "formatted_work_type", mode="before")
     def validate_enum_fields(cls, value, info):
-        if pd.isna(value) or not value:
+        if pd.isna(value) or not value or value == 'None' or value == 'NONE':
             return None
         value = str(value).strip()
 
@@ -107,8 +108,7 @@ class JobPosting(BaseModel):
         }
 
         field_name = info.field_name
-
-        # Special handling for formatted_work_type - convert to lowercase and match
+        # handling for formatted_work_type - convert to lowercase and match
         if field_name == "formatted_work_type":
             lowercase_value = value.lower()
             mapping = {
@@ -116,6 +116,9 @@ class JobPosting(BaseModel):
                 "part-time": "Part-Time",
                 "full-time": "Full-Time",
                 "volunteer": "Volunteer",
+                "internship": "Internship",
+                "temporary": "Temporary",
+                "other": "Other"
             }
             if lowercase_value in mapping:
                 return FormattedWorkType(mapping[lowercase_value])
@@ -132,7 +135,7 @@ class JobPosting(BaseModel):
 
         raise ValueError(f"Invalid value '{value}' for field '{field_name}'. Expected one of {list(field_enum_map[field_name].__members__.values())}.")
 
-    # Datetime Fields Validator - MM/DD/YYYY h:mm:ss AM/PM)
+    # Datetime Fields Validator - YYYY-MM-DD HH:mm:ss)
     @field_validator("original_listed_time", "listed_time", "expiry", "closed_time", mode="before")
     def validate_datetime_fields(cls, value):
         if pd.isna(value) or not value:
@@ -142,14 +145,18 @@ class JobPosting(BaseModel):
         
         value = str(value).strip()
         try:
-            return datetime.strptime(value, "%m/%d/%Y %I:%M:%S %p")
+            return datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
         except ValueError:
-            raise ValueError(f"Invalid datetime format: {value}. Expected format: MM/DD/YYYY h:mm:ss AM/PM.")
+            raise ValueError(f"Invalid datetime format: {value}. Expected format: YYYY-MM-DD HH:mm:ss")
 
     @field_validator("job_id", "company_id", "company_name", "title", "description", 
                      "skills_desc", "location", "job_posting_url", "application_url",
                      mode="before")
     def clean_strings(cls, value):
-        if pd.isna(value) or not value:
-            return ""
+        if pd.isna(value) or not value or str(value).lower() == "none" :
+            return None
         return str(value).strip()
+
+class JobPostingList(BaseModel):
+    """Schema for validation of List of JobPostings."""
+    jobs: List[JobPosting]

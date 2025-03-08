@@ -1,143 +1,156 @@
 import pandas as pd
-import pyarrow.parquet as pq  
-from google.cloud import storage
-from io import BytesIO
 from src.utils.gen_helper import read_input_file, upload_file_to_gcs
 import os
+import re
+import kagglehub
 from src.logger import logger
 
-# This can be loaded from env or directly passed in Airflow DAG
-DB_CREDENTIALS_PATH = os.getenv("DB_CREDENTIALS_PATH", "/opt/airflow/gcp_credentials.json")
+"""
+Actions: Start on run preprocessing - pass bucket name, folders for raw, processed, filtered
+1. Download Kaggle data - 
+2. preprocess (postings csv) - upload everything to bucket all other files drop na 
+3. preprocess all other files
+4. filter posting and upload everything to filtered
+"""
 
-def read_file_from_gcs(filepath: str, column_names=None) -> pd.DataFrame:
-    """
-    Reads data from GCP bucket into a DataFrame.
-    filepath should be of the format: bucket_name/object_name
-    """
+FILE_PATHS = [
+        '/postings',
+        '/mappings/industries',
+        '/mappings/skills',
+        '/jobs/benefits',
+        '/jobs/job_industries',
+        '/jobs/job_skills',   
+        '/jobs/salaries',
+        '/companies/companies',
+        '/companies/company_industries',
+        '/companies/company_specialities',
+        '/companies/employee_counts',
+    ]
+CSV_FILE_EXTENSION = '.csv'
 
-    client = storage.Client.from_service_account_json(DB_CREDENTIALS_PATH)
+PARQUET_FILE_EXTENSION = '.parquet'
+
+
+def download_raw_data(bucket_path: str) -> None:
+    path = kagglehub.dataset_download("arshkon/linkedin-job-postings")
+    logger.info(f"Path to dataset files: {path}")  
     
-    bucket_name, object_name = filepath.split("/", 1)
-    bucket = client.bucket(bucket_name)
-    blob = bucket.blob(object_name)
+    for file_path in FILE_PATHS:
+        logger.info(f"Loading {file_path+CSV_FILE_EXTENSION}.. ")
+        df = pd.read_csv(path+file_path+CSV_FILE_EXTENSION)
+        logger.info(f"Uploading {file_path}.. ")
+        bucket_file_path = bucket_path + file_path + PARQUET_FILE_EXTENSION
+        upload_file_to_gcs(df, bucket_file_path)
+    logger.info(f"Completed Downloading data from Kaggle")
 
-    if not blob.exists():
-        raise FileNotFoundError(f"File '{object_name}' not found in bucket '{bucket_name}'.")
 
-    file_data = blob.download_as_bytes()
+def preprocess_postings(bucket_file_path: str) -> pd.DataFrame:
+    logger.info(f"Reading file {bucket_file_path} from GCS")
+    df = read_input_file(bucket_file_path, None)
+    print(f"Len of file: {len(df)}")
+    logger.info(f"Preprocessing file {bucket_file_path}")
+    df = df.dropna(subset=['job_id', 'company_name', 'title', 'description'])
+    str_columns = ['job_id', 'company_name', 'title', 'description', 'company_id',
+               'pay_period', 'location', 'formatted_work_type', 'job_posting_url',
+               'application_url', 'application_type', 'formatted_experience_level',
+               'skills_desc', 'posting_domain', 'work_type', 'currency', 'compensation_type']
+    df['company_id'] = df['company_id'].astype(int)
+    df[str_columns] = df[str_columns].astype(str).apply(lambda x: x.str.strip())
 
-    # Detect file format and read appropriately (CSV vs Parquet)
-    if object_name.endswith(".parquet"):
-        table = pq.read_table(BytesIO(file_data), columns=column_names)
-        df = table.to_pandas()
-    elif object_name.endswith(".csv"):
-        df = pd.read_csv(BytesIO(file_data), usecols=column_names)
-    else:
-        raise ValueError("Unsupported file format: Must be CSV or Parquet.")
+    float_columns = ['max_salary', 'med_salary', 'min_salary', 'normalized_salary']
+    df[float_columns] = df[float_columns]
 
+    df['applies'] = df['applies'].fillna(0).astype(int)
+    df['views'] = df['views'].fillna(0).astype(int)
+
+    df['remote_allowed'] = df['remote_allowed'].fillna(0).astype(bool)
+    df['sponsored'] = df['sponsored'].fillna(0).astype(bool)
+
+    date_columns = ['closed_time', 'listed_time', 'expiry', 'original_listed_time']
+    df[date_columns] = df[date_columns].apply(lambda x: pd.to_datetime(x, unit='ms', errors='coerce'))
+    df[date_columns] = df[date_columns].apply(lambda x: x.dt.strftime("%Y-%m-%d %H:%M:%S"))
+    df['zip_code'] = df['zip_code'].apply(lambda x: str(int(x)).strip() if pd.notna(x) else "")
+    print(df[date_columns].head())
     return df
 
-# ------------------- Step 1: Load Data -------------------
-
-def load_all_data(input_bucket_path, file_type):
-    """Loads all required datasets from GCS bucket."""
-    postings = read_input_file(input_bucket_path+'/postings'+file_type, None)
-    companies = read_input_file(input_bucket_path+'/companies'+file_type, None)
-    benefits = read_input_file(input_bucket_path+'/benefits'+file_type, None)
-    employee_counts = read_input_file(input_bucket_path+'/employee_counts'+file_type, None)
-    return postings, companies, benefits, employee_counts
-
-# ------------------- Step 2: Preprocess company_id -------------------
-
-def clean_company_ids(postings_df, companies_df):
-    """Ensure company_id is consistent across postings and companies."""
-    postings_df["company_id"] = postings_df["company_id"].apply(lambda x: str(int(float(x))) if pd.notna(x) else x)
-    companies_df["company_id"] = companies_df["company_id"].apply(lambda x: str(int(float(x))) if pd.notna(x) else x)
-
-    postings_df["company_id"] = postings_df["company_id"].astype(str)
-    companies_df["company_id"] = companies_df["company_id"].astype(str)
-
-    return postings_df, companies_df
-
-# ------------------- Step 3: Clean and enrich postings -------------------
-
-def enrich_and_clean_postings(postings_df, companies_df):
-    """Add company names to postings and handle missing values."""
-    company_name_mapping = companies_df.set_index("company_id")["name"].to_dict()
-    postings_df["company_name"] = postings_df["company_id"].map(company_name_mapping)
-    postings_df["company_name"].fillna("", inplace=True)
-
-    postings_df.dropna(subset=["company_name", "title", "location"], inplace=True)
-
-    return postings_df
-
-# ------------------- Master Function (Combine All) -------------------
-
-def load_and_clean_data(input_bucket_path, output_bucket_path):
-    """
-    Complete process: Load from GCS -> Clean -> Save.
-    """
-
-    # Step 1: Load all
-    postings_df, companies_df, benefits_df, employee_counts_df = load_all_data(input_bucket_path, '.csv')
-    logger.info("Loaded all raw data")
-    # Step 2: Clean company_ids
-    postings_df, companies_df = clean_company_ids(postings_df, companies_df)
-    logger.info("Clean Company ids")
-    # Step 3: Clean and enrich postings
-    postings_df = enrich_and_clean_postings(postings_df, companies_df)
-    logger.info("Enriched posts")
-
-    # Deduplication across all
-    postings_df.drop_duplicates(inplace=True)
-    companies_df.drop_duplicates(inplace=True)
-    benefits_df.drop_duplicates(inplace=True)
-    employee_counts_df.drop_duplicates(inplace=True)
-    logger.info(f"Dropped duplicates: {len(postings_df)}")
-    # Save cleaned files to GCP
-    upload_file_to_gcs(postings_df, output_bucket_path+'/postings.parquet')
-    upload_file_to_gcs(companies_df, output_bucket_path+'/companies.parquet')
-    upload_file_to_gcs(benefits_df, output_bucket_path+'/benefits.parquet')
-    upload_file_to_gcs(employee_counts_df, output_bucket_path+'/employee_counts.parquet')
-
-
-    logger.info(f" All cleaned files saved to {output_bucket_path}")
+def preprocess_files(bucket_file_path: str) -> pd.DataFrame:
+    logger.info(f"Reading file {bucket_file_path} from GCS")
+    df = read_input_file(bucket_file_path, None)
+    print(f"Len of file: {len(df)}")
+    logger.info(f"Preprocessing file {bucket_file_path}")
+    subset_cols = None
+    if 'companies' in bucket_file_path:
+        subset_cols = ['company_id']
+    elif 'jobs' in bucket_file_path:
+        subset_cols = ['job_id']
+    elif 'mappings/industries' in bucket_file_path:
+        subset_cols = ['industry_id']
+    else:
+        subset_cols = None
     
-    return
+    df = df.dropna(subset=subset_cols)
+    return df
 
+def preprocess_raw_data(in_bucket_path: str, out_bucket_path: str) -> None:
+    for file_path in FILE_PATHS:
+        file_path = file_path+PARQUET_FILE_EXTENSION
+        logger.info(f"Preprocessing file {file_path}..")
 
-def filter_technology_industry(input_bucket_path, output_bucket_path):
+        if '/postings' in file_path:
+            df = preprocess_postings(in_bucket_path+file_path)
+        else:
+            df = preprocess_files(in_bucket_path+file_path)
+        
+        logger.info(f"Upload preprocessed file {file_path}")
+        bucket_file_path = out_bucket_path + file_path
+        upload_file_to_gcs(df, bucket_file_path)
+    logger.info(f"Completed preprocessing for all files")
+        
 
-    postings_df, companies_df, benefits_df, employee_counts_df = load_all_data(input_bucket_path, '.parquet')
-
-    postings_df['company_name'] = postings_df['company_name'].str.lower().str.strip()
-    companies_df['name'] = companies_df['name'].str.lower().str.strip()
-
-    combined_df = postings_df.merge(companies_df, on="company_id", suffixes=('_postings', '_companies'), how="left")
-    logger.info(f"Merges companies and postings")
-
-    tech_keywords = [
-        'tech', 'technology', 'software', 'ai', 'cloud', 'data', 'it', 'systems', 'digital',
-        'analytics', 'robotics', 'cyber', 'computing', 'network', 'engineering', 'electronics',
-        'semiconductor', 'programming', 'developer', 'internet', 'solutions'
+def filter_postings(bucket_file_path: str) -> pd.DataFrame:
+    logger.info(f"Reading file {bucket_file_path} from GCS")
+    df = read_input_file(bucket_file_path, None)
+    logger.info(f"Filtering file {bucket_file_path}..")
+    print(f"test data types : \n {df.dtypes}")
+    title_keywords = ["Developer", "Engineer", "Data", "Analyst", "Data Scientist", "Machine Learning",
+    "ML", "Artificial Intelligence", "AI", "Full Stack", "IOS", "Android", "Web", "Systems",
+    "Network", "Security", "Cloud", "IT", "Database", "Product", "Technical", "QA", "UX", "UI",
+    "UX/UI", "UI/UX", "Site Reliability", "Research Scientist", "Blockchain", "Business Intelligence",
+    "BI", "AWS", "GCP", "Snowflake", "Cybersecurity", "Systems", "IT Project Manager", "Robotics Engineer",
+    "Solutions Architect", "Technical Writer", "Bioinformatics", "Technician", "Tester", "IAM", "Azure",
+    "Analytics", "Technical", "Workday Integration", "DevOps", "DevSecOps", "Programmer", "ETL", ".NET",
+    ]
+    tech_related_titles = [
+        (r'\b' + title + r'\b')
+        for title in title_keywords
     ]
 
-    tech_mask = combined_df['company_name'].str.contains('|'.join(tech_keywords), na=False) | \
-                combined_df['name'].str.contains('|'.join(tech_keywords), na=False) | \
-                combined_df['title'].str.contains('|'.join(tech_keywords), na=False)
-    
-    tech_companies_df = combined_df[tech_mask]
-    tech_company_ids = tech_companies_df['company_id'].unique()
+    result_df = df[df["title"].apply(lambda x: any(re.search(title, x, re.IGNORECASE) for title in tech_related_titles))]
+    print(f"Check Datatypes after filtering: \n {result_df.dtypes}")
+    return result_df
 
-    tech_postings_df = postings_df[postings_df['company_id'].isin(tech_company_ids)]
-    tech_benefits_df = benefits_df[benefits_df['job_id'].isin(tech_postings_df['job_id'])]
-    tech_employee_counts_df = employee_counts_df[employee_counts_df['company_id'].isin(tech_company_ids)]
+def filter_preprocessed_data(in_bucket_path: str,  out_bucket_path: str) -> None:
+    for file_path in FILE_PATHS:
+        file_path = file_path+PARQUET_FILE_EXTENSION
+        logger.info(f"Filtering file {file_path}..")
+        if '/postings' in file_path:
+            df = filter_postings(in_bucket_path+file_path)
+        else:
+            df = read_input_file(in_bucket_path+file_path, None)
+        
+        logger.info(f"Upload filtered file {file_path}")
+        bucket_file_path = out_bucket_path + file_path
+        upload_file_to_gcs(df, bucket_file_path)
 
-    logger.info(f"Number of records: {len(tech_postings_df)}")
 
-    upload_file_to_gcs(tech_postings_df, output_bucket_path+'/tech_postings.parquet')
-    upload_file_to_gcs(tech_companies_df, output_bucket_path+'/companies.parquet')
-    upload_file_to_gcs(tech_benefits_df, output_bucket_path+'/benefits.parquet')
-    upload_file_to_gcs(tech_employee_counts_df, output_bucket_path+'/employee_counts.parquet')
-
-    logger.info(f"Uploaded to GCS filtered files.")
+def data_preprocessing(bucket_name: str, raw_data_folder: str, processed_data_folder: str, filtered_data_folder: str) -> None:
+    try:
+        logger.info("Downloading raw data from Kaggle...")
+        download_raw_data(bucket_name+"/"+raw_data_folder)
+        logger.info("Preprocessing data...")
+        preprocess_raw_data(bucket_name+"/"+raw_data_folder, bucket_name+"/"+processed_data_folder)
+        logger.info("Filtering data for Tech jobs...")
+        filter_preprocessed_data(bucket_name+"/"+processed_data_folder, bucket_name+"/"+filtered_data_folder)
+        logger.info(f"Preprocessing Completed!")
+    except RuntimeError as e:
+        logger.error(f"Data Processing Step failed with RunTimeError: \n {e}")
