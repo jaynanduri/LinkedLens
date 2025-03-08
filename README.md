@@ -152,13 +152,19 @@ OpenRouter Models: https://openrouter.ai/models
 - Create GCS Bucket:
     - Bucket Name: `linkedlens_data`
     - Purpose: Stored raw and preprocessed data.
+      
+- Create Cloud Run Function
+    - Cloud Run is used to trigger DAG runs on the Compute Engine.
+    - Follow the [steps](gcp-deploy/functions/dag-trigger/README.md) to set up and run functions
 
 #### Workflow Automation
-- GitHub Actions workflow (`update_dags_vm.yml`) that automates the following steps:
-    - Clone or update the repository on the VM.
-    - Restart Airflow using Docker Compose
-    - Ensure all services are healthy before proceeding.
-
+- There are three GitHub Action workflows currently set up:
+    - `update_code_vm.yml`: Ensure git repo changes are synced to VM
+    - `trigger_airflow_generation.yml`: Restarts the airflow container for the data generation pipeline
+    - `trigger_airflow_data_pipeline.yml`: Restarts the airflow container for the data pipeline
+- The `update_code_vm.yml` workflow is triggered when there are changes to the respective pipeline folders (`data-generation/**` and `data-pipeline/**`) on the main branch or when using manual dispatch.
+- The remaining two workflows are triggered on completion of workflow runs of `update_code_vm.yml`. There are additional checks to ensure that the containers are only restarted when required.
+  
 #### Folder Structure
 - data-generation/
     - dags/ - Contains DAG Definitions for data preprocessing and generation

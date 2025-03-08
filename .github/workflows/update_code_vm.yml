@@ -44,10 +44,10 @@ jobs:
   
 
               echo "Updating code from git.."
-              git fetch origin main
-              git reset --hard origin/main
+              git fetch origin dev-data-generation
+              git reset --hard origin/dev-data-generation
               git clean -fd
-              git pull origin main
+              git pull origin dev-data-generation
   
               # Rewrite .env file
               echo "Creating/Re-writing .env file"
@@ -70,14 +70,6 @@ jobs:
               SMTP_RECIPIENT_EMAILS=${{ secrets.SMTP_RECIPIENT_EMAILS }}
               AIRFLOW_WWW_USER_USERNAME=${{ secrets.AIRFLOW_WWW_USER_USERNAME }}
               AIRFLOW_WWW_USER_PASSWORD=${{ secrets.AIRFLOW_WWW_USER_PASSWORD }}
-<<<<<<<< HEAD:.github/workflows/update_code_vm_yml
-========
-              PINECONE_API_KEY=${{ secrets.PINECONE_API_KEY }}
-              PINECONE_ENVIRONMENT=${{ secrets.PINECONE_ENVIRONMENT }}
-              GOOGLE_APPLICATION_CREDENTIALS=${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
-              LOG_LEVEL=${{ secrets.LOG_LEVEL }}
-              HUGGINGFACE_API_KEY=${{ secrets.HUGGINGFACE_API_KEY }}
->>>>>>>> 30c3d22c91d58e87070049a55cfbca446df7e82b:.github/workflows/update_code_vm.yml
               EOF
               echo ".env file created"
 
@@ -95,8 +87,4 @@ jobs:
               mkdir -p dags/src/credentials
           
               echo "Creating/Re-writing linkedlens-firestore-srvc-acc.json..."
-<<<<<<<< HEAD:.github/workflows/update_code_vm_yml
               echo '${{ secrets.GCP_CREDENTIALS_JSON }}' > dags/src/credentials/linkedlens-firestore-srvc-acc.json
-========
-              echo '${{ secrets.GCP_CREDENTIALS_JSON }}' > dags/src/credentials/linkedlens-firestore-srvc-acc.json
->>>>>>>> 30c3d22c91d58e87070049a55cfbca446df7e82b:.github/workflows/update_code_vm.yml
