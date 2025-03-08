@@ -7,16 +7,17 @@ from src.utils.rate_limit import RateLimiter
 from src.config.config import settings
 from typing import List
 from src.utils.prompts import PROMTPS
-from langchain_core.prompts import ChatPromptTemplate
 from langchain.prompts import PromptTemplate
 from langchain.output_parsers import PydanticOutputParser
-from src.schema.user_list import UserList
+from langchain_core.runnables import RunnableSerializable
+from google.cloud.firestore import DocumentSnapshot
 from src.schema.user import BasicUser
+from src.schema.post import LinkedInPost
 from src.llm.llm_client import get_open_router_llm
+from typing import Any, List, Tuple
 import pandas as pd
-from io import StringIO
 
-def read_input_file(filepath: str, column_names: List[str], filter=False):
+def read_input_file(filepath: str, column_names: List[str], filter=False, num_rows=20)->pd.DataFrame:
     """Reads specific column file from GCP bucket(filepath) """
     try:
         client = storage.Client.from_service_account_json(settings.DB_CREDENTIALS_PATH)
@@ -38,24 +39,22 @@ def read_input_file(filepath: str, column_names: List[str], filter=False):
             if filter:
                 if column_names:
                     df = df.astype(str).apply(lambda x: x.str.strip())
-                # Filter data 
-                df_subset = df.iloc[:10] 
+            # Filter data 
+            if filter and num_rows > 0:
+                df_subset = df.iloc[:num_rows] 
                 logger.info(f"Input data to generate data for: {len(df_subset)}")
 
                 return df_subset
             return df
-        elif object_name.endswith(".csv"):
-            df = pd.read_csv(BytesIO(file_data), usecols=column_names)
-            return df
         else: 
-            raise ValueError("Unsupported file format: Must be CSV or Parquet.")
+            raise ValueError("Unsupported file format: Must be of type Parquet.")
 
     except Exception as e:
         raise RuntimeError(f"Error reading input file: {e}")
     
 
 
-def connect_to_db():
+def connect_to_db()->FirestoreClient:
     """Establishes and returns a connection to the Firestore database."""
     try:
         db_client = FirestoreClient()
@@ -65,7 +64,7 @@ def connect_to_db():
     
 
 
-def get_request_limiter():
+def get_request_limiter()->RateLimiter:
     """Creates and returns a RateLimiter object for managing API request limits.""" 
     try:
         request_limiter = RateLimiter(settings.MAX_OPEN_AI_REQUEST_PER_MIN, settings.MAX_OPEN_AI_REQUEST_PER_DAY)
@@ -74,7 +73,8 @@ def get_request_limiter():
         raise RuntimeError(f"Error creating request limiter: {e}")
     
 
-def get_docs_list_by_field(docs, field_name):
+def get_docs_list_by_field(docs: List[DocumentSnapshot], field_name: str)->set:
+    """Return a set of existing values for the specified field in documents"""
     field_list = set()
     for doc in docs:
         doc_dict = doc.to_dict()
@@ -82,34 +82,25 @@ def get_docs_list_by_field(docs, field_name):
     return field_list
 
 
-def get_llm_chain(chain_type):
+def get_llm_chain(chain_type: str)-> Tuple[RunnableSerializable[dict, Any], str]:
     """Creates and returns an LLM processing chain and response format instructions."""
     try:
-        if chain_type == 'user-recruiter-generation':
-            messages = [
-                ("system", PROMTPS[chain_type])
-            ]
-            prompt = ChatPromptTemplate.from_messages(messages)
-
-            parser = PydanticOutputParser(pydantic_object=UserList)
-            format_instructions = parser.get_format_instructions()
-            logger.info(f"\nFormat Instructions:\n {format_instructions}")
-            llm = get_open_router_llm(chain_type)
-            chain = prompt | llm | parser
-
-            return chain, format_instructions
-        elif chain_type == 'recruiter-post':
+        if chain_type == 'recruiter-post':
             llm = get_open_router_llm(chain_type)
             logger.info(f"\nLLM for posts: \n {llm}")
+            parser = PydanticOutputParser(pydantic_object=LinkedInPost)
+            format_instructions = parser.get_format_instructions()
             post_template = PromptTemplate.from_template(PROMTPS[chain_type])
-            chain = post_template | llm
-            return chain
+            chain = post_template | llm | parser
+            return chain, format_instructions
         elif chain_type == 'user-post-generation':
             llm = get_open_router_llm(chain_type)
             logger.info(f"\nLLM for posts: \n {llm}")
+            parser = PydanticOutputParser(pydantic_object=LinkedInPost)
+            format_instructions = parser.get_format_instructions()
             post_template = PromptTemplate.from_template(PROMTPS[chain_type])
-            chain = post_template | llm
-            return chain
+            chain = post_template | llm | parser
+            return chain, format_instructions
         elif chain_type == 'basic-user-details':
             llm = get_open_router_llm(chain_type)
             user_template = PromptTemplate.from_template(PROMTPS[chain_type])
@@ -127,11 +118,9 @@ def get_llm_chain(chain_type):
     
 
 
-def upload_file_to_gcs(data, bucket_path):
+def upload_file_to_gcs(data: pd.DataFrame, bucket_path: str)-> None:
+    """Uploads data to the specified bucket path in GCS """
     try:
-        # csv_buffer = StringIO()
-        # data.to_csv(csv_buffer, index=False)
-        # csv_buffer.seek(0)
         client = storage.Client.from_service_account_json(settings.DB_CREDENTIALS_PATH)
         
         bucket_name = bucket_path.split("/")[0]
@@ -143,12 +132,11 @@ def upload_file_to_gcs(data, bucket_path):
         blob = bucket.blob(object_name)
         print(f"Created blob for {object_name}")
 
-
         buffer = BytesIO()
         data.to_parquet(buffer, engine="pyarrow")
         blob.upload_from_string(buffer.getvalue(), content_type="application/octet-stream")
+        buffer.seek(0)
 
-        # blob.upload_from_string(data, content_type="text/csv")
-        print(f"File uploaded to gs://{bucket_name}/{object_name}")
+        logger.info(f"File uploaded to gs://{bucket_name}/{object_name}")
     except Exception as e:
         logger.error(f"Failed to upload data to bucket: {e}")

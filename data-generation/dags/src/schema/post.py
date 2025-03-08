@@ -64,6 +64,7 @@ class Post(BaseModel):
     likes: List[Reaction] = Field(default_factory=list, max_items=10)  # 0-10 reactions.
     comments: List[Comment] = Field(default_factory=list)
     repost: Repost = Field(default_factory=Repost)
+    vectorized: bool = False
  
     @field_validator('comments', mode='before')
     @classmethod

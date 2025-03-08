@@ -1,6 +1,7 @@
 import firebase_admin
 from firebase_admin import credentials, firestore
 from src.config.config import settings
+from google.cloud.firestore_v1 import FieldFilter
 from src.logger import logger
 
 class FirestoreClient:
@@ -63,7 +64,8 @@ class FirestoreClient:
         Retrieve documents from a collection where the specified field equals the given value.
         """
         try:
-            docs = self.db.collection(collection_name).where(field_name, "==", value).get()
+            # docs = self.db.collection(collection_name).where(field_name, "==", value).get()
+            docs = self.db.collection(collection_name).where(filter=FieldFilter(field_name, "==", value)).get()
             logger.info(f"Retrieved {len(docs)} documents where {field_name} == {value}.")
             return docs
         except Exception as e:

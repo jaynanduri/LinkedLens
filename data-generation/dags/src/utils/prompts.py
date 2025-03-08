@@ -54,7 +54,11 @@ PROMTPS = {
     - Keep paragraphs under 3 lines
     - Use clean line breaks between sections
     - Avoid markdown formatting
-    - Maintain corporate tone with personality""",
+    - Maintain corporate tone with personality
+    
+    Return a JSON strictly in the following format:
+
+    {format_instructions}""",
 
 
     "linkedin-user-profiles": """
@@ -75,10 +79,9 @@ Ensure the following:
 """,
     
     "basic-user-details": """Generate a unique name pair ensuring diversity in gender and ethnicity. The name should be realistic and culturally appropriate, representing various backgrounds such as European, African, Asian, Hispanic, Middle Eastern, and Indigenous origins.
-
+    Try to generate new, unique and realistic names each time. 
 **Return a JSON object exactly in the following format:**  
 {format_instructions}
-
 """,
 
     "user-post-generation": """Create a professional LinkedIn post about a software engineering interview experience at {company_name} for the {position_role} position. 
@@ -109,5 +112,8 @@ Ensure the following:
     [Encouraging closing message] Remember: [brief motivational statement]! 
     
     #{company_name}Interview #{position_role} #TechCareerGrowth #CodingJourney"
+    Return a JSON strictly in the following format:
+
+    {format_instructions}
     """,
 }

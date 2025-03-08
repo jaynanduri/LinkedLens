@@ -70,14 +70,6 @@ jobs:
               SMTP_RECIPIENT_EMAILS=${{ secrets.SMTP_RECIPIENT_EMAILS }}
               AIRFLOW_WWW_USER_USERNAME=${{ secrets.AIRFLOW_WWW_USER_USERNAME }}
               AIRFLOW_WWW_USER_PASSWORD=${{ secrets.AIRFLOW_WWW_USER_PASSWORD }}
-<<<<<<<< HEAD:.github/workflows/update_code_vm.yml
-              PINECONE_API_KEY=${{ secrets.PINECONE_API_KEY }}
-              PINECONE_ENVIRONMENT=${{ secrets.PINECONE_ENVIRONMENT }}
-              GOOGLE_APPLICATION_CREDENTIALS=${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
-              LOG_LEVEL=${{ secrets.LOG_LEVEL }}
-              HUGGINGFACE_API_KEY=${{ secrets.HUGGINGFACE_API_KEY }}
-========
->>>>>>>> 634915b (update workflows):.github/workflows/update_code_vm_yml
               EOF
               echo ".env file created"
 
@@ -95,8 +87,4 @@ jobs:
               mkdir -p dags/src/credentials
           
               echo "Creating/Re-writing linkedlens-firestore-srvc-acc.json..."
-<<<<<<<< HEAD:.github/workflows/update_code_vm.yml
               echo '${{ secrets.GCP_CREDENTIALS_JSON }}' > dags/src/credentials/linkedlens-firestore-srvc-acc.json
-========
-              echo '${{ secrets.GCP_CREDENTIALS_JSON }}' > dags/src/credentials/linkedlens-firestore-srvc-acc.json
->>>>>>>> 634915b (update workflows):.github/workflows/update_code_vm_yml

@@ -3,7 +3,7 @@ from src.config.config import settings
 from langchain_openai import ChatOpenAI
 from src.logger import logger
 
-def get_open_router_llm(config_key):
+def get_open_router_llm(config_key: str) -> ChatOpenAI:
 
     """Retrieves and initializes an LLM model using OpenRouter settings.
     

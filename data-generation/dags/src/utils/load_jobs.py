@@ -1,25 +1,53 @@
 from src.logger import logger
-from src.utils.gen_helper import get_docs_list_by_field, connect_to_db
-from src.schema.job_posting import JobPosting
+from src.utils.gen_helper import get_docs_list_by_field, connect_to_db, read_input_file
+from src.schema.job_posting import JobPosting, JobPostingList
+from pydantic import ValidationError
 import json
 
-def load_jobs(input_df):
-    """Loads job postings from a DataFrame into the database after validation."""
-    # get current job ids from DB
-    db_client = connect_to_db()
-    docs_job = db_client.get_all_docs('jobs')
-    job_ids = get_docs_list_by_field(docs_job, 'job_id')
 
-    for row in input_df.to_dict(orient="records"):
-        logger.info(f"Loading job_id: {row['job_id']}")
-        if row['job_id'] not in job_ids:
-            logger.info("Validate row")
-            job_posting = JobPosting(**row)
-            logger.info("Created job posting object")
-            job_data = json.loads(job_posting.model_dump_json())
-            job_data['vectorized'] = False
-            logger.info(f"Added job")
-            # db_client.insert_entry('jobs', job_data, job_data['job_id'])
-            # logger.info(f"Inserted job data to DB for job id : {job_data['job_id']}")
+def load_jobs(bucket_file_path: str, batch_size: int) -> int:
+    """
+    Loads job postings from a DataFrame into the database after validating them.
+    Uses bulk validation/insertion when possible.
+    """
+    try:
+        df = read_input_file(bucket_file_path, None)
+        logger.info(f"Total Len of Input DB read: {len(df)}")
+        db_client = connect_to_db()
+        docs_job = db_client.get_all_docs('jobs')
+        job_ids = get_docs_list_by_field(docs_job, 'job_id')
 
+        valid_count = 0
+        records = df.to_dict(orient="records")
 
+        for i in range(0, len(records), batch_size):
+            batch = records[i: i + batch_size]
+            batch = [row for row in batch if row['job_id'] not in job_ids]
+            if not batch:
+                logger.info(f"All jobs in batch {i} already loaded to DB.")
+                continue
+
+            try:
+                logger.info(f"Loading {len(batch)} records from the batch {i}")
+                job_postings_batch = JobPostingList(jobs=batch)
+                bulk_data = [json.loads(job.model_dump_json()) for job in job_postings_batch.jobs]
+                logger.info(f"Validated jobs in  batch {i}")
+
+                db_client.bulk_insert('jobs', bulk_data, 'job_id')
+                valid_count += len(bulk_data)
+            except ValidationError as batch_err:
+                for row in batch:
+                    try:
+                        job_posting = JobPosting(**row)
+                        logger.info(f"Validated single job from batch {i}")
+                        job_data = json.loads(job_posting.model_dump_json())
+                        db_client.insert_entry('jobs', job_data, job_data['job_id'])
+                        valid_count += 1
+                    except ValidationError as row_err:
+                        logger.error(f"Validation error for job_id {row.get('job_id')}: {row_err}")
+        logger.info(f"Total records inserted: {valid_count}")
+        return valid_count
+
+    except RuntimeError as e:
+        logger.error(f"Loading Jobs process failed with RunTimeError: {e}")
+        raise
