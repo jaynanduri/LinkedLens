@@ -104,13 +104,15 @@ def post_generation(user_type: str, post_chain: RunnableSerializable[dict, BaseM
     logger.info(f"Basic user details: {user_details}")
 
     user_uuid = generate_new_user_id(user_ids, user_type, company_user_cnt_map, user_list_by_company, company)
-
+    timestamp = int(datetime.datetime.now().timestamp())
     valid_user = User(
         user_id=user_uuid,
         first_name=user_details['first_name'],
         last_name=user_details["last_name"],
         company=company,
         username="",
+        createdAt=timestamp,
+        updatedAt=timestamp,
         account_type=user_type
     )
     logger.info(f"Generated Valid user: {valid_user}")
@@ -122,10 +124,12 @@ def post_generation(user_type: str, post_chain: RunnableSerializable[dict, BaseM
     if not post_uuid:
         raise ValueError("Invalid post_id: ", post_uuid)
 
+    timestamp = int(datetime.datetime.now().timestamp())
     valid_post = Post(
         post_id = post_uuid,
         job_id=job_id,
-        timestamp=int(datetime.datetime.now().timestamp()),
+        createdAt=timestamp,
+        updatedAt=timestamp,
         author=str(user_uuid),
         content=str(post_content.content),
         ttl=0,  # Will be auto-calculated

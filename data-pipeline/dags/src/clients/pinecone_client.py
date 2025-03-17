@@ -186,67 +186,13 @@ class PineconeClient:
             logger.error(f"Error creating Pinecone index '{index_name}': {str(e)}")
             raise
     
-    def store_embedding(
-        self, 
-        document_id: str, 
-        embedding: List[float], 
-        metadata: Dict[str, Any], 
-        namespace: str
-    ) -> Dict[str, Any]:
-        """
-        Store an embedding in Pinecone.
-        
-        Args:
-            document_id: Document ID.
-            embedding: Vector embedding.
-            metadata: Metadata to store with the vector.
-            namespace: Namespace to store the vector in.
-            
-        Returns:
-            Result of the upsert operation.
-            
-        Raises:
-            Exception: If the operation fails.
-        """
-        try:
-            index = self.get_index()
-            
-            # Prepare vector record
-            vector = {
-                "id": document_id,
-                "values": embedding,
-                "metadata": {
-                    **metadata,
-                    "firestoreId": document_id,
-                    "type": namespace,
-                    "lastUpdated": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                }
-            }
-            
-            logger.debug(
-                f"Storing vector for document: {document_id}", 
-                extra={"metadata": metadata, "dimension": len(embedding)}
-            )
-            
-            # Store the vector
-            result = index.upsert(vectors=[vector], namespace=namespace)
-            
-            logger.info(
-                f"Successfully stored vector for document: {document_id}",
-                extra={"namespace": namespace}
-            )
-            
-            return result
-        except Exception as e:
-            logger.error(f"Error storing embedding for document {document_id}: {str(e)}")
-            raise
-    
-    def store_embeddings(self, processed_data_array: List[Dict]) -> Dict[str, Any]:
+    def store_embeddings(self, vector_list: List[Dict], namespace: str) -> Dict[str, Any]:
         """
         Store multiple embeddings in Pinecone.
         
         Args:
-            processed_data_array: Array of processed documents with embeddings.
+            vector_list: List of vectors - processed documents with embeddings.
+            namespace : The namesapce where the vector should be inserted.
             
         Returns:
             Results of the upsert operations.
@@ -256,62 +202,25 @@ class PineconeClient:
         """
         try:
             index = self.get_index()
-            
-            # Group vectors by namespace (type)
-            vectors_by_namespace = {}
-            
-            for data in processed_data_array:
-                embedding = data.get("embedding")
-                metadata = data.get("metadata", {})
-                doc_type = data.get("type")
-                doc_id = data.get("id")
-                
-                if not all([embedding, doc_type, doc_id]):
-                    logger.warning(f"Skipping document with missing data: {data}")
-                    continue
-                
-                if doc_type not in vectors_by_namespace:
-                    vectors_by_namespace[doc_type] = []
-                
-                vectors_by_namespace[doc_type].append({
-                    "id": doc_id,
-                    "values": embedding,
-                    "metadata": {
-                        **metadata,
-                        "firestoreId": doc_id,
-                        "type": doc_type,
-                        "lastUpdated": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                    }
-                })
-            
             # Store vectors by namespace
             results = {}
-            
-            for namespace, vectors in vectors_by_namespace.items():
-                logger.debug(f"Upserting {len(vectors)} vectors to namespace: {namespace}")
-                
-                # Store in batches to avoid API limits
-                batch_size = 100
-                
-                for i in range(0, len(vectors), batch_size):
-                    batch = vectors[i:i+batch_size]
+            logger.info(f"Number of vectors to be inserted : {len(vector_list)}")
+            # Upsert batch
+            result = index.upsert(vectors=vector_list, namespace=namespace)
                     
-                    # Upsert batch
-                    result = index.upsert(vectors=batch, namespace=namespace)
+            logger.info(f"Vectors upserted to {namespace}: {len(vector_list)} vectors")
                     
-                    logger.info(f"Batch upserted to {namespace}: {len(batch)} vectors")
+            # Track results
+            if namespace not in results:
+                results[namespace] = {"upsertedCount": 0}
                     
-                    # Track results
-                    if namespace not in results:
-                        results[namespace] = {"upsertedCount": 0}
-                    
-                    results[namespace]["upsertedCount"] += len(batch)
+            results[namespace]["upsertedCount"] += len(vector_list)
             
             return results
         except Exception as e:
             logger.error(
                 f"Error batch storing embeddings: {str(e)}",
-                extra={"count": len(processed_data_array)}
+                extra={"count": len(vector_list)}
             )
             raise
     

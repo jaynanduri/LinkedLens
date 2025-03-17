@@ -3,7 +3,7 @@ from pydantic import BaseModel, field_validator
 from typing import Optional, List
 from datetime import datetime
 import pandas as pd
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, Field
 from typing import Optional
 from datetime import datetime
 from enum import Enum
@@ -79,6 +79,8 @@ class JobPosting(BaseModel):
     application_url: Optional[str] = ""
     views: Optional[int] = None
     applies: Optional[int] = None
+    createdAt: int = Field(...)
+    updatedAt: int = Field(...)
     vectorized: bool = False
 
     @field_validator("zip_code", mode="before")
