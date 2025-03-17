@@ -56,7 +56,8 @@ class Post(BaseModel):
     """Represents a job-related post with metadata, reactions, and engagement details."""
     post_id: uuid.UUID = Field(default_factory=uuid.uuid1)
     job_id: str = Field(...)
-    timestamp: int = Field(...)
+    createdAt: int = Field(...)
+    updatedAt: int = Field(...)
     author: str = Field(...)
     content: str = Field(...)
     ttl: int = Field(...)
@@ -75,7 +76,7 @@ class Post(BaseModel):
     @field_validator('ttl', mode='before')
     @classmethod
     def validate_ttl(cls, v, info: ValidationInfo):
-        timestamp = info.data.get('timestamp')  # Correct way to access fields
+        timestamp = info.data.get('createdAt') 
         if timestamp!=0:
           expected_ttl = timestamp + 90 * 24 * 60 * 60
           return expected_ttl

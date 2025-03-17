@@ -8,7 +8,8 @@ from typing import Any, Dict, List, Optional, Union
 
 import firebase_admin
 from firebase_admin import credentials, firestore
-
+from google.cloud.firestore_v1 import FieldFilter
+from datetime import datetime, timezone
 from src.config.settings import settings
 from src.utils.logger import logger
 
@@ -183,7 +184,7 @@ class FirestoreClient:
             logger.error(f"Error updating document {collection}/{doc_id}: {str(e)}")
             raise
     
-    def update_vector_info(self, collection: str, doc_id: str, vector_info: Dict[str, Any]) -> bool:
+    def update_vector_info(self, collection: str, doc_id: str) -> bool:
         """
         Update a document with vector information.
         
@@ -203,15 +204,9 @@ class FirestoreClient:
             
             # Prepare update data
             update_data = {
-                "vectorId": vector_info.get("vectorId", doc_id),
-                "vectorNamespace": vector_info.get("namespace"),
-                "vectorTimestamp": firestore.SERVER_TIMESTAMP,
+                "vectorTimestamp": int(datetime.now(timezone.utc).timestamp()),
                 "vectorized": True
             }
-            
-            # Add error info if provided
-            if "vectorError" in vector_info:
-                update_data["vectorError"] = vector_info["vectorError"]
             
             # Update the document
             doc_ref.update(update_data)
@@ -222,10 +217,42 @@ class FirestoreClient:
             logger.error(f"Error updating vector info for {collection}/{doc_id}: {str(e)}")
             raise
     
+    def bulk_update_vector_info(self, collection: str, doc_ids: List[str]) -> bool:
+        """
+        Bulk updates Firestore documents with vector information using batch writes.
+        
+        Args:
+            collection (str): Firestore collection name.
+            doc_ids (list): List of document IDs to update.
+        
+        Returns:
+            bool: True if successful.
+        """
+        try:
+
+            batch = self._db.batch()
+            update_data = {
+                "vectorTimestamp": int(datetime.now(timezone.utc).timestamp()),
+                "vectorized": True
+            }
+            
+            # Loop through each doc_id and add an update operation to the batch
+            for doc_id in doc_ids:
+                doc_ref = self._db.collection(collection).document(doc_id)
+                batch.update(doc_ref, update_data)
+            
+            batch.commit()
+            logger.info(f"Bulk update successful for collection {collection} with {len(doc_ids)} docs.")
+            return True
+        except Exception as e:
+            logger.error(f"Error in bulk update for collection {collection}: {str(e)}")
+            raise
+
     def get_documents_for_vectorization(
         self, 
         collection: str, 
         only_new: bool = False, 
+        additional_filters: List[FieldFilter] = None,
         batch_size: Optional[int] = None
     ) -> List[Dict[str, Any]]:
         """
@@ -234,6 +261,7 @@ class FirestoreClient:
         Args:
             collection: Collection name.
             only_new: Only get documents that haven't been vectorized.
+            additional_filters (list, optional): A list of FieldFilter objects for extra filtering.
             batch_size: Batch size.
             
         Returns:
@@ -250,14 +278,26 @@ class FirestoreClient:
             
             if only_new:
                 # This is a simple query that doesn't require an index
-                query = self._db.collection(collection).where("vectorized", "==", False).limit(batch_size)
+                query = self._db.collection(collection).where(filter = FieldFilter("vectorized", "==", False))
+                if additional_filters:
+                    for filter in additional_filters:
+                        # validate filter
+                        if filter.field_path and filter.op_string:
+                            query = query.where(filter=filter)
+                query = query.limit(batch_size)
+                # query = self._db.collection(collection).where("vectorized", "==", False).limit(batch_size)
                 snapshot = query.get()
                 
                 if snapshot:
                     documents = [{"id": doc.id, **doc.to_dict()} for doc in snapshot]
             else:
-                # Get non-vectorized documents first (up to batch_size)
-                non_vectorized_query = self._db.collection(collection).where("vectorized", "==", False).limit(batch_size)
+                non_vectorized_query = self._db.collection(collection).where(filter = FieldFilter("vectorized", "==", False))
+                if additional_filters:
+                    for filter in additional_filters:
+                        # validate filter
+                        if filter.field_path and filter.op_string:
+                            non_vectorized_query = non_vectorized_query.where(filter=filter)
+                non_vectorized_query = non_vectorized_query.limit(batch_size)
                 non_vectorized_snapshot = non_vectorized_query.get()
                 
                 if non_vectorized_snapshot:
@@ -267,12 +307,13 @@ class FirestoreClient:
                 # If we need more documents to reach batch_size, get some vectorized ones
                 remaining = batch_size - len(documents)
                 if remaining > 0:
-                    vectorized_query = self._db.collection(collection).where("vectorized", "==", True).limit(remaining)
-                    vectorized_snapshot = vectorized_query.get()
+                    updated_documents = self.find_updated_documents(collection, remaining, additional_filters)
+                    # vectorized_query = self._db.collection(collection).where("vectorized", "==", True).limit(remaining)
+                    # vectorized_snapshot = vectorized_query.get()
                     
-                    if vectorized_snapshot:
-                        for doc in vectorized_snapshot:
-                            documents.append({"id": doc.id, **doc.to_dict()})
+                    if updated_documents:
+                        for doc in updated_documents:
+                            documents.append(doc)
             
             if not documents:
                 logger.debug(f"No documents found for vectorization in {collection}")
@@ -284,9 +325,11 @@ class FirestoreClient:
             logger.error(f"Error getting documents for vectorization from {collection}: {str(e)}")
             raise
     
+    
     def find_updated_documents(
         self, 
         collection: str, 
+        additional_filters: List[FieldFilter] = None,
         batch_size: Optional[int] = None
     ) -> List[Dict[str, Any]]:
         """
@@ -294,6 +337,7 @@ class FirestoreClient:
         
         Args:
             collection: Collection name.
+            additional_filters (list, optional): A list of FieldFilter objects for extra filtering.
             batch_size: Batch size.
             
         Returns:
@@ -308,9 +352,15 @@ class FirestoreClient:
             
             # Simplified query - just get documents that are vectorized
             # without ordering (which requires an index)
-            query = self._db.collection(collection) \
-                .where("vectorized", "==", True) \
-                .limit(batch_size * 2)  # Get more docs since we'll filter client-side
+            query = self._db.collection(collection).where(filter = FieldFilter("vectorized", "==", True))
+                # .limit(batch_size * 2)  # Get more docs since we'll filter client-side
+            if additional_filters:
+                for filter in additional_filters:
+                    # validate filter
+                    if filter.field_path and filter.op_string:
+                        query = query.where(filter=filter)
+            query = query.limit(batch_size*2)
+            
             
             # Execute query
             snapshot = query.get()
@@ -389,7 +439,7 @@ class FirestoreClient:
             # Try to access the 'users' collection (or any collection from settings)
             test_collection = settings.firestore.collections[0] if settings.firestore.collections else "users"
             
-            # Just try to get a reference (doesn't actually query the database yet)
+            # Just try to get a reference
             collection_ref = self._db.collection(test_collection)
             logger.info(f"Retrieved reference to collection: {test_collection}")
             

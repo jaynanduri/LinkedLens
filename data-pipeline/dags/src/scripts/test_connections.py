@@ -1,14 +1,6 @@
-#!/usr/bin/env python3
-"""
-Script to test Firestore and Pinecone connections.
-"""
-
 import sys
 from pathlib import Path
 
-# Add the project root directory to the Python path
-project_root = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(project_root))
 
 from src.config.settings import settings
 from src.clients.firestore_client import FirestoreClient
@@ -190,51 +182,51 @@ def test_embedding():
         return {"success": False, "error": str(e)}
 
 
-def main():
-    """Main function for the script."""
-    results = {}
+# def main():
+#     """Main function for the script."""
+#     results = {}
     
-    # Test Firestore
-    logger.info("=" * 50)
-    logger.info("TESTING FIRESTORE CONNECTION")
-    logger.info("=" * 50)
-    results["firestore"] = test_firestore()
+#     # Test Firestore
+#     logger.info("=" * 50)
+#     logger.info("TESTING FIRESTORE CONNECTION")
+#     logger.info("=" * 50)
+#     results["firestore"] = test_firestore()
     
-    # Test Pinecone
-    logger.info("\n" + "=" * 50)
-    logger.info("TESTING PINECONE CONNECTION")
-    logger.info("=" * 50)
-    results["pinecone"] = test_pinecone()
+#     # Test Pinecone
+#     logger.info("\n" + "=" * 50)
+#     logger.info("TESTING PINECONE CONNECTION")
+#     logger.info("=" * 50)
+#     results["pinecone"] = test_pinecone()
     
-    # Test Embedding
-    logger.info("\n" + "=" * 50)
-    logger.info("TESTING EMBEDDING MODEL")
-    logger.info("=" * 50)
-    results["embedding"] = test_embedding()
+#     # Test Embedding
+#     logger.info("\n" + "=" * 50)
+#     logger.info("TESTING EMBEDDING MODEL")
+#     logger.info("=" * 50)
+#     results["embedding"] = test_embedding()
     
-    # Summary
-    logger.info("\n" + "=" * 50)
-    logger.info("CONNECTION TEST SUMMARY")
-    logger.info("=" * 50)
+#     # Summary
+#     logger.info("\n" + "=" * 50)
+#     logger.info("CONNECTION TEST SUMMARY")
+#     logger.info("=" * 50)
     
-    firestore_status = "✅ Connected" if results["firestore"]["connected"] else "❌ Failed"
-    pinecone_status = "✅ Connected" if results["pinecone"].get("connected", False) else "❌ Failed"
-    embedding_status = "✅ Working" if results["embedding"]["success"] else "❌ Failed"
+#     firestore_status = "✅ Connected" if results["firestore"]["connected"] else "❌ Failed"
+#     pinecone_status = "✅ Connected" if results["pinecone"].get("connected", False) else "❌ Failed"
+#     embedding_status = "✅ Working" if results["embedding"]["success"] else "❌ Failed"
     
-    logger.info(f"Firestore: {firestore_status}")
-    logger.info(f"Pinecone:  {pinecone_status}")
-    logger.info(f"Embedding: {embedding_status}")
+#     logger.info(f"Firestore: {firestore_status}")
+#     logger.info(f"Pinecone:  {pinecone_status}")
+#     logger.info(f"Embedding: {embedding_status}")
     
-    # Exit with appropriate status code
-    if (results["firestore"]["connected"] and 
-        results["pinecone"].get("connected", False) and 
-        results["embedding"]["success"]):
-        logger.info("\nAll connections successful! ✅")
-        sys.exit(0)
-    else:
-        logger.error("\nSome connections failed. See logs for details. ❌")
-        sys.exit(1)
+#     # Exit with appropriate status code
+#     if (results["firestore"]["connected"] and 
+#         results["pinecone"].get("connected", False) and 
+#         results["embedding"]["success"]):
+#         logger.info("\nAll connections successful! ✅")
+#         sys.exit(0)
+#     else:
+#         logger.error("\nSome connections failed. See logs for details. ❌")
+#         sys.exit(1)
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

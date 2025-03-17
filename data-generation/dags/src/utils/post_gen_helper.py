@@ -54,7 +54,7 @@ def create_posts(input_df: pd.DataFrame, db_client: FirestoreClient,
         post_chain_type, user_chain_type = get_post_and_user_chain_type(user_type)
         post_chain, post_format_instructions = get_llm_chain(post_chain_type)
         user_chain, user_format_instructions = get_llm_chain(user_chain_type)
-
+        
         req_rate_limiter = get_request_limiter()
         generated_post_count = 0
         for _, row in input_df.iterrows():
@@ -111,6 +111,7 @@ def create_posts(input_df: pd.DataFrame, db_client: FirestoreClient,
 
                 logger.info(f"Length of updated user_list company : {len(user_list_by_company)}")
             generated_post_count += 1
+            logger.info(f"Posts generated so far: {generated_post_count}")
         
         logger.info(f"Total posts generated {generated_post_count}")
         

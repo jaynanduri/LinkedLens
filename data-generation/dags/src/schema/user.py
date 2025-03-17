@@ -14,6 +14,8 @@ class User(BaseModel):
     company: str
     username: str
     account_type: str
+    createdAt: int = Field(...)
+    updatedAt: int = Field(...)
     vectorized: bool = False
 
     @property
@@ -21,15 +23,6 @@ class User(BaseModel):
         """Returns the full name by combining first and last name."""
         return f"{self.first_name} {self.last_name}"
     
-    # @field_validator("user_id", mode="before")
-    # def validate_user_id(cls, value, info: ValidationInfo):
-    #     """Generates a new UUID for the user_id field."""
-    #     # if isinstance(value, int):
-    #     #     print("Generating uuid for user")
-    #     return uuid.uuid1()
-        # else:
-        #     print(f"Returning the value {value}")
-        #     return value
     
     @field_validator("account_type", mode="before")
     def validate_account_type(cls, value, info: ValidationInfo):

@@ -65,7 +65,7 @@ def preprocess_postings(bucket_file_path: str) -> pd.DataFrame:
 
     df['remote_allowed'] = df['remote_allowed'].fillna(0).astype(bool)
     df['sponsored'] = df['sponsored'].fillna(0).astype(bool)
-
+    # modify date columns - retain 2 listed_time and expiry = ttl
     date_columns = ['closed_time', 'listed_time', 'expiry', 'original_listed_time']
     df[date_columns] = df[date_columns].apply(lambda x: pd.to_datetime(x, unit='ms', errors='coerce'))
     df[date_columns] = df[date_columns].apply(lambda x: x.dt.strftime("%Y-%m-%d %H:%M:%S"))
