@@ -6,7 +6,7 @@ from langchain.schema import HumanMessage, AIMessage
 from clients.embedding_client import EmbeddingClient
 from clients.pinecone_client import PineconeClient
 from collections import defaultdict
-
+from datetime import datetime, timezone
 
 
 class QueryAnalysis(BaseModel):
@@ -88,27 +88,81 @@ def retrieval_node(
     query_embedding = embedding_client.generate_embedding(state['standalone_query'])
 
     retrieved_results = []
+    current_time = int(datetime.now(timezone.utc).timestamp())
+
     for namespace in state['vector_namespace']:
+        filter_conditions = {"ttl": {"$gt": current_time}} if namespace!='user' else {}
         # Query the Pinecone index for the current namespace
         query_response = pinecone_client.query_similar(
             query_vector=query_embedding,
             top_k=10,
             namespace=namespace,
+            filter=filter_conditions,
             include_metadata=True,
             include_values=False
         )
         # Process the response: assuming each match has metadata with a "text" field.
+        threshold = settings.pinecone.namesapce_threshold.get(namespace, 0)
         for match in query_response.get('matches', []):
-            if match:
+            if match and match.get("score", 0) >= threshold:
                 match_dict = {
                     'id': match['id'],
                     'score': match['score'],
                     'metadata': match['metadata']
                 }
-                retrieved_results.append(match_dict)
+                if match_dict:
+                    retrieved_results.append(match_dict)
     return {'retrieved_docs': retrieved_results}
 
-def process_retrieved_docs(matches: List[dict]) -> Dict[str, dict]:
+
+def fetch_complete_doc_text(matches: List[dict], pinecone_client: PineconeClient)-> Dict[str, str]:
+    """
+    Fetch all chunks for each retrieved doc and returns the complete raw_data of each doc.
+    """
+    # extract all firestorIds and total #chunks of the doc
+    unique_ids = defaultdict(list)
+    for doc in matches:
+        metadata = doc.get("metadata", {})
+        firestore_id = metadata.get("firestoreId")
+        total_chunks = int(metadata.get("total_chunks"))
+        namespace = metadata.get("docType")
+        unique_ids[namespace].append((firestore_id, total_chunks))
+
+    # prepare list of vector ids for all chunks of each doc
+    ns_vector_ids = {}
+    for namespace, ids in unique_ids.items():
+      vector_ids = set()
+      for firestoreId, total_chunks in ids:
+        for i in range(1, total_chunks + 1):
+          vector_ids.add(f"{firestoreId}_chunk_{i}")
+      ns_vector_ids[namespace] = list(vector_ids)
+
+    # Fetch all chunks for each doc and extract chunk number and raw_data
+    all_docs_dict = {}
+    for namespace, vector_ids in ns_vector_ids.items():
+        response = pinecone_client.fetch_by_vector_ids(vector_id_list=vector_ids, namespace=namespace)
+        
+        for vector_id, vector_obj in response.vectors.items():
+            metadata = vector_obj.metadata
+            firestore_id = metadata.get("firestoreId")
+            chunk_id = int(metadata.get("chunk"))
+            raw_text = metadata.get("raw_data")
+            
+            if firestore_id not in all_docs_dict:
+                all_docs_dict[firestore_id] = []
+            
+            all_docs_dict[firestore_id].append((chunk_id, raw_text))
+    
+    # Sort the chunks in order adn combine the raw_data for each doc
+    for firestore_id in all_docs_dict:
+        all_docs_dict[firestore_id].sort(key=lambda x: x[0])
+        final_text = " ".join(text for _, text in all_docs_dict[firestore_id])
+        all_docs_dict[firestore_id] = final_text
+
+    return all_docs_dict
+
+
+def process_retrieved_docs(matches: List[dict], pinecone_client: PineconeClient) -> Dict[str, dict]:
     """
     Processes a list of Pinecone matches and aggregates them by unique Firestore ID.
     For each unique Firestore ID (within its namespace):
@@ -125,22 +179,7 @@ def process_retrieved_docs(matches: List[dict]) -> Dict[str, dict]:
     Returns:
         A dictionary where each key is a Firestore ID and its value is the processed document data.
     """
-    # Group matches by (namespace, firestoreId)
-    unique_ids = defaultdict(list)
-    for doc in matches:
-        metadata = doc.get("metadata", {})
-        firestore_id = metadata.get("firestoreId")
-        namespace = metadata.get("docType")
-        if firestore_id and namespace:
-            if firestore_id not in unique_ids[namespace]:
-                unique_ids[namespace].append(firestore_id)
-
-    base_urls = {
-        "job": "https://yourdomain.com/job",
-        "user_post": "https://yourdomain.com/post",
-        "recruiter_post": "https://yourdomain.com/post",
-        "user": "https://yourdomain.com/user"
-    }
+    final_doc_text = fetch_complete_doc_text(matches, pinecone_client)
     
     final_docs = {}
 
@@ -154,23 +193,22 @@ def process_retrieved_docs(matches: List[dict]) -> Dict[str, dict]:
         # If this is the first chunk seen for this Firestore ID, create a new entry.
         if firestore_id not in final_docs:
             base_score = doc.get("score", 0)
-            combined_raw_text = doc.get("metadata").get("raw_data", "")
+            combined_raw_text = final_doc_text.get(firestore_id, "")
             # Copy metadata and remove unwanted fields.
             doc_metadata = dict(metadata)
-            for field in ["chunk", "total_chunks", "createdAt", "updatedAt", "ttl"]:
+            for field in ["chunk", "total_chunks", "createdAt", "updatedAt", "ttl", "firestoreId"]:
                 doc_metadata.pop(field, None)
-            # For 'job' namespace, remove 'author' if it's blank.
+            # For 'job' namespace, remove 'author' if it's blank. - check
             if namespace == "job" and not doc_metadata.get("author"):
                 doc_metadata.pop("author", None)
             # # Convert creation timestamp to a date string, if available.
             # created_at = metadata.get("createdAt")
             # date_str = datetime.fromtimestamp(created_at).strftime("%Y-%m-%d") if created_at else "N/A"
             # Generate URL.
-            base_url = base_urls.get(namespace, "https://yourdomain.com")
+            base_url = settings.NAMESPACE_URLS.get(namespace)
             url = f"{base_url}/{firestore_id}"
             
             final_docs[firestore_id] = {
-                "namespace": namespace,
                 "score": base_score,
                 **doc_metadata,
                 "combined_raw_text": combined_raw_text,
@@ -183,13 +221,13 @@ def process_retrieved_docs(matches: List[dict]) -> Dict[str, dict]:
             # Update the score if the new chunk has a higher score.
             if new_score > entry["score"]:
                 entry["score"] = new_score
-            additional_text = doc.get("metadata", {}).get("raw_data", "")
-            if additional_text:
-                entry["combined_raw_text"] += " " + additional_text
+            # additional_text = doc.get("metadata", {}).get("raw_data", "")
+            # if additional_text:
+            #     entry["combined_raw_text"] += " " + additional_text
     
     return final_docs
 
-def format_context_for_llm(processed_docs: Dict[str, dict], max_docs: int = 10) -> str:
+def format_context_for_llm(processed_docs: Dict[str, dict], max_docs: int = 20) -> str:
     """
     Formats the processed documents into a string for use as context in an LLM prompt.
     
@@ -217,12 +255,12 @@ def format_context_for_llm(processed_docs: Dict[str, dict], max_docs: int = 10) 
     return "\n".join(context_lines)
 
 @with_logging
-def augmentation_node(state: State):
+def augmentation_node(state: State, pinecone_client: PineconeClient):
     """
     Augments retrieved docs and prepares the final context used to generate response.
     """
-    cleaned_docs = process_retrieved_docs(state['retrieved_docs'])
-    final_context = format_context_for_llm(cleaned_docs, 10)
+    cleaned_docs = process_retrieved_docs(state['retrieved_docs'], pinecone_client)
+    final_context = format_context_for_llm(cleaned_docs, settings.pinecone.max_docs)
     return {"final_context": final_context}
 
 

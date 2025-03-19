@@ -133,48 +133,6 @@ class PineconeClient:
             logger.error(f"Error getting Pinecone stats: {str(e)}")
             raise
 
-    def find_vectors_by_firestore_ids(
-        self, 
-        firestore_ids: List[str], 
-        namespace: Optional[str] = None
-    ) -> List[Dict]:
-        """
-        Find vectors by Firestore IDs.
-        
-        Args:
-            firestore_ids: Firestore document IDs.
-            namespace: Namespace to search in.
-            
-        Returns:
-            Matching vector records.
-            
-        Raises:
-            Exception: If the operation fails.
-        """
-        try:
-            index = self.get_index()
-            
-            # Fetch vectors
-            fetch_params = {"ids": firestore_ids}
-            
-            if namespace:
-                fetch_params["namespace"] = namespace
-            
-            response = index.fetch(**fetch_params)
-            
-            # Extract vectors
-            if response and hasattr(response, "vectors") and response.vectors:
-                return list(response.vectors.values())
-            
-            logger.debug(f"No vectors found for Firestore IDs: {', '.join(firestore_ids)}")
-            return []
-        except Exception as e:
-            logger.error(
-                f"Error finding vectors by Firestore IDs: {str(e)}",
-                extra={"ids": firestore_ids}
-            )
-            raise
-
     def query_similar(
         self,
         query_vector: List[float],
@@ -233,3 +191,43 @@ class PineconeClient:
         except Exception as e:
             logger.error(f"Error querying Pinecone: {str(e)}")
             raise
+
+
+    def fetch_by_vector_ids(
+            self,
+            vector_id_list: List[str],
+            namespace:str = None,
+        ) -> Dict[str, Any]:
+            """
+            Fetch records for vector ids.
+            
+            Args:
+                vector_id_list: List of vector ids.
+                namespace: Namespace to query.
+                
+            Returns:
+                FetchResponse: Query results.
+                
+            Raises:
+                Exception: If the query fails.
+            """
+            try:
+                index = self.get_index()
+                
+                logger.debug(
+                    "Querying Pinecone for similar vectors",
+                    extra={
+                        "namespace": namespace,
+                        "vector_id_list": vector_id_list
+                    }
+                )
+                
+                # Fetch docs
+                results = index.fetch(ids=vector_id_list, namespace=namespace)
+
+                logger.info(f"Query returned {len(results.vectors)} results")
+                return results
+            except Exception as e:
+                logger.error(f"Error querying Pinecone: {str(e)}")
+                raise
+

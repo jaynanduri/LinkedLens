@@ -7,13 +7,13 @@ from google.oauth2 import service_account
 from google.cloud.logging.handlers import CloudLoggingHandler
 from config.settings import settings
 from functools import wraps
-
+import json
 
 
 def get_logger(env="dev"):
     # Initialize Google Cloud Logging client
     gcp_client = gcloud_logging.Client()
-    gcp_handler = CloudLoggingHandler(gcp_client)
+    gcp_handler = CloudLoggingHandler(gcp_client, name=settings.LOG_NAME)
 
     logger = logging.getLogger("custom_logger")
     logger.setLevel(logging.INFO)
@@ -36,7 +36,6 @@ def get_logger(env="dev"):
 # Set up logger (Change env to 'prod' when deploying)
 logger = get_logger(env="dev")
 
-
 def with_logging(func):
     @wraps(func)
     def wrapper(state:dict, *args, **kwargs):
@@ -56,7 +55,7 @@ def with_logging(func):
                 "error": str(e),
                 "timestamp": time.time_ns()
             }
-            logger.error(error_log)
+            logger.error(json.dumps(error_log))
             raise
         
         duration_ns = time.time_ns() - start
@@ -68,9 +67,8 @@ def with_logging(func):
             "func_output": str_func_output,
             "timestamp": time.time_ns()
         }
-        logger.info(log_data)
+        logger.info(json.dumps(log_data))
         
         print(f"Scheduled log write for {func.__name__}")
         return func_output
     return wrapper
-
