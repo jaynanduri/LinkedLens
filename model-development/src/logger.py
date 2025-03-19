@@ -12,17 +12,7 @@ from functools import wraps
 
 def get_logger(env="dev"):
     # Initialize Google Cloud Logging client
-    relative_path = os.path.join('credentials', 'linkedlens-firestore-srvc-acc.json')
-
-
-    # Get the absolute path based on the script's directory
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    credentials_path = os.path.join(script_dir, relative_path)
-    print("Logger creds path ",credentials_path)
-
-    credentials = service_account.Credentials.from_service_account_file(credentials_path)
-    gcp_client = gcloud_logging.Client(credentials=credentials)
-    print(gcp_client)
+    gcp_client = gcloud_logging.Client()
     gcp_handler = CloudLoggingHandler(gcp_client)
 
     logger = logging.getLogger("custom_logger")
