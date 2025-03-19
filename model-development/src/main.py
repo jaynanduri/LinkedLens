@@ -1,4 +1,4 @@
-from logger import logger, with_logging
+from logger import logger
 from config.settings import settings
 from langgraph.graph import StateGraph
 from graph.state import State

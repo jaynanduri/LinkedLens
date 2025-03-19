@@ -43,7 +43,8 @@ class Graph:
                                                         embedding_client=self.embedding_client, 
                                                         pinecone_client=self.pinecone_client))
         
-        self.builder.add_node("augmentation_node", augmentation_node)
+        self.builder.add_node("augmentation_node", partial(augmentation_node, 
+                                                           pinecone_client=self.pinecone_client))
         
         self.builder.add_node("final_response_node", partial(final_response_node, 
                                                              chain=self.final_response_chain))

@@ -19,6 +19,8 @@ class PineconeSettings(BaseModel):
     index_name: str = constants.PINECONE_INDEX_NAME
     namespace_collection: Dict[str, str] = constants.PINECONE_NAMESPACE_COLLECTION
     metadata_fields: Dict[str, List[str]] = constants.PINECONE_METADATA_FIELDS
+    namesapce_threshold: Dict[str, float] = constants.PINECONE_NAMESPACE_THRESHOLD
+    max_docs: int = constants.PINECONE_MAX_DOCS
 
 
 class FirestoreSettings(BaseModel):
@@ -48,5 +50,7 @@ class Settings(BaseModel):
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY")
     GOOGLE_APPLICATION_CREDENTIALS: str = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     GEMINI_MODEL_NAME: str = constants.GEMINI_MODEL_NAME
+    LOG_NAME: str = constants.LOG_NAME
+    NAMESPACE_URLS: Dict[str, str] = constants.NAMESPACE_URLS
 
 settings = Settings()
