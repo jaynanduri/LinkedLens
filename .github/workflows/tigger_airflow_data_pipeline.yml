@@ -22,7 +22,7 @@ jobs:
         uses: tj-actions/changed-files@v45
         id: verify-changed-path
         with:
-          files: 'data-pipeline/**'
+          files: 'data-pipelines/data-preprocessing/**'
 
       - name: Test Network Connection
         run: |
@@ -44,7 +44,7 @@ jobs:
               cd "$REPO_PATH"
               # navigate to data-pipeline folder
               #Verifying PWD
-              if [ -d "./data-pipeline" ]; then
+              if [ -d "./data-pipelines/data-preprocessing" ]; then
                 echo "Correct directory"
               else
                 echo "Repository not found. Exiting.."

@@ -6,7 +6,7 @@ on:
     #   - main
     #   - dev-data-generation
     # paths:
-    #  - "data-generation/**"
+    #  - "./data-pipelines/data-generation/**"
   workflow_dispatch:
 
 jobs:
@@ -74,7 +74,7 @@ jobs:
               echo ".env file created"
 
               #Verifying PWD
-              if [ -d "./data-generation" ]; then
+              if [ -d "./data-pipelines/data-generation" ]; then
                 echo "Correct directory"
               else
                 echo "Repository not found. Exiting.."
