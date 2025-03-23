@@ -28,7 +28,7 @@ FIRESTORE_COLLECTIONS = ["users", "jobs", "posts"]
 
 # Embedding settings
 EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
-
+EMBEDDING_DIMENSION = 384
 
 # LLM Model name
 GEMINI_MODEL_NAME = "gemini-1.5-pro"

@@ -23,11 +23,11 @@ class PineconeSettings(BaseModel):
     max_docs: int = constants.PINECONE_MAX_DOCS
 
 
-class FirestoreSettings(BaseModel):
-    """Firestore configuration settings."""
-    collections: List[str] = constants.FIRESTORE_COLLECTIONS
-    # credentials_path: str = Field(default_factory=lambda: os.getenv("GOOGLE_APPLICATION_CREDENTIALS"))
-    database_id: Optional[str] = Field(default_factory=lambda: os.getenv("DB_NAME"))
+# class FirestoreSettings(BaseModel):
+#     """Firestore configuration settings."""
+#     collections: List[str] = constants.FIRESTORE_COLLECTIONS
+#     # credentials_path: str = Field(default_factory=lambda: os.getenv("GOOGLE_APPLICATION_CREDENTIALS"))
+#     database_id: Optional[str] = Field(default_factory=lambda: os.getenv("DB_NAME"))
 
 class PromptSettings(BaseModel):
     project_id: str = Field(default_factory=lambda: os.getenv("GOOGLE_PROJECT_ID"))
@@ -41,10 +41,10 @@ class EmbeddingSettings(BaseModel):
     """Embedding configuration settings."""
     model_name: str = constants.EMBEDDING_MODEL_NAME
     huggingface_api_key: Optional[str] = Field(default_factory=lambda: os.getenv("HF_TOKEN"))
+    dimension: int = constants.EMBEDDING_DIMENSION
 
 class Settings(BaseModel):
     pinecone: PineconeSettings = PineconeSettings()
-    firestore: FirestoreSettings = FirestoreSettings()
     embedding: EmbeddingSettings = EmbeddingSettings()
     prompt_setting: PromptSettings = PromptSettings()
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY")

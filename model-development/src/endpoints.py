@@ -68,6 +68,7 @@ class ClientApp:
         self.graph = self.graph_builder.build_graph(isMemory=False)
         logger.info("Initializing graph complete")
 
+
 clapp = ClientApp()
 
 router = APIRouter()
