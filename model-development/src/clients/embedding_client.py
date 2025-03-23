@@ -2,10 +2,8 @@
 Embedding client for the LinkedLens Vector Integration.
 """
 
-from typing import Dict, List, Optional, Tuple, Union
-
+from typing import Dict, List, Union
 from sentence_transformers import SentenceTransformer
-
 from config.settings import settings
 from logger import logger
 
@@ -80,36 +78,36 @@ class EmbeddingClient:
             )
             raise
     
-    def generate_embeddings(
-        self, 
-        texts: List[Union[str, List, Dict, None]]
-    ) -> List[List[float]]:
-        """
-        Generate embeddings for multiple texts.
+    # def generate_embeddings(
+    #     self, 
+    #     texts: List[Union[str, List, Dict, None]]
+    # ) -> List[List[float]]:
+    #     """
+    #     Generate embeddings for multiple texts.
         
-        Args:
-            texts: Array of texts to embed.
+    #     Args:
+    #         texts: Array of texts to embed.
             
-        Returns:
-            Array of embedding vectors.
+    #     Returns:
+    #         Array of embedding vectors.
             
-        Raises:
-            Exception: If embedding generation fails.
-        """
-        try:
-            logger.debug(f"Generating embeddings for {len(texts)} texts")
+    #     Raises:
+    #         Exception: If embedding generation fails.
+    #     """
+    #     try:
+    #         logger.debug(f"Generating embeddings for {len(texts)} texts")
             
-            embeddings = [None] * len(texts)
+    #         embeddings = [None] * len(texts)
             
-            if None in embeddings:
-                logger.warning(f"Some embeddings were not generated: {embeddings.count(None)} of {len(embeddings)}")
-                # Fill in any missing embeddings with empty vectors (this shouldn't happen, but just in case)
-                dimension = len(embeddings[0]) if embeddings[0] is not None else settings.pinecone.dimension
-                empty_vector = [0.0] * dimension
-                embeddings = [embedding if embedding is not None else empty_vector for embedding in embeddings]
+    #         if None in embeddings:
+    #             logger.warning(f"Some embeddings were not generated: {embeddings.count(None)} of {len(embeddings)}")
+    #             # Fill in any missing embeddings with empty vectors (this shouldn't happen, but just in case)
+    #             dimension = len(embeddings[0]) if embeddings[0] is not None else settings.embedding.dimension
+    #             empty_vector = [0.0] * dimension
+    #             embeddings = [embedding if embedding is not None else empty_vector for embedding in embeddings]
             
-            logger.info(f"Successfully generated {len(embeddings)} embeddings")
-            return embeddings
-        except Exception as e:
-            logger.error(f"Error generating embeddings in batch: {str(e)}")
-            raise
+    #         logger.info(f"Successfully generated {len(embeddings)} embeddings")
+    #         return embeddings
+    #     except Exception as e:
+    #         logger.error(f"Error generating embeddings in batch: {str(e)}")
+    #         raise

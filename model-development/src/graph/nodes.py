@@ -141,7 +141,6 @@ def fetch_complete_doc_text(matches: List[dict], pinecone_client: PineconeClient
     all_docs_dict = {}
     for namespace, vector_ids in ns_vector_ids.items():
         response = pinecone_client.fetch_by_vector_ids(vector_id_list=vector_ids, namespace=namespace)
-        
         for vector_id, vector_obj in response.vectors.items():
             metadata = vector_obj.metadata
             firestore_id = metadata.get("firestoreId")
@@ -221,9 +220,6 @@ def process_retrieved_docs(matches: List[dict], pinecone_client: PineconeClient)
             # Update the score if the new chunk has a higher score.
             if new_score > entry["score"]:
                 entry["score"] = new_score
-            # additional_text = doc.get("metadata", {}).get("raw_data", "")
-            # if additional_text:
-            #     entry["combined_raw_text"] += " " + additional_text
     
     return final_docs
 
