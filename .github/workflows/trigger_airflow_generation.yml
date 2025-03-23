@@ -22,7 +22,7 @@ jobs:
         uses: tj-actions/changed-files@v45
         id: verify-changed-path
         with:
-          files: 'data-generation/**'
+          files: './data-pipelines/data-generation/**'
 
       - name: Test Network Connection
         run: |
@@ -46,7 +46,7 @@ jobs:
               
               # navigate to data-generation folder
               #Verifying PWD
-              if [ -d "./data-generation" ]; then
+              if [ -d "./data-pipelines/data-generation" ]; then
                 echo "Correct directory"
               else
                 echo "Repository not found. Exiting.."
