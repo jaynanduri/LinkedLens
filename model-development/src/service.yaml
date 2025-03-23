@@ -9,5 +9,5 @@ spec:
   ports:
   - protocol: TCP
     port: 60000
-    targetPort: 50001
+    targetPort: 8000
 
