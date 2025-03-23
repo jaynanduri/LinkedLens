@@ -17,6 +17,7 @@ secrets/
 secrets/
 *.json
 .env
+.github/deploy-airflow.yml
 
 # Created by https://www.toptal.com/developers/gitignore/api/pycharm,visualstudiocode,macos,windows,linux
 # Edit at https://www.toptal.com/developers/gitignore?templates=pycharm,visualstudiocode,macos,windows,linux
