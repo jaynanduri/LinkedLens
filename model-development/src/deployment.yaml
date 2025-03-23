@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model-dev-deployment
+  labels:
+    app: model-dev
+
+spec:
+  selector:
+    matchLabels:
+      app: model-dev
+  template:
+    metadata:
+      labels:
+        app: model-dev
+    spec:
+      containers:
+      - name: model-dev
+        image: us-east1-docker.pkg.dev/${{env.GCP_PROJECT_NAME}}}/${{env.ARTIFACT_REPO}}/model-dev:latest
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 8000
