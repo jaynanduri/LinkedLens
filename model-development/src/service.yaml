@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: model-dev-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: model-dev
+  ports:
+  - protocol: TCP
+    port: 60000
+    targetPort: 50001
+
