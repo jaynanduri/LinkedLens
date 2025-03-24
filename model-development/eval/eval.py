@@ -92,7 +92,7 @@ def run_evaluation(handler: LangSmithHandler, experiment_prefix: str):
         experiment_results = evaluate(
             lambda example: example,
             data=dataset_id,
-            evaluators=[CompletenessEvaluator(), FaithfulnessEvaluator()],
+            evaluators=[CompletenessEvaluator(), FaithfulnessEvaluator(), RetrievalEvaluator()],
             experiment_prefix=experiment_prefix,
             metadata={"version": "1.0.0"},
         )
