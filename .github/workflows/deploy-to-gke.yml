@@ -1,0 +1,65 @@
+name: Setup, Build, Deploy
+
+on:
+  # push:
+  #   branches:
+  #     - main
+  workflow_dispatch:
+
+jobs:
+  setup-build-deploy-push:
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    name: Setup, Build, Publish, and Deploy Model
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./model-development/src
+
+    steps:
+      - name: 'Checkout'
+        uses: 'actions/checkout@v2'
+
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          project_id: ${{env.GCP_PROJECT_ID}}
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{secrets.SERVICE_ACCOUNT}}
+      
+      - id: 'get-credentials'
+        uses: 'google-github-actions/get-gke-credentials@v2'
+        with:
+          cluster_name: 'test-cluster'
+          location: ${{env.GCP_REGION}}
+      
+      - id: 'get-pods'
+        run: 'kubectl get pods'
+
+      - name: 'Setup Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v2'
+
+      - name: 'Use gcloud cli'
+        run: 'gcloud info'
+      
+      - name: 'Docker auth'
+        run: |-
+          gcloud auth configure-docker us-east1-docker.pkg.dev
+      
+      - name: Build image
+        run: docker build . --file ./Dockerfile --tag us-east1-docker.pkg.dev/${{env.GCP_PROJECT_NAME}}}/${{env.ARTIFACT_REPO}}/model-dev
+        working-directory: .
+      
+      - name: Docker push
+        run: docker push us-east1-docker.pkg.dev/${{env.GCP_PROJECT_NAME}}}/${{env.ARTIFACT_REPO}}/model-dev
+      
+      - name: Deploy
+        run: |-
+          kubectl apply -f ./deployment.yaml
+          kubectl apply -f ./service.yaml
+      
+      - name: Restart deployment
+        run: kubectl rollout restart deployment model-dev-deployment
