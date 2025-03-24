@@ -17,4 +17,3 @@ This project utilizes GitHub Actions to automate the CD pipeline to deploy to GC
 - The workflow makes use of Workflow Identity Providers to authenticate with and connect to GCloud.
 - Once the connection has been made the docker image is built and pushed to the Artifact Repository created for this project.
 - The docker image is then deployed to GKE using the `deployment.yaml` and `service.yaml` files.
-- Any failures in this workflow will result in an alert being sent bua email.

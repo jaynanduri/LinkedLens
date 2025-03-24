@@ -12,14 +12,14 @@ LinkedLens aims to enhance and streamline existing job search portals and profes
 
 The main components of this project can be broken down to the following:
 
-1. [Data Pipelines](/data-pipelines/README.md)
-2. [Model Development Pipeline](/model-development/README.md)
+1. [Data Pipelines](/data-pipelines/)
+2. [Model Development Pipeline](/model-development/)
 3. [Testing & Automation](/docs/CD_Pipeline.md)
-4. [Cloud Deployment](/cloud-functions/README.md)
+4. [Cloud Deployment](/cloud-functions/)
 
 ## System Architecture
 
-![Diagram to show System architecture](/images/Architecture.jpeg)
+![Diagram to show System architecture](/images/Architecture_updated.jpeg)
 
 ## Logging and Monitoring
 

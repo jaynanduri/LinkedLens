@@ -7,7 +7,7 @@ The GCP services used in this project include the following:
 2. Compute Engine
    - The VMs provisioned on Compute Engines are used to host the Airflow instances that run the Data DAGs. We use one Debian-based VM with Airflow deployed as a Docker container to run the DAGs. [[Setup](/docs/GCE-Setup.md)] 
 3. Google Kubernetes Engine
-    - A cluster is provisioned om Google Kubernetes Engine. Currently, the model pipeline is deployed on the cluster with an exposed API endpoint to send queries and receive responses. The cluster is setup to have images deployed by [GitHub Actions](/docs/GitHub%20Workflows.md). [[Setup](/docs/GKE-Setup.md)]
+    - A cluster is provisioned om Google Kubernetes Engine. Currently, the model pipeline is deployed on the cluster with an exposed API endpoint to send queries and receive responses. The cluster is setup to have images deployed by [GitHub Actions](/docs/CD_Pipeline.md). [[Setup](/docs/GKE-Setup.md)]
 4. Artifact Repository
     - The images being built for the model pipeline and Artifacts built by other pipelines are pushed to the Artifact Repository, from where they can be deployed to GKE or Cloud Run.
 5. Prompt Management
