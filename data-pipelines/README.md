@@ -65,9 +65,59 @@ All DAGs send an email notification updating the status. The email notifications
 
 ![Notification Email Example](/images/image_10.png)
 
+## Folder Structure
+
+
+- The data preprocessing pipeline and data generation pipeline follow a similar structure as follows:
+  ```
+    data-generation/
+      |- dags/                 #Contains DAG Definitions for data preprocessing and generation
+          |- src/
+              |- config/       #`config.py` Manages environment variables
+              |- experiments/  #`test.ipynb` - Testing LLM prompts
+              |- llm/
+              |- schema/       #Contains all Pydantic validation schemas
+              |- utils/        #Helper functions for data processing 
+          |- tests/
+          |- __init__.py
+          |- logger.py
+          |- main.py
+      |- docker-compose.yml    # For Airflow container
+      |- README.md
+  ```
+
 ## LLM and API Used
 We utilize the OpenRouter API via the LangChain OpenAI package to generate text-based content. The responses are validated using Pydantic to maintain structure and consistency.
 
 - Model used: LLaMA- **meta-llama/llama-3.3-70b-instruct:free**
 
 OpenRouter Models: https://openrouter.ai/models
+
+## Testing and Validation
+
+### Pydantic Validation
+
+All Pydantic validation classes are stored in the `schema/` directory. These classes ensure data integrity before inserting records into Firestore DB.
+Validation ensures:
+  - Correct data types.
+  - Required fields are present.
+  - Structured output for LLM-generated content.
+
+
+### Data Preprocessing & Validation
+1. Type Conversion & Cleaning: Ensuring numeric/string company IDs are standardized, NaN handling, and dtype consistency.
+2. Schema Enforcement: Validation of JobPosting Pydantic models with edge cases like epoch timestamp handling.
+3. Data Integrity: Testing dataframe operations (merges, drops, enrichment) in enrich_and_clean_postings to ensure valid titles, locations, and company mappings.
+4. Company-User Mapping: Verifying correct user allocation ratios with create_company_user_map.
+5. ID Generation Workflows: Testing UUID generation, rate limiting, and uniqueness checks for user/post creation.
+6. External Service Simulation: Mocking LLM chains (e.g., DummyPostChain, DummyUserChain) to validate structured JSON outputs without real API calls.
+7. Rate Limiter Behavior: Simulating allowed/blocked states to test conditional logic in data generation pipelines.
+8. Deterministic UUIDs: Using patched UUIDs to verify ID assignment and relational integrity between users and posts.
+9. Empty/missing data, invalid types, and schema violations (e.g., testing ValidationError for malformed job postings).
+10. Stress-testing functions with mixed data types, zero values, and unexpected NaN propagation.
+
+Test suite combines pandas-based assertions, Pydantic model validation, and unittest.mock to isolate components, ensuring reliability across data pipelines, model hydration, and synthetic data generation workflows.
+
+The results of a test run for all the files in data-generation/dags/src/
+
+![alt text](/images/test-cases.png)
