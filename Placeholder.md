@@ -12,18 +12,18 @@ LinkedLens aims to enhance and streamline existing job search portals and profes
 
 The main components of this project can be broken down to the following:
 
-1. [Data Pipelines](./data-pipelines/README.md)
-2. [Model Development Pipeline](./model-development/README.md)
-3. [Testing & Automation](./docs/GitHub%20Workflows)
-4. [Cloud Deployment](./cloud-functions/README.md)
+1. [Data Pipelines](/data-pipelines/README.md)
+2. [Model Development Pipeline](/model-development/README.md)
+3. [Testing & Automation](/docs/CD_Pipeline.md)
+4. [Cloud Deployment](/cloud-functions/README.md)
 
 ## System Architecture
 
-![Diagram to show System architecture](./images/Architecture.jpeg)
+![Diagram to show System architecture](/images/Architecture.jpeg)
 
 ## Logging and Monitoring
 
-The logging for the project is currently being handled separately by Airflow Logger (data pipelines)and Cloud Logger. 
+The logging for the project is currently being handled separately by Airflow Logger (data pipelines) and Cloud Logger. 
 
 ## Folder Structure
 
@@ -45,7 +45,7 @@ The repo can be cloned using the following:
 git clone https://github.com/jaynanduri/LinkedLens.git
 ```
 
-The DAGs can be run on a local or hosted Docker installation of Airflow. To install Docker using Airflow, use the docker-compose.yml provided in the [pipeline folder](data-pipelines\data-preprocessing\docker-compose.yaml). 
+The DAGs can be run on a local or hosted Docker installation of Airflow. To install Docker using Airflow, use the docker-compose.yml provided in the [pipeline folder](/data-pipelines/data-generation/docker-compose.yaml). 
 
 ```
 docker-compose up

@@ -4,6 +4,12 @@
 
 This project aims to aid job seekers and recruiters in job searching. The project would integrate a conversational chatbot with Retrieval Augmented Generation (RAG) to allow users to enter natural language queries that retrieve and summarize related information from company job listings, recruiter posts, and other relevant user posts. Continuous data integration and tracking Time-To-Live would ensure that users would receive the latest insights and job openings. By creating a chatbot that implements these features, the goal of this project is to enhance and streamline existing job search portals and professional social media platforms.
 
+1. Data Preprocessing Pipeline
+2. Data Generation Pipeline
+3. Model Development Pipeline
+4. CI/CD - Workflow Automation
+5. Testing
+
 ## Data Preprocessing and Generation Pipeline
 
 ### Overview 
@@ -136,14 +142,13 @@ OpenRouter Models: https://openrouter.ai/models
     - Enable IP forwarding
 
     - Add firewall rules to allow:
+  ```
         - **allow-ssh** (Ingress) → `tcp:22`  
-
         - **airflow-port** (Ingress) → `tcp:8080`  
-
         - **airflow-port** (Ingress) → `tcp:8080` and `tcp:9090`  
-
         - **allow-dns** (Egress) → `tcp:53, udp:53`  
         - **smtp-outbound-vm** (Egress) → `tcp:587`
+  ```
 
     - Ensure network tags are assigned to the VM.
 
