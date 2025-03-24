@@ -7,6 +7,7 @@ from clients.embedding_client import EmbeddingClient
 from clients.pinecone_client import PineconeClient
 from collections import defaultdict
 from datetime import datetime, timezone
+from langsmith import traceable
 
 
 class QueryAnalysis(BaseModel):
@@ -19,6 +20,7 @@ class QueryAnalysis(BaseModel):
 
 
 @with_logging
+@traceable
 def query_analyzer_node(state: State, chain)->dict:
   """
   Process the user query to generate a standalone query and set the query_type.
@@ -68,6 +70,7 @@ def check_query_type(state: State) -> Literal['retrieve', 'generic']:
 
 
 @with_logging
+@traceable
 def retrieval_node(
     state: State,
     embedding_client: EmbeddingClient,
@@ -251,6 +254,7 @@ def format_context_for_llm(processed_docs: Dict[str, dict], max_docs: int = 20) 
     return "\n".join(context_lines)
 
 @with_logging
+@traceable
 def augmentation_node(state: State, pinecone_client: PineconeClient):
     """
     Augments retrieved docs and prepares the final context used to generate response.
@@ -261,6 +265,7 @@ def augmentation_node(state: State, pinecone_client: PineconeClient):
 
 
 @with_logging
+@traceable
 def final_response_node(state: State, chain):
     """
     Final node that produces the assistant response.

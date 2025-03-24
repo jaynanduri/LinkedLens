@@ -52,5 +52,7 @@ class Settings(BaseModel):
     GEMINI_MODEL_NAME: str = constants.GEMINI_MODEL_NAME
     LOG_NAME: str = constants.LOG_NAME
     NAMESPACE_URLS: Dict[str, str] = constants.NAMESPACE_URLS
+    LANGSMITH_API_KEY:str = os.environ["LANGSMITH_API_KEY"]
+
 
 settings = Settings()
