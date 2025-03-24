@@ -4,6 +4,12 @@
 
 This project aims to aid job seekers and recruiters in job searching. The project would integrate a conversational chatbot with Retrieval Augmented Generation (RAG) to allow users to enter natural language queries that retrieve and summarize related information from company job listings, recruiter posts, and other relevant user posts. Continuous data integration and tracking Time-To-Live would ensure that users would receive the latest insights and job openings. By creating a chatbot that implements these features, the goal of this project is to enhance and streamline existing job search portals and professional social media platforms.
 
+1. Data Preprocessing Pipeline
+2. Data Generation Pipeline
+3. Model Development Pipeline
+4. CI/CD - Workflow Automation
+5. Testing
+
 ## Data Preprocessing and Generation Pipeline
 
 ### Overview 
@@ -136,14 +142,13 @@ OpenRouter Models: https://openrouter.ai/models
     - Enable IP forwarding
 
     - Add firewall rules to allow:
+  ```
         - **allow-ssh** (Ingress) → `tcp:22`  
-
         - **airflow-port** (Ingress) → `tcp:8080`  
-
         - **airflow-port** (Ingress) → `tcp:8080` and `tcp:9090`  
-
         - **allow-dns** (Egress) → `tcp:53, udp:53`  
         - **smtp-outbound-vm** (Egress) → `tcp:587`
+  ```
 
     - Ensure network tags are assigned to the VM.
 
@@ -153,34 +158,6 @@ OpenRouter Models: https://openrouter.ai/models
     - Bucket Name: `linkedlens_data`
     - Purpose: Stored raw and preprocessed data.
       
-- Create Cloud Run Function
-    - Cloud Run is used to trigger DAG runs on the Compute Engine.
-    - Follow the [steps](gcp-deploy/functions/dag-trigger/README.md) to set up and run functions
-
-#### Workflow Automation
-- There are three GitHub Action workflows currently set up:
-    - `update_code_vm.yml`: Ensure git repo changes are synced to VM
-    - `trigger_airflow_generation.yml`: Restarts the airflow container for the data generation pipeline
-    - `trigger_airflow_data_pipeline.yml`: Restarts the airflow container for the data pipeline
-- The `update_code_vm.yml` workflow is triggered when there are changes to the respective pipeline folders (`data-generation/**` and `data-pipeline/**`) on the main branch or when using manual dispatch.
-- The remaining two workflows are triggered on completion of workflow runs of `update_code_vm.yml`. There are additional checks to ensure that the containers are only restarted when required.
-  
-#### Folder Structure
-- data-generation/
-    - dags/ - Contains DAG Definitions for data preprocessing and generation
-        - src/
-            - config/ (`config.py` Manages environment variables)
-            - credentials/ (`linkedlens-firestore-srvc-acc.json` GCP credentials for authentication)
-            - experiments/ (`test.ipynb` - Testing LLM prompts)
-            - llm/
-            - schema/ (Contains all Pydantic validation schemas)
-            - utils/ (Helper functions for data processing) 
-        - job_data_generation.py
-        - recruiter_generation.py
-        - recruiter_post_generation.py
-        - user_post_generation.py
-    - .env_template
-
 - Create Cloud Run Function
     - Cloud Run is used to trigger DAG runs on the Compute Engine.
     - Follow the [steps](gcp-deploy/functions/dag-trigger/README.md) to set up and run functions
