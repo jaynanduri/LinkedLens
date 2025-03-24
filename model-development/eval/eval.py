@@ -6,9 +6,7 @@ from langsmith import Client, evaluate
 from langsmith.schemas import Run, Example
 from config.settings import settings
 from logger import logger
-import pandas as pd
 from evaluators import *
-
 from evidently.future.datasets import Dataset
 from evidently.future.datasets import DataDefinition
 from evidently.future.datasets import Descriptor
@@ -95,7 +93,7 @@ def run_evaluation(handler: LangSmithHandler, experiment_prefix: str):
             lambda example: example,
             data=dataset_id,
             evaluators=[CompletenessEvaluator(), FaithfulnessEvaluator(), RetrievalEvaluator()],
-            experiment_prefix="test_eval",
+            experiment_prefix=experiment_prefix,
             metadata={"version": "1.0.0"},
         )
         logger.info("Evaluation completed.")
@@ -103,9 +101,9 @@ def run_evaluation(handler: LangSmithHandler, experiment_prefix: str):
         logger.info(f"Error during evaluation: {e}")
 
 if __name__ == "__main__":
-    PROJECT_NAME = "linkedlens-test"
-    DATASET_NAME = "LinkedLensTest"
-    experiment_prefix="test_eval"
+    PROJECT_NAME = settings.LANGSMITH_PROJECT_NAME_PROD
+    DATASET_NAME = settings.LANGSMITH_DATASET_NAME_PROD
+    experiment_prefix=settings.LANGSMITH_EXPERIMENT_PREFIX_PROD
     
     handler = LangSmithHandler(PROJECT_NAME, DATASET_NAME)
     handler.load_runs_into_dataset()
