@@ -23,11 +23,6 @@ class PineconeSettings(BaseModel):
     max_docs: int = constants.PINECONE_MAX_DOCS
 
 
-# class FirestoreSettings(BaseModel):
-#     """Firestore configuration settings."""
-#     collections: List[str] = constants.FIRESTORE_COLLECTIONS
-#     # credentials_path: str = Field(default_factory=lambda: os.getenv("GOOGLE_APPLICATION_CREDENTIALS"))
-#     database_id: Optional[str] = Field(default_factory=lambda: os.getenv("DB_NAME"))
 
 class PromptSettings(BaseModel):
     project_id: str = Field(default_factory=lambda: os.getenv("GOOGLE_PROJECT_ID"))
@@ -53,6 +48,11 @@ class Settings(BaseModel):
     LOG_NAME: str = constants.LOG_NAME
     NAMESPACE_URLS: Dict[str, str] = constants.NAMESPACE_URLS
     LANGSMITH_API_KEY:str = os.environ["LANGSMITH_API_KEY"]
-
+    settings.LANGSMITH_PROJECT_NAME_PROD = "linkedlens-prod"
+    settings.LANGSMITH_PROJECT_NAME_TEST = "linkedlens-test"
+    settings.LANGSMITH_DATASET_NAME_PROD = "LinkedLens"
+    settings.LANGSMITH_DATASET_NAME_TEST = "LinkedLensTest"
+    settings.LANGSMITH_EXPERIMENT_PREFIX_PROD = "prod_eval"
+    settings.LANGSMITH_EXPERIMENT_PREFIX_TEST = "test_eval"
 
 settings = Settings()
