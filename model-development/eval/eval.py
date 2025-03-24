@@ -61,6 +61,7 @@ class LangSmithHandler:
                 final_context = run.outputs.get("final_context", "")
                 response = run.outputs.get("response", "")
                 retrieved_docs_list = run.outputs.get("retrieved_docs", [])
+                messages = run.outputs.get("messages", [])
                 if final_context and retrieved_docs_list:
                     example = {
                         "id": run.id,
@@ -70,8 +71,10 @@ class LangSmithHandler:
                             "query_type": run.inputs.get("query_type", ""),
                             "vector_namespace": run.outputs.get("vector_namespace", ""),
                             "retrieved_docs": self.cleanup_retrieved_chunks(retrieved_docs_list),
+                            "messages": messages,
                             "context": final_context,
                             "response": response,
+                            "messages": run.outputs.get("messages", [])
                         },
                     }
                     self.client.create_example(
