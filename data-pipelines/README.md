@@ -67,7 +67,6 @@ All DAGs send an email notification updating the status. The email notifications
 
 ## Folder Structure
 
-
 - The data preprocessing pipeline and data generation pipeline follow a similar structure as follows:
   ```
     data-generation/
@@ -82,6 +81,7 @@ All DAGs send an email notification updating the status. The email notifications
           |- __init__.py
           |- logger.py
           |- main.py
+      |- airflow.cfg
       |- docker-compose.yml    # For Airflow container
       |- README.md
   ```

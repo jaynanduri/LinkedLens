@@ -8,7 +8,6 @@
     - **Infrastructure Management**: `Editor` (to create Firestore DB, VM, and bucket)
 
 3. Create [Firestore DB](https://firebase.google.com/docs/firestore/quickstart)
-
 4. Create [VM Instance](https://cloud.google.com/compute/docs/create-linux-vm-instance) on Compute Engine
 
     - Debian-based VM
@@ -28,8 +27,7 @@
 
 5. Create [GCS Bucket](https://cloud.google.com/storage/docs/creating-buckets):
     - Bucket Name: `linkedlens_data`
-    - Purpose: Stored raw and preprocessed data.
-      
+    - Purpose: Stored raw and preprocessed data.   
 6. Create Cloud Run Function
     - Cloud Run is used to trigger DAG runs on the Compute Engine.
     - Follow the [steps](gcp-deploy/functions/dag-trigger/README.md) to set up and run functions
