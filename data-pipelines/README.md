@@ -86,6 +86,18 @@ All DAGs send an email notification updating the status. The email notifications
       |- README.md
   ```
 
+## Deployment and Installation
+
+The DAGs are deployed to run on a Cloud VM using Google Compute Engine. The Airflow instance can be run using the `docker-compose.yml` files provided in the respective folders for the DAGs using the following commands:
+
+```
+docker-compose up airflow-init
+docker-compose up
+```
+Once the docker container is running, navigate to `https:\\localhost:8080` to access Airflow using the login credentials provided in the docker-compose file.
+
+Follow these [steps](/docs/GCE-Setup.md) before running the DAGs to ensure the required infrastructure is in place.
+
 ## LLM and API Used
 We utilize the OpenRouter API via the LangChain OpenAI package to generate text-based content. The responses are validated using Pydantic to maintain structure and consistency.
 
