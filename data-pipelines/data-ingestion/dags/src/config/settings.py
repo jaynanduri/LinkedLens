@@ -53,7 +53,7 @@ class FirestoreSettings(BaseModel):
     credentials_path: str = Field(
         default_factory=lambda: os.getenv(
             "GOOGLE_APPLICATION_CREDENTIALS", 
-            str(BASE_DIR / "config" / "db-credentials.json")
+            str(BASE_DIR / "credentials" / "linkedlens-firestore-srvc-acc.json")
         )
     )
     database_id: Optional[str] = Field(

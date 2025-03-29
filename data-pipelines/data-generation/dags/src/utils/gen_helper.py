@@ -17,25 +17,13 @@ from src.llm.llm_client import get_open_router_llm
 from typing import Any, List, Tuple
 import pandas as pd
 
+
 def read_input_file(filepath: str, column_names: List[str], filter=False, num_rows=20)->pd.DataFrame:
-    """Reads specific column file from GCP bucket(filepath) """
+    """Reads specific column file from given filepath """
     try:
-        client = storage.Client.from_service_account_json(settings.DB_CREDENTIALS_PATH)
-        
-        bucket_name = filepath.split("/")[0]
-        object_name = "/".join(filepath.split("/")[1:])
 
-        bucket = client.bucket(bucket_name)
-        # object_name = 'job_postings/tech_postings.praquet'
-        blob = bucket.blob(object_name)
-        if not blob.exists():
-            raise FileNotFoundError(f"File '{object_name}' not found in bucket '{bucket_name}'.")
-
-        file_data = blob.download_as_bytes()
-
-        if object_name.endswith('.parquet'):
-            table = pq.read_table(BytesIO(file_data), columns=column_names)
-            df = table.to_pandas()
+        if filepath.endswith('.parquet'):
+            df = pd.read_parquet(filepath, columns=column_names)
             if filter:
                 if column_names:
                     df = df.astype(str).apply(lambda x: x.str.strip())
@@ -51,6 +39,43 @@ def read_input_file(filepath: str, column_names: List[str], filter=False, num_ro
 
     except Exception as e:
         raise RuntimeError(f"Error reading input file: {e}")
+   
+
+
+# def read_input_file(filepath: str, column_names: List[str], filter=False, num_rows=20)->pd.DataFrame:
+#     """Reads specific column file from GCP bucket(filepath) """
+#     try:
+#         client = storage.Client.from_service_account_json(settings.DB_CREDENTIALS_PATH)
+        
+#         bucket_name = filepath.split("/")[0]
+#         object_name = "/".join(filepath.split("/")[1:])
+
+#         bucket = client.bucket(bucket_name)
+#         # object_name = 'job_postings/tech_postings.praquet'
+#         blob = bucket.blob(object_name)
+#         if not blob.exists():
+#             raise FileNotFoundError(f"File '{object_name}' not found in bucket '{bucket_name}'.")
+
+#         file_data = blob.download_as_bytes()
+
+#         if object_name.endswith('.parquet'):
+#             table = pq.read_table(BytesIO(file_data), columns=column_names)
+#             df = table.to_pandas()
+#             if filter:
+#                 if column_names:
+#                     df = df.astype(str).apply(lambda x: x.str.strip())
+#             # Filter data 
+#             if filter and num_rows > 0:
+#                 df_subset = df.iloc[:num_rows] 
+#                 logger.info(f"Input data to generate data for: {len(df_subset)}")
+
+#                 return df_subset
+#             return df
+#         else: 
+#             raise ValueError("Unsupported file format: Must be of type Parquet.")
+
+#     except Exception as e:
+#         raise RuntimeError(f"Error reading input file: {e}")
     
 
 
