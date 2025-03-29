@@ -8,6 +8,7 @@ from google.cloud.logging.handlers import CloudLoggingHandler
 from config.settings import settings
 from functools import wraps
 import json
+import asyncio
 
 
 def get_logger(env="dev"):

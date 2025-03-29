@@ -6,6 +6,8 @@ from logger import logger
 from graph.graph_builder import Graph
 from graph.state import State
 from langchain.schema import HumanMessage, AIMessage
+from langsmith  import traceable
+import langsmith as ls
 
 
 class Message(BaseModel):
@@ -15,6 +17,7 @@ class Message(BaseModel):
 class InvokePayload(BaseModel):
     user_id: str
     session_id: str
+    chat_id: str
     messages: List[Message]
 
 def create_default_state() -> State:
@@ -65,7 +68,7 @@ class ClientApp:
     def __init__(self):
         logger.info("Initializing graph")
         self.graph_builder = Graph()
-        self.graph = self.graph_builder.build_graph(isMemory=False)
+        self.graph = self.graph_builder.build_graph(isMemory=True)
         logger.info("Initializing graph complete")
 
 
@@ -92,7 +95,7 @@ async def invoke(payload: InvokePayload = Body(...)):
     
     logger.info(f"Invoke called for user {payload.user_id} and session {payload.session_id} with query: {new_query}")
     
-    config = {"configurable": {"thread_id": payload.session_id}}
+    config = {"configurable": {"thread_id": payload.session_id, "user_id": payload.user_id, "chat_id": payload.chat_id}}
 
     try:
         response_state = await clapp.graph.ainvoke(state, config=config)
@@ -100,6 +103,7 @@ async def invoke(payload: InvokePayload = Body(...)):
         # include ids
         response_json["user_id"] = payload.user_id
         response_json["session_id"] = payload.session_id
+        response_json["chat_id"] = payload.chat_id
     except Exception as e:
         logger.error(f"Error during graph processing: {e}")
         raise HTTPException(status_code=500, detail="Error processing query")

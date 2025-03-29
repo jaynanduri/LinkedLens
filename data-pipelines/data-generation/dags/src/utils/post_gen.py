@@ -71,6 +71,7 @@ def post_generation(user_type: str, post_chain: RunnableSerializable[dict, BaseM
                     rate_limiter: RateLimiter, user_ids:set, post_ids:set, job_id, job_title, company=None, description=None,
                     company_user_cnt_map: dict[str, int]=None, user_list_by_company: defaultdict[str, List[str]]=None)->Tuple[str, str]:
 
+    logger.info(f"Request Limit {rate_limiter.num_requests}")
     if not rate_limiter.request():
         logger.info(f"Reached Open Router API limit")
         return None, None
@@ -90,11 +91,12 @@ def post_generation(user_type: str, post_chain: RunnableSerializable[dict, BaseM
 
     logger.info(f"Generated post: \n {post_content.content}")
     logger.info(f"Generated {user_type} post content for {job_id} : {job_title}")
-
+    logger.info(f"Request Limit {rate_limiter.num_requests}")
     if not rate_limiter.request():
         logger.info(f"Reached Open Router API limit")
         return None, None
     
+    logger.info(f"Generating Basic User details")
     basic_user = user_chain.invoke({
         "format_instructions": user_format_instructions
     })
@@ -104,6 +106,7 @@ def post_generation(user_type: str, post_chain: RunnableSerializable[dict, BaseM
     logger.info(f"Basic user details: {user_details}")
 
     user_uuid = generate_new_user_id(user_ids, user_type, company_user_cnt_map, user_list_by_company, company)
+    logger.info(f"Generated user id: {user_uuid}")
     timestamp = int(datetime.datetime.now().timestamp())
     valid_user = User(
         user_id=user_uuid,

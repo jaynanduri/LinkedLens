@@ -56,6 +56,7 @@ def create_posts(input_df: pd.DataFrame, db_client: FirestoreClient,
         user_chain, user_format_instructions = get_llm_chain(user_chain_type)
         
         req_rate_limiter = get_request_limiter()
+        logger.info(f"Rate Limiter: {req_rate_limiter.num_requests}")
         generated_post_count = 0
         for _, row in input_df.iterrows():
             job_id = row['job_id']
