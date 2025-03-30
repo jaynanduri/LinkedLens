@@ -1,16 +1,14 @@
 import os
 from dotenv import load_dotenv
 import os
-from pathlib import Path
 from pydantic_settings import BaseSettings
-from pydantic import BaseModel, Field
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+
 class Settings(BaseSettings):
     """Configuration settings loaded from environment variables."""
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY")
     DB_NAME: str = os.getenv("DB_NAME")
-    DB_CREDENTIALS_PATH:str = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    GOOGLE_APPLICATION_CREDENTIALS:str = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     AIRFLOW_UID:int = os.getenv("AIRFLOW_UID")
     MAX_OPEN_AI_REQUEST_PER_MIN: int = os.getenv("MAX_OPEN_AI_REQUEST_PER_MIN")
     MAX_OPEN_AI_REQUEST_PER_DAY: int = os.getenv("MAX_OPEN_AI_REQUEST_PER_DAY")

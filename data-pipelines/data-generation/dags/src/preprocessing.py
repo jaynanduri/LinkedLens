@@ -191,7 +191,6 @@ def filter_preprocessed_data() -> None:
                 df = read_input_file(os.path.join(PREPROCESSED_DATA_FOLDER, folder, file))
                 local_file_path = os.path.join(FILTERED_DATA_FOLDER, folder, file)
 
-            local_file_path = os.path.join(FILTERED_DATA_FOLDER, folder, file)
             os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
             df.to_parquet(local_file_path, engine="pyarrow")
     logger.info(f"Completed filtering for all files")
