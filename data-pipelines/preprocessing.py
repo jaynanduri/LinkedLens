@@ -4,15 +4,14 @@ import os
 import re
 import kagglehub
 from typing import List
-from logger import logger
+import logging
 
-"""
-Actions: Start on run preprocessing - pass bucket name, folders for raw, processed, filtered
-1. Download Kaggle data - 
-2. preprocess (postings csv) - upload everything to bucket all other files drop na 
-3. preprocess all other files
-4. filter posting and upload everything to filtered
-"""
+# Create logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+console_handler = logging.StreamHandler()
+logger.addHandler(console_handler)
+
 
 
 RAW_DATA_FOLDER_NAME = "raw_data"

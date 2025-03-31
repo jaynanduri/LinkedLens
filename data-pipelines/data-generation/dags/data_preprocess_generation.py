@@ -1,11 +1,11 @@
 from airflow import DAG
 from airflow.providers.google.cloud.sensors.gcs import GCSObjectExistenceSensor
-from airflow.operators.python import BranchPythonOperator, PythonOperator
-from airflow.operators.dummy import DummyOperator
-from airflow.operators.bash_operator import BashOperator
+from airflow.operators.python import PythonOperator,  BranchPythonOperator
+# from airflow.operators.dummy import DummyOperator
+# from airflow.operators.bash_operator import BashOperator
 from datetime import datetime, timedelta
 from src.utils.send_email import send_failure_email, send_success_email
-from src.utils.preprocessing import data_preprocessing
+# from src.utils.preprocessing import data_preprocessing
 from src.utils.load_jobs import load_jobs
 from src.utils.post_gen_helper import generate_posts
 from src.logger import logger
@@ -55,30 +55,18 @@ dag = DAG(
     catchup=False,
 )
 
-set_credentials = BashOperator(
-    task_id='set_dvc_credentials',
-    bash_command='dvc remote modify --local myremote credentialpath /opt/airflow/credentials/linkedlens-firestore-srvc-acc.json',
-    dag=dag,
-)
 
-pull_data = BashOperator(
-    task_id='dvc pull',
-    bash_command='dvc pull',
-    dag=dag,
-)
-
-set_credentials >> pull_data
 # Task: Sensor to check file existence in GCP bucket.
-# check_file_exists = GCSObjectExistenceSensor(
-#     task_id="check_file_exists",
-#     bucket="linkedlens_data",
-#     object="filtered_data/postings.parquet",
-#     poke_interval=10,
-#     timeout=20,
-#     mode='poke',
-#     soft_fail=True,
-#     dag=dag,
-# )
+check_file_exists = GCSObjectExistenceSensor(
+    task_id="check_file_exists",
+    bucket="linkedlens_data",
+    object="filtered_data/postings.parquet",
+    poke_interval=10,
+    timeout=20,
+    mode='poke',
+    soft_fail=True,
+    dag=dag,
+)
 
 # Task: Branch to decide whether to run preprocessing.
 # branch_task = BranchPythonOperator(
@@ -106,41 +94,41 @@ set_credentials >> pull_data
 
 
 # Task: Load all job postings.
-# load_jobs_task = PythonOperator(
-#     task_id="load_jobs",
-#     python_callable=load_jobs,
-#     op_args=[POSTING_PATH_BUCKET, 1000],
-#     on_success_callback=notify_success,
-#     on_failure_callback=notify_failure,
-#     trigger_rule="one_success",  
-#     dag=dag,
-# )
+load_jobs_task = PythonOperator(
+    task_id="load_jobs",
+    python_callable=load_jobs,
+    op_args=[POSTING_PATH_BUCKET, 1000],
+    on_success_callback=notify_success,
+    on_failure_callback=notify_failure,
+    trigger_rule="one_success",  
+    dag=dag,
+)
 
 # Task: Create recruiter posts.
-# create_recruiter_posts_task = PythonOperator(
-#     task_id="create_recruiter_posts",
-#     python_callable=generate_posts,
-#     # bucket_filepath: str, column_names: List[str], filter: bool, num_rows: int, user_type: str
-#     op_args=[POSTING_PATH_BUCKET, ["job_id", "description", "title", "company_name"], True, 200, 'recruiter'],
-#     on_success_callback=notify_success,
-#     on_failure_callback=notify_failure,
-#     dag=dag,
-# )
+create_recruiter_posts_task = PythonOperator(
+    task_id="create_recruiter_posts",
+    python_callable=generate_posts,
+    # bucket_filepath: str, column_names: List[str], filter: bool, num_rows: int, user_type: str
+    op_args=[POSTING_PATH_BUCKET, ["job_id", "description", "title", "company_name"], True, 200, 'recruiter'],
+    on_success_callback=notify_success,
+    on_failure_callback=notify_failure,
+    dag=dag,
+)
 
 # # Task: Create interview experience posts.
-# create_interview_exp_posts_task = PythonOperator(
-#     task_id="create_interview_exp_posts",
-#     python_callable=generate_posts,
-#     # bucket_filepath: str, column_names: List[str], filter: bool, num_rows: int, user_type: str
-#     op_args=[POSTING_PATH_BUCKET, ["job_id", "title", "company_name"], True, 200, 'user'],
-#     on_success_callback=notify_success,
-#     on_failure_callback=notify_failure,
-#     dag=dag,
-# )
+create_interview_exp_posts_task = PythonOperator(
+    task_id="create_interview_exp_posts",
+    python_callable=generate_posts,
+    # bucket_filepath: str, column_names: List[str], filter: bool, num_rows: int, user_type: str
+    op_args=[POSTING_PATH_BUCKET, ["job_id", "title", "company_name"], True, 200, 'user'],
+    on_success_callback=notify_success,
+    on_failure_callback=notify_failure,
+    dag=dag,
+)
 
 # Set up task dependencies.
 # check_file_exists >> branch_task
 # branch_task >> skip_preprocessing >> load_jobs_task
 # branch_task >> run_preprocessing >> load_jobs_task
 
-# load_jobs_task >> create_recruiter_posts_task >> create_interview_exp_posts_task
+check_file_exists >> load_jobs_task >> create_recruiter_posts_task >> create_interview_exp_posts_task
