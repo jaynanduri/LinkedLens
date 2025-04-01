@@ -33,7 +33,7 @@ jobs:
       - id: 'get-credentials'
         uses: 'google-github-actions/get-gke-credentials@v2'
         with:
-          cluster_name: 'test-cluster'
+          cluster_name: ${{env.GKE_CLUSTER_NAME}}
           location: ${{env.GCP_REGION}}
       
       - id: 'get-pods'
@@ -63,3 +63,10 @@ jobs:
       
       - name: Restart deployment
         run: kubectl rollout restart deployment model-dev-deployment
+      
+      - name: Status of deployment
+        run: | 
+          if ! kubectl rollout status deployment model-dev-deployment; then
+            exit 1
+          else
+            echo "Deployment successful"
