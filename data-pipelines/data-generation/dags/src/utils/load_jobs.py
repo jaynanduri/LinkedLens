@@ -17,21 +17,22 @@ def load_jobs(bucket_file_path: str, batch_size: int) -> int:
         docs_job = db_client.get_all_docs('jobs')
         job_ids = get_docs_list_by_field(docs_job, 'job_id')
 
-        valid_count = 0
+        valid_count = 0 # total validated and inserted records
         records = df.to_dict(orient="records")
-
+        batch_num = 0
         for i in range(0, len(records), batch_size):
+            batch_num += 1
             batch = records[i: i + batch_size]
             batch = [row for row in batch if row['job_id'] not in job_ids]
             if not batch:
-                logger.info(f"All jobs in batch {i} already loaded to DB.")
+                logger.info(f"All jobs in batch {batch_num} already loaded to DB.")
                 continue
 
             try:
-                logger.info(f"Loading {len(batch)} records from the batch {i}")
+                logger.info(f"Loading {len(batch)} records from the batch {batch_num}")
                 job_postings_batch = JobPostingList(jobs=batch)
                 bulk_data = [json.loads(job.model_dump_json()) for job in job_postings_batch.jobs]
-                logger.info(f"Validated jobs in  batch {i}")
+                logger.info(f"Validated jobs in  batch {batch_num}")
 
                 db_client.bulk_insert('jobs', bulk_data, 'job_id')
                 valid_count += len(bulk_data)
@@ -39,7 +40,7 @@ def load_jobs(bucket_file_path: str, batch_size: int) -> int:
                 for row in batch:
                     try:
                         job_posting = JobPosting(**row)
-                        logger.info(f"Validated single job from batch {i}")
+                        logger.info(f"Validated single job from batch {batch_num}")
                         job_data = json.loads(job_posting.model_dump_json())
                         db_client.insert_entry('jobs', job_data, job_data['job_id'])
                         valid_count += 1

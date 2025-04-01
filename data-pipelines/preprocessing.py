@@ -3,8 +3,12 @@ import pyarrow.parquet as pq
 import os
 import re
 import kagglehub
-from typing import List
+from typing import List, Dict, Any, Tuple
 import logging
+from tqdm.auto import tqdm
+import re
+import numpy as np
+from datetime import datetime, timedelta
 
 # Create logger
 logger = logging.getLogger(__name__)
@@ -90,6 +94,104 @@ def download_raw_data() -> None:
             df.to_parquet(local_file_path, engine="pyarrow")
     logger.info(f"Completed Downloading data from Kaggle")
 
+def extract_deadlines(text: str) -> List[Dict[str, Any]]:
+    date_patterns = [
+        r"\b\d{1,2}/\d{1,2}/\d{2,4}\b",  # MM/DD/YY or DD/MM/YY
+        r"\b\d{1,2}-\d{1,2}-\d{2,4}\b",  # MM-DD-YY or DD-MM-YY
+        r"\b\d{4}/\d{1,2}/\d{1,2}\b",  # YYYY/MM/DD
+        r"\b\d{4}-\d{1,2}-\d{1,2}\b",  # YYYY-MM-DD
+        r"\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{1,2}\b",  # Month DD, YYYY
+        r"\b\d{1,2} (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\b",  # DD Month YYYY
+    ]
+    # Define deadline-related keywords
+    deadline_keywords = [
+        "deadline",
+        "due date",
+        "due by",
+        "closes on",
+        "closing date",
+        "apply by",
+        "apply before",
+        "apply until",
+        "submit by",
+        "application deadline",
+        "last date",
+        "applications close",
+    ]
+
+    # Combine patterns into a single regex
+    combined_date_pattern = "|".join(date_patterns)
+    
+    if pd.isna(text):
+        return None
+    results = []
+    # Look for deadline keywords near dates
+    for keyword in deadline_keywords:
+        keyword_matches = re.finditer(re.escape(keyword), text, re.IGNORECASE)
+        for match in keyword_matches:
+            start_pos = match.start()
+            end_pos = len(text)-1
+            context = text[start_pos:end_pos]
+
+            date_matches = re.finditer(combined_date_pattern, context, re.IGNORECASE)
+            for date_match in date_matches:
+                results.append(
+                    {
+                        "keyword": keyword,
+                        "date": date_match.group(),
+                        "context": context.strip(),
+                    }
+                )
+
+    return results
+
+
+def filter_deadline(df: pd.DataFrame) -> pd.DataFrame:
+    deadline_info = []
+    deadline_df = None
+    for idx, row in tqdm(df.iterrows()):
+        deadlines = extract_deadlines(row["description"])
+        if deadlines:
+            for d in deadlines:
+                deadline_info.append(
+                    {
+                        "job_id": row["job_id"],
+                        "title": row["title"],
+                        "keyword": d["keyword"],
+                        "date_found": d["date"],
+                        "context": d["context"],
+                    }
+                )
+
+    # Create DataFrame of results
+    deadline_df = pd.DataFrame(deadline_info)
+    if len(deadline_df) > 0:
+        logger.info(f"Found {len(deadline_df)} potential application deadlines")
+    else:
+        logger.info(f"No application deadlines found in job descriptions")
+    return deadline_df
+
+
+def modify_dates(num_rows: int)-> Tuple[List[Any], List[Any]]:
+    listed_time_start = datetime(2025, 2, 1)
+    listed_time_end = datetime(2025, 3, 21)
+    listed_time_random = []
+    expiry_random = []
+    for _ in tqdm(range(num_rows)):
+        # Random number of seconds between start and end dates
+        random_seconds = np.random.randint(
+            0, int((listed_time_end - listed_time_start).total_seconds())
+        )
+        random_date = listed_time_start + timedelta(seconds=random_seconds)
+        expiry_date = random_date + timedelta(days=90)
+        listed_time_random.append(int(random_date.timestamp()))        
+        expiry_random.append(int(expiry_date.timestamp()))
+
+    
+    return listed_time_random, expiry_random
+
+
+
 def preprocess_postings(input_filepath: str) -> pd.DataFrame:
     logger.info(f"Reading file {input_filepath}")
     df = read_input_file(input_filepath)
@@ -111,12 +213,25 @@ def preprocess_postings(input_filepath: str) -> pd.DataFrame:
 
     df['remote_allowed'] = df['remote_allowed'].fillna(0).astype(bool)
     df['sponsored'] = df['sponsored'].fillna(0).astype(bool)
-    # modify date columns - retain 2 listed_time and expiry = ttl
+
     date_columns = ['closed_time', 'listed_time', 'expiry', 'original_listed_time']
-    df[date_columns] = df[date_columns].apply(lambda x: pd.to_datetime(x, unit='ms', errors='coerce'))
-    df[date_columns] = df[date_columns].apply(lambda x: x.dt.strftime("%Y-%m-%d %H:%M:%S"))
+    df = df.drop(columns=date_columns)
+
     df['zip_code'] = df['zip_code'].apply(lambda x: str(int(x)).strip() if pd.notna(x) else "")
-    print(df[date_columns].head())
+
+    # remove jobs with deadline in description = 2153 deadlines found
+    deadline_df = filter_deadline(df)
+    df = df[~df["job_id"].isin(deadline_df["job_id"])]
+
+    # Modify Dates
+    listed_time_random, expiry_random = modify_dates(len(df))
+    df['createdAt'] = listed_time_random
+    df['updatedAt'] = df['createdAt']
+    df['ttl'] = expiry_random
+    df['createdAt'] = df['createdAt'].astype(int)
+    df['updatedAt'] = df['updatedAt'].astype(int)
+    df['ttl'] = df['ttl'].astype(int)
+    logger.info(f"Len after modifying dates: {len(df)}")
     return df
 
 def preprocess_files(input_filepath: str) -> pd.DataFrame:
@@ -160,7 +275,7 @@ def filter_postings(input_filepath: str) -> pd.DataFrame:
     logger.info(f"Reading file from {input_filepath}")
     df = read_input_file(input_filepath)
     logger.info(f"Filtering file {input_filepath}..")
-    print(f"test data types : \n {df.dtypes}")
+    # print(f"test data types : \n {df.dtypes}")
     title_keywords = ["Developer", "Engineer", "Data", "Analyst", "Data Scientist", "Machine Learning",
     "ML", "Artificial Intelligence", "AI", "Full Stack", "IOS", "Android", "Web", "Systems",
     "Network", "Security", "Cloud", "IT", "Database", "Product", "Technical", "QA", "UX", "UI",
@@ -175,7 +290,7 @@ def filter_postings(input_filepath: str) -> pd.DataFrame:
     ]
 
     result_df = df[df["title"].apply(lambda x: any(re.search(title, x, re.IGNORECASE) for title in tech_related_titles))]
-    print(f"Check Datatypes after filtering: \n {result_df.dtypes}")
+    # print(f"Check Datatypes after filtering: \n {result_df.dtypes}")
     return result_df
 
 def filter_preprocessed_data() -> None:
@@ -209,6 +324,6 @@ def data_preprocessing() -> None:
 
 
 if __name__ == "__main__":
-    logger.info("Creating datda folder")
+    logger.info("Creating data folder")
     os.makedirs(DATA_FOLDER, exist_ok=True)
     data_preprocessing()

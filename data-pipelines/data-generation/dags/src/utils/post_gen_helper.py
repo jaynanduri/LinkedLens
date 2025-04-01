@@ -91,7 +91,7 @@ def create_posts(input_df: pd.DataFrame, db_client: FirestoreClient,
             db_client.insert_entry('posts', post_data, post_data['post_id'])
             logger.info(f"Inserted Post data into DB for job_id: {job_id}")
             if user_type == 'user':
-                db_client.insert_entry('userPostJobIds', {"job_id": job_id}, job_id)
+                db_client.insert_entry('userPostJobIds', {"job_id": job_id, "post_id": post_data['post_id']}, job_id)
             
             job_ids.add(job_id)
             logger.info(f"Added job id {job_id} for tracking")

@@ -53,7 +53,7 @@ class JobPosting(BaseModel):
     Model representing a job posting with various attributes 
     including company details, salary, job type, and timestamps.
     """
-    job_id: str
+    job_id: str = Field(...)
     company_id: str
     company_name: str
     title: str
@@ -71,16 +71,18 @@ class JobPosting(BaseModel):
     max_salary: Optional[float] = None
     currency: Optional[Currency] = None
     normalized_salary: Optional[float] = None
-    original_listed_time: Optional[datetime] = None
-    listed_time: Optional[datetime] = None
-    expiry: Optional[datetime] = None
-    closed_time: Optional[datetime] = None
+    # remove old dates
+    # original_listed_time: Optional[datetime] = None
+    # listed_time: Optional[datetime] = None
+    # expiry: Optional[datetime] = None
+    # closed_time: Optional[datetime] = None
     job_posting_url: Optional[str] = ""
     application_url: Optional[str] = ""
     views: Optional[int] = None
     applies: Optional[int] = None
     createdAt: int = Field(...)
     updatedAt: int = Field(...)
+    ttl: int = Field(...)
     vectorized: bool = False
 
     @field_validator("zip_code", mode="before")
@@ -138,18 +140,18 @@ class JobPosting(BaseModel):
         raise ValueError(f"Invalid value '{value}' for field '{field_name}'. Expected one of {list(field_enum_map[field_name].__members__.values())}.")
 
     # Datetime Fields Validator - YYYY-MM-DD HH:mm:ss)
-    @field_validator("original_listed_time", "listed_time", "expiry", "closed_time", mode="before")
-    def validate_datetime_fields(cls, value):
-        if pd.isna(value) or not value:
-            return None
-        if isinstance(value, datetime):
-            return value
+    # @field_validator("original_listed_time", "listed_time", "expiry", "closed_time", mode="before")
+    # def validate_datetime_fields(cls, value):
+    #     if pd.isna(value) or not value:
+    #         return None
+    #     if isinstance(value, datetime):
+    #         return value
         
-        value = str(value).strip()
-        try:
-            return datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
-        except ValueError:
-            raise ValueError(f"Invalid datetime format: {value}. Expected format: YYYY-MM-DD HH:mm:ss")
+    #     value = str(value).strip()
+    #     try:
+    #         return datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+    #     except ValueError:
+    #         raise ValueError(f"Invalid datetime format: {value}. Expected format: YYYY-MM-DD HH:mm:ss")
 
     @field_validator("job_id", "company_id", "company_name", "title", "description", 
                      "skills_desc", "location", "job_posting_url", "application_url",

@@ -68,30 +68,6 @@ check_file_exists = GCSObjectExistenceSensor(
     dag=dag,
 )
 
-# Task: Branch to decide whether to run preprocessing.
-# branch_task = BranchPythonOperator(
-#     task_id="branch_on_file_existence",
-#     python_callable=decide_next,
-#     provide_context=True,
-#     trigger_rule="all_done",
-#     dag=dag,
-# )
-
-# Dummy task for skipping preprocessing.
-# skip_preprocessing = DummyOperator(
-#     task_id="skip_preprocessing",
-#     dag=dag,
-# )
-
-# Task for running preprocessing.
-# run_preprocessing = PythonOperator(
-#     task_id="run_preprocessing",
-#     python_callable=data_preprocessing,
-#     op_args=['linkedlens_data', 'raw_data', 'processed_data', 'filtered_data'],
-#     dag=dag,
-# )
-
-
 
 # Task: Load all job postings.
 load_jobs_task = PythonOperator(
@@ -99,8 +75,7 @@ load_jobs_task = PythonOperator(
     python_callable=load_jobs,
     op_args=[POSTING_PATH_BUCKET, 1000],
     on_success_callback=notify_success,
-    on_failure_callback=notify_failure,
-    trigger_rule="one_success",  
+    on_failure_callback=notify_failure, 
     dag=dag,
 )
 
@@ -109,13 +84,13 @@ create_recruiter_posts_task = PythonOperator(
     task_id="create_recruiter_posts",
     python_callable=generate_posts,
     # bucket_filepath: str, column_names: List[str], filter: bool, num_rows: int, user_type: str
-    op_args=[POSTING_PATH_BUCKET, ["job_id", "description", "title", "company_name"], True, 200, 'recruiter'],
+    op_args=[POSTING_PATH_BUCKET, ["job_id", "description", "title", "company_name"], True, 201, 'recruiter'],
     on_success_callback=notify_success,
     on_failure_callback=notify_failure,
     dag=dag,
 )
 
-# # Task: Create interview experience posts.
+# # # Task: Create interview experience posts.
 create_interview_exp_posts_task = PythonOperator(
     task_id="create_interview_exp_posts",
     python_callable=generate_posts,
@@ -127,8 +102,4 @@ create_interview_exp_posts_task = PythonOperator(
 )
 
 # Set up task dependencies.
-# check_file_exists >> branch_task
-# branch_task >> skip_preprocessing >> load_jobs_task
-# branch_task >> run_preprocessing >> load_jobs_task
-
 check_file_exists >> load_jobs_task >> create_recruiter_posts_task >> create_interview_exp_posts_task

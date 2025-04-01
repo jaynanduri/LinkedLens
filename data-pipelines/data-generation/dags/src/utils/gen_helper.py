@@ -21,7 +21,7 @@ import pandas as pd
 def read_input_file(filepath: str, column_names: List[str], filter=False, num_rows=20)->pd.DataFrame:
     """Reads specific column file from GCP bucket(filepath) """
     try:
-        client = storage.Client.from_service_account_json(settings.DB_CREDENTIALS_PATH)
+        client = storage.Client.from_service_account_json(settings.GOOGLE_APPLICATION_CREDENTIALS)
         
         bucket_name = filepath.split("/")[0]
         object_name = "/".join(filepath.split("/")[1:])
@@ -115,28 +115,3 @@ def get_llm_chain(chain_type: str)-> Tuple[RunnableSerializable[dict, Any], str]
     except Exception as e:
         logger.error(f"Error creating chain: {e}")
         raise Exception(f"Error creating chain: {e}")
-    
-
-
-def upload_file_to_gcs(data: pd.DataFrame, bucket_path: str)-> None:
-    """Uploads data to the specified bucket path in GCS """
-    try:
-        client = storage.Client.from_service_account_json(settings.DB_CREDENTIALS_PATH)
-        
-        bucket_name = bucket_path.split("/")[0]
-        object_name = "/".join(bucket_path.split("/")[1:])
-        print(f"Output bucket name: {bucket_name}")
-        print(f"Object path: {object_name}")
-        
-        bucket = client.bucket(bucket_name)
-        blob = bucket.blob(object_name)
-        print(f"Created blob for {object_name}")
-
-        buffer = BytesIO()
-        data.to_parquet(buffer, engine="pyarrow")
-        blob.upload_from_string(buffer.getvalue(), content_type="application/octet-stream")
-        buffer.seek(0)
-
-        logger.info(f"File uploaded to gs://{bucket_name}/{object_name}")
-    except Exception as e:
-        logger.error(f"Failed to upload data to bucket: {e}")
