@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 
 load_dotenv(override=True)
 
-print(f"Check the google creds path : {os.getenv("GOOGLE_APPLICATION_CREDENTIALS")}")
 class Settings(BaseSettings):
     """Configuration settings loaded from environment variables."""
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY")

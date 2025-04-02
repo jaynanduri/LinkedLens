@@ -199,7 +199,7 @@ def ingest_namespace(namespace: str, collection: str, only_new: bool = False) ->
                 }
             
             total_docs_fetched = total_docs_fetched + len(documents)
-            # total_batches = (len(documents) + batch_size - 1) // batch_size
+
             # if batch size changes later
             for i in range(0, len(documents), batch_size):
                 batch = documents[i:i+batch_size]
@@ -247,7 +247,6 @@ def ingest_namespace(namespace: str, collection: str, only_new: bool = False) ->
                 docs_in_batch = len(batch_vector_doc_grp)
                 processed += docs_in_batch
                 logger.info(f"Total documents processed so far: {processed}/{total_docs_fetched}")
-
     except Exception as e:
         logger.error(
             f"Error processing for namespace {namespace} from collection {collection}: {str(e)}",
@@ -275,7 +274,7 @@ def ingest_all_namespaces(only_new: bool = False):
     namespaces = list(settings.pinecone.namespace_collection.keys())
     results = []
     logger.info(
-        f"Starting batch processing for all namespaces ({len(namespaces)})",
+        f"Starting batch processing for all namespaces ({namespaces})",
         extra={"onlyNew": only_new}
     )
     
@@ -323,7 +322,7 @@ def ingest_data(only_new: bool = False) -> None:
         pinecone_client.get_index()
     except ValueError:
         logger.error(
-            f"Pinecone index '{settings.pinecone.index_name}' does not exist. Run 'init' command first."
+            f"Pinecone index '{settings.pinecone.index_name}' does not exist."
         )
         raise
     try:

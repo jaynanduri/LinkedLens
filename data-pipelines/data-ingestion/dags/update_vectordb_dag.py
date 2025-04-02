@@ -5,6 +5,9 @@ from src.main import init_pinecone, test_connections, ingest_data
 from src.utils.email_util import send_success_email, send_failure_email
 from src.utils import logger
 
+import os
+os.environ["NO_PROGRESS_BAR"] = "1"
+
 BASE_URL = "https://storage.cloud.google.com/linkedlens-airflow-logs/data-pipeline"
 
 def notify_success(context):

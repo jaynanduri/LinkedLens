@@ -1,9 +1,9 @@
-# import firebase_admin
-# from firebase_admin import credentials, firestore
-# from firebase_admin.firestore import DELETE_FIELD
-# from datetime import datetime, timezone, timedelta
-# from google.cloud.firestore_v1 import FieldFilter
-# import numpy as np
+import firebase_admin
+from firebase_admin import credentials, firestore
+from firebase_admin.firestore import DELETE_FIELD
+from datetime import datetime, timezone, timedelta
+from google.cloud.firestore_v1 import FieldFilter
+import numpy as np
 
 
 # def update_post_collection(collection, db_client):
@@ -105,18 +105,19 @@
 #     print(f"Posts with missing job_id references: {missing_job_id_post_ids}")
 
 
-# if __name__ == '__main__':
-#     try:
-#         cred = credentials.Certificate('../../../credentials/linkedlens-firestore-srvc-acc.json')
-#         firebase_admin.initialize_app(cred)
-#         db = firestore.client(database_id='linked-lens')
-#         print("DB:", db)
-#         # update_user_collection("users", db)
-#         # update_job_collection("jobs", db)
-#         # update_post_collection("posts", db)
-#         check_missing_job_ids(db)
-#     except Exception as e:
-#         print(f"Failed: {e}")
+if __name__ == '__main__':
+    try:
+        cred = credentials.Certificate('../../../credentials/linkedlens-firestore-srvc-acc.json')
+        firebase_admin.initialize_app(cred)
+        db = firestore.client(database_id='linked-lens')
+        print("DB:", db)
+        # update_user_collection("users", db)
+        # update_job_collection("jobs", db)
+        # update_post_collection("posts", db)
+        jobs = db.collection("jobs").where(filter = FieldFilter("vectorized", "==", True)).get()
+        print(f"Number of docs fetched for jobs: {len(jobs)}")
+    except Exception as e:
+        print(f"Failed: {e}")
 
 # """
 # Update all records

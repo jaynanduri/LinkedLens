@@ -68,10 +68,11 @@ class EmbeddingClient:
         
         try:
             embedding = self._model.encode(text).tolist()
-            logger.debug(
-                "Successfully generated embedding",
-                extra={"dimension": len(embedding), "model": settings.embedding.model_name}
-            )
+            logger.info(f"Successfully generated embedding for text.")
+            # logger.debug(
+            #     "Successfully generated embedding",
+            #     extra={"dimension": len(embedding), "model": settings.embedding.model_name}
+            # )
             
             return embedding
         except Exception as e:

@@ -3,14 +3,14 @@ from unittest.mock import MagicMock, patch
 import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
-from src.graph.graph_builder import Graph
-from src.graph.state import State
-from src.graph.nodes import query_analyzer_node, retrieval_node, augmentation_node, final_response_node
-from src.services.prompt_manager import PromptManager
-from src.services.llm_provider import LLMProvider
-from src.services.llm_chain_factory import LLMChainFactory
-from src.clients.embedding_client import EmbeddingClient
-from src.clients.pinecone_client import PineconeClient
+from graph.graph_builder import Graph
+from graph.state import State
+from graph.nodes import query_analyzer_node, retrieval_node, augmentation_node, final_response_node
+from services.prompt_manager import PromptManager
+from services.llm_provider import LLMProvider
+from services.llm_chain_factory import LLMChainFactory
+from clients.embedding_client import EmbeddingClient
+from clients.pinecone_client import PineconeClient
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 class TestServices(unittest.TestCase):
@@ -22,7 +22,7 @@ class TestServices(unittest.TestCase):
         LLMProvider._llm = None
         PromptManager._instance = None
 
-        self.chat_llm_patcher = patch('src.services.llm_provider.ChatGoogleGenerativeAI')
+        self.chat_llm_patcher = patch('services.llm_provider.ChatGoogleGenerativeAI')
         self.mock_chat_llm = self.chat_llm_patcher.start()
 
         # Set up a mocked instance of ChatGoogleGenerativeAI
@@ -38,20 +38,20 @@ class TestServices(unittest.TestCase):
         
 
         # Patch settings
-        self.settings_patcher = patch('src.services.prompt_manager.settings')
+        self.settings_patcher = patch('services.prompt_manager.settings')
         self.mock_settings = self.settings_patcher.start()
         self.mock_settings.prompt_setting.project_id = 'test_project_id'
         self.mock_settings.prompt_setting.prompt_mapping = {'test_prompt': 'test_prompt_id'}
 
         # Patch vertexai.init
-        self.vertexai_patcher = patch('src.services.prompt_manager.vertexai.init')
+        self.vertexai_patcher = patch('services.prompt_manager.vertexai.init')
         self.mock_vertexai_init = self.vertexai_patcher.start()
 
         # Patch prompts.list and prompts.get
-        self.prompts_list_patcher = patch('src.services.prompt_manager.prompts.list')
+        self.prompts_list_patcher = patch('services.prompt_manager.prompts.list')
         self.mock_prompts_list = self.prompts_list_patcher.start()
 
-        self.prompts_get_patcher = patch('src.services.prompt_manager.prompts.get')
+        self.prompts_get_patcher = patch('services.prompt_manager.prompts.get')
         self.mock_prompts_get = self.prompts_get_patcher.start()
 
         # Mock prompt responses
@@ -63,10 +63,10 @@ class TestServices(unittest.TestCase):
         # Initialize the PromptManager
         self.prompt_manager = PromptManager()
 
-        self.prompt_template_patcher = patch('src.services.llm_chain_factory.PromptTemplate')
+        self.prompt_template_patcher = patch('services.llm_chain_factory.PromptTemplate')
         self.mock_prompt_template = self.prompt_template_patcher.start()
 
-        self.chat_prompt_template_patcher = patch('src.services.llm_chain_factory.ChatPromptTemplate')
+        self.chat_prompt_template_patcher = patch('services.llm_chain_factory.ChatPromptTemplate')
         self.mock_chat_prompt_template = self.chat_prompt_template_patcher.start()
 
 

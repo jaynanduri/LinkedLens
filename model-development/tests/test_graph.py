@@ -3,18 +3,18 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 from unittest.mock import patch, MagicMock
-from src.graph.graph_builder import Graph
-from src.graph.state import State
+from graph.graph_builder import Graph
+from graph.state import State
 import torch
 from mock_classes import *
 from functools import partial
-from src.graph.nodes import *
-from src.clients.embedding_client import EmbeddingClient
-from src.clients.pinecone_client import PineconeClient
+from graph.nodes import *
+from clients.embedding_client import EmbeddingClient
+from clients.pinecone_client import PineconeClient
 from langchain.schema import HumanMessage, AIMessage
-from src.services.llm_chain_factory import LLMChainFactory
-from src.services.llm_provider import LLMProvider
-from src.services.prompt_manager import PromptManager
+from services.llm_chain_factory import LLMChainFactory
+from services.llm_provider import LLMProvider
+from services.prompt_manager import PromptManager
 
 
 class TestGraph(unittest.TestCase):
@@ -39,7 +39,7 @@ class TestGraph(unittest.TestCase):
         self.mock_embedding_client.generate_embedding = MagicMock(return_value=torch.ones(384))
 
         # Mock settings
-        self.mock_settings_patcher = patch('src.graph.nodes.settings')
+        self.mock_settings_patcher = patch('graph.nodes.settings')
         self.mock_settings = self.mock_settings_patcher.start()
         self.mock_settings.pinecone.max_docs = 2
         self.mock_settings.pinecone.namesapce_threshold = {"recruiter_post": 0.8, "job": 0.7}
@@ -61,7 +61,7 @@ class TestGraph(unittest.TestCase):
         )
 
         # Mock StateGraph
-        self.mock_state_graph_patcher = patch("src.graph.graph_builder.StateGraph")
+        self.mock_state_graph_patcher = patch("graph.graph_builder.StateGraph")
         self.mock_state_graph = self.mock_state_graph_patcher.start()
         self.mock_builder = MagicMock()
         self.mock_state_graph.return_value = self.mock_builder
@@ -79,9 +79,9 @@ class TestGraph(unittest.TestCase):
         self.mock_prompt_manager.get_prompt.side_effect = lambda name: f"Mocked {name}"
 
         # Patch the LLMProvider, LLMChainFactory, PromptManager in the Graph class
-        self.mock_llm_provider_patcher = patch("src.graph.graph_builder.LLMProvider", return_value=self.mock_llm_provider)
-        self.mock_chain_factory_patcher = patch("src.graph.graph_builder.LLMChainFactory", return_value=self.mock_chain_factory)
-        self.mock_prompt_manager_patcher = patch("src.graph.graph_builder.PromptManager", return_value=self.mock_prompt_manager)
+        self.mock_llm_provider_patcher = patch("graph.graph_builder.LLMProvider", return_value=self.mock_llm_provider)
+        self.mock_chain_factory_patcher = patch("graph.graph_builder.LLMChainFactory", return_value=self.mock_chain_factory)
+        self.mock_prompt_manager_patcher = patch("graph.graph_builder.PromptManager", return_value=self.mock_prompt_manager)
 
         self.mock_llm_provider_patcher.start()
         self.mock_chain_factory_patcher.start()
@@ -359,8 +359,8 @@ class TestGraph(unittest.TestCase):
         self.mock_pinecone_client.fetch_by_vector_ids.assert_called()
 
 
-    @patch("src.graph.nodes.process_retrieved_docs")
-    @patch("src.graph.nodes.format_context_for_llm")
+    @patch("graph.nodes.process_retrieved_docs")
+    @patch("graph.nodes.format_context_for_llm")
     def test_augmentation_node(self, mock_format_context, mock_process_docs):
         """Test augmentation_node updates final_context correctly."""
 
@@ -387,7 +387,7 @@ class TestGraph(unittest.TestCase):
         mock_format_context.assert_called_once_with(mock_process_docs.return_value, self.mock_settings.pinecone.max_docs)
 
     
-    @patch("src.graph.nodes.fetch_complete_doc_text")
+    @patch("graph.nodes.fetch_complete_doc_text")
     def test_process_retrieved_docs(self, mock_fetch_complete_doc_text):
         # Mock response for fetch_complete_doc_text
         mock_fetch_complete_doc_text.return_value = {

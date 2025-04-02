@@ -1,11 +1,12 @@
 import os
 import sys
+from mock_classes import *
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
-from src.clients.embedding_client import EmbeddingClient
-from src.clients.pinecone_client import PineconeClient
+from clients.embedding_client import EmbeddingClient
+from clients.pinecone_client import PineconeClient
 from unittest.mock import patch, MagicMock
 import unittest     
-from mock_classes import *
+
 
 
 
@@ -70,7 +71,7 @@ class TestPineconeClient(unittest.TestCase):
 
 class TestEmbeddingClient(unittest.TestCase):
     
-    @patch("src.clients.embedding_client.SentenceTransformer")
+    @patch("clients.embedding_client.SentenceTransformer")
     def test_generate_embedding(self, mock_transformer):
         """Test SentenceTransformer embedding generation"""
         mock_instance = MagicMock()
