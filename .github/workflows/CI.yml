@@ -29,7 +29,7 @@ jobs:
             python-version: 3.8
         
         - name: Install dependencies
-          working-directory: model-developmeny/src/
+          working-directory: model-development/src/
           run: pip install -r requirements.txt
         
         - name: Run unittests
