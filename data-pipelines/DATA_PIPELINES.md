@@ -1,97 +1,43 @@
-# Data Generation, and Ingestion Pipelines
+# Data Pipelines
+This section explains the data pipelines used in the project - Data Generation Pipeline and Data Ingestion Pipeline. It also covers the end-to-end workflow, from deploying code to triggering the pipelines using Cloud Run.
 
-We load preprocessed data from GCP and generate synthetic user profiles, recruiter job posts, and interview experience posts using LLM APIs. The generated data is validated using Pydantic before loading it into Firestore DB. The data stored in the FirestoreDB then makes use of the Data loading pipeline to ingest/sync the data into the Vector DB.
+## Overview
+Both DAGs are deployed on a VM on GCP. [Deployment details link]
+- A GitHub workflow is used to deploy the code to the VM on push.
+- The Data Generation DAG loads preprocessed data and saves newly generated data in FirestoreDB.
+- A Cloud Run function is set up to detect any changes in FirestoreDB.
+- When a change is detected, the Cloud Run function triggers the Data Ingestion Pipeline.
 
-There are two main DAGs:
-1. [Data Generation and Processing Pipeline](/data-pipelines/data-generation/)
-2. [Data Ingestion](/data-pipelines/data-generation/)
+For details on setting up the required GCP resources to run these pipelines, refer to [GCP Setup](/docs/DATA_PIPELINES_GCP_Setup.md)
 
-## Data Preprocessing
+## Data Generation Pipeline
 
-This pipeline fetches job posting and company data from Kaggle, performs preprocessing, and prepares the data for analysis of tech job postings.
+### Overview
+- The DAG is deployed on a VM running on port 8080.
+- Using only the job dataset, this DAG generates data for posts and user profiles, then loads them into FirestoreDB.
+- It utilizes the preprocessed and versioned data uploaded to a GCP bucket, as explained in [DATA_PREPROCESS.md](DATA_PREPROCESS.md).
 
-### 1. Data Acquisition
+### Tasks:
 
-- Fetch company and job posting data from Kaggle
-- Load multiple related datasets:
-  - Company industries
-  - Company specialities
-  - Employee counts
+- `check_file_exists`: Verifies if the preprocessed file is available at the specified path in the GCP bucket.
+- `load_jobs`: Validates and loads all job data into the database in batches.
 
-### 2. Data Preprocessing
+- `create_recruiter_posts`: Leverages basic details from the preprocessed dataset (company name, job description, job title) to generate recruiter profiles and corresponding hiring posts.
 
-- Drop unused columns to reduce dataset size
-- Convert columns to appropriate data types
-- Clean text fields (descriptions, titles)
-- Merge related datasets to create comprehensive view
-- Remove entries with null values in critical fields (job_title, job_description)
+- `create_interview_exp_posts`: Uses company name and job title from the dataset to create user profiles and generate posts about their interview experiences for specific roles and companies.
 
-### 3. Data Analysis
+### Visualization
 
-- Perform exploratory data analysis (EDA) on:
-  - Company information
-  - Industry distribution
-  - Job posting characteristics
-- Create visualizations of top industries and job titles
+#### Pipeline Diagram: 
 
-### 4. Tech Job Filtering
+#### Gantt Chart:
 
-- Filter job postings to focus on tech-related positions
-- Create a specialized dataset for tech industry analysis
-- Save processed data to Parquet format for efficient storage and retrieval
+### LLM Utilization
 
-## Data Bias Detection Using Data Slicing
-
-Since the dataset from Kaggle is not representative of the entire job market, we need to be aware of potential biases in the data. Below are some interesting slices of the data that can help us understand the biases:
-
-![top-30-job-titles.png](/images/top-30-job-titles.png)
-The dataset is skewed towards software engineering roles, with the top job titles being related to software development.
-
-![top-40-companies.png](/images/top-40-companies.png)
-The dataset contains job postings from a variety of companies, with the top companies being well-known tech giants, however usual suspects like Apple, Meta/Facebook are missing. The distribution of companies is definitely not representative of the entire job market.
-
-![top-industries.png](/images/top-industries.png)
-The industries are definitely dominated by tech companies, with the top industries being related to technology and software development.
-
-## Logging and Failure Tracking
-- Logs are generated at each step and for all functions.
-- The logs are currently collected using the in-built Airflow logger
-- Errors are captured and logged for easy debugging and resolution.
-- Any errors during the pipeline runs result in a failed run, and appropriate notifications are sent to alert about the status.
-
-## Alerting
-
-All DAGs send an email notification updating the status. The email notifications are sent for both failed/successful runs of the data pipelines. An example of the email notification is attached below.
-
-![Notification Email Example](/images/image_10.png)
-
-## Folder Structure
-
-- The data preprocessing pipeline and data generation pipeline follow a similar structure as follows:
-  ```
-    data-generation/
-      |- dags/                 #Contains DAG Definitions for data preprocessing and generation
-          |- src/
-              |- config/       #`config.py` Manages environment variables
-              |- experiments/  #`test.ipynb` - Testing LLM prompts
-              |- llm/
-              |- schema/       #Contains all Pydantic validation schemas
-              |- utils/        #Helper functions for data processing 
-          |- tests/
-          |- __init__.py
-          |- logger.py
-          |- main.py
-      |- airflow.cfg
-      |- docker-compose.yml    # For Airflow container
-      |- README.md
-  ```
-
-## LLM and API Used
-We utilize the OpenRouter API via the LangChain OpenAI package to generate text-based content. The responses are validated using Pydantic to maintain structure and consistency.
-
-- Model used: LLaMA- **meta-llama/llama-3.3-70b-instruct:free**
-
-OpenRouter Models: https://openrouter.ai/models
+- We use the OpenRouter API via the LangChain OpenAI package to generate text-based content.
+- The model ensures structured responses validated using Pydantic.
+- Model Used: meta-llama/llama-3.3-70b-instruct:free
+- OpenRouter Models: https://openrouter.ai/models
 
 ## Testing and Validation
 
@@ -103,8 +49,24 @@ Validation ensures:
   - Required fields are present.
   - Structured output for LLM-generated content.
 
+Key Pydantic Classes:
+- `BasicUser`: Validates user data generated by the LLM.
 
-### Data Preprocessing & Validation
+- `User`: Ensures the correct schema for user data before loading into Firestore.
+
+- `UserList`: Validates bulk user data uploads.
+
+- `JobPosting`: Validates job posting data before adding to Firestore.
+
+- `JobPostingList`: Ensures integrity for lists of job postings.
+
+- `Post`: Validates a post object before loading into Firestore.
+
+- `LinkedInPost`: Ensures structured content for LLM-generated posts.
+
+Additionally, supporting Enums and dependent classes are used to enforce structure and consistency for outputs.
+
+### Testing
 1. Type Conversion & Cleaning: Ensuring numeric/string company IDs are standardized, NaN handling, and dtype consistency.
 2. Schema Enforcement: Validation of JobPosting Pydantic models with edge cases like epoch timestamp handling.
 3. Data Integrity: Testing dataframe operations (merges, drops, enrichment) in enrich_and_clean_postings to ensure valid titles, locations, and company mappings.
@@ -121,3 +83,70 @@ Test suite combines pandas-based assertions, Pydantic model validation, and unit
 The results of a test run for all the files in data-generation/dags/src/
 
 ![alt text](/images/test-cases.png)
+
+
+## Cloud Run Function
+Once the Data Generation Pipeline is triggered and data is loaded into FirestoreDB, a Cloud Function hosted on Cloud Run is configured to detect any additions or updates in FirestoreDB. This triggers the Data Ingestion Pipeline accordingly. 
+
+[[Setup](../cloud-functions/functions/dag-trigger/README.md)]
+
+[[Function](../cloud-functions/functions/dag-trigger/dag-firebase-trigger.py)]
+
+
+## Data Ingestion Piepeline
+
+### Overview
+- This pipeline loads data from FirestoreDB into the Pinecone Vector Store.
+- The DAG is deployed on a VM and is accessible via port 9090. 
+- A GitHub workflow updates the code on the VM whenever there’s a push. - The pipeline is automatically triggered by Cloud Run.
+
+### Tasks
+- `initialize_pinecone`: Initializes the Pinecone index. If the index doesn't exist, it will be created.
+
+- `test_connections`: Verifies connectivity and functionality for the following services:
+
+  1. Firestore: Ensures Firestore is accessible.
+
+  2. Pinecone: Confirms the availability of the vector database.
+
+  3. Embedding Model: Verifies that the embedding model is working correctly.
+
+- `ingest_data`: Ingests data into the Pinecone vector store, processing one namespace at a time.
+
+### Visualization
+
+#### Pipeline Diagram: 
+![Data Ingestion Pipeline](/images/data_ingestion.png)
+
+#### Gantt Chart:
+![Data Ingestion Gantt Chart](/images/data-ingestion-gantt.png)
+
+### Testing
+[TODO]
+
+## Logging and Failure Tracking
+- Logs are generated at each step and for all functions.
+- The logs are currently collected using the in-built Airflow logger
+- Errors are captured and logged for easy debugging and resolution.
+- Any errors during the pipeline runs result in a failed run, and appropriate notifications are sent to alert about the status.
+
+## Alerting
+
+All DAGs send an email notification updating the status. The email notifications are sent for both failed/successful runs of the data pipelines. An example of the email notification is attached below.
+
+![Notification Email Example](/images/image_10.png)
+
+## GitHub Workflows
+There are two workflows triggered on a push to the main branch. These workflows perform the following tasks:
+
+- SSH into the VM.
+
+- Pull the latest code from the repository.
+
+- Ensure that all required files, such as the .env file and GCP credentials JSON, are available. If not, they are added.
+
+- Restart the Docker containers and ensure the Airflow endpoint is up and running.
+
+The workflow definitions can be found in the corresponding YAML files:
+- [data-generation-workflow](../.github/workflows/trigger_airflow_generation.yml)
+- [data-generation-workflow](../.github/workflows/trigger_airflow_data_pipeline.yml)
