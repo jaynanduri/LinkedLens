@@ -1,0 +1,58 @@
+name: Run Tests
+
+on:
+    # push:
+    #   branches:
+    #     - main
+    workflow_dispatch:
+
+jobs:
+    run-model-tests:
+        permissions:
+            contents: 'read'
+            id-token: 'write'
+      
+        name: Model Unit Tests
+        runs-on: ubuntu-latest
+      
+        # defaults:
+        #     run:
+        #         working-directory: ./model-development
+    
+        steps:
+        - name: 'Checkout'
+          uses: 'actions/checkout@v2'
+        
+        - name: 'Set up Python'
+          uses: actions/setup-python@v2
+          with:
+            python-version: 3.8
+        
+        - name: Install dependencies
+          uses: pip install -r requirements.txt
+        
+        - name: Run unittests
+          working-directory: ./model-development
+          run: python -m unittest test.test_unittest
+    
+        - name: Notify on success
+          if: success()
+          run: echo "Model Unit tests passed successfully"
+    
+        # - name: Notify on failure
+        #   if: failure()
+        #   uses: hilarion5/send-mail@v1
+        #   with:
+        #     smtp-server: smtp.example.com
+        #     smtp-port: 465
+        #     smtp-secure: true
+        #     from-email: sender@example.com
+        #     to-email: recipient1@example.com,recipient2@example.com
+        #     username: yourusername
+        #     password: yourpassword
+        #     subject: Unit Test failed.
+        #     body: This is a test email sent from GitHub Actions.
+        #     html: |
+        #       <h1>This is a test email</h1>
+        #       <p>Test Paragraph</p>
+        
