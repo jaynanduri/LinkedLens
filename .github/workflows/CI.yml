@@ -61,7 +61,7 @@ jobs:
           run: pip install -r requirements.txt
         
         - name: Run data generation unittests
-          working-directory: data-pipeline/data-generation/dags
+          working-directory: data-pipelines/data-generation/dags
           run: python -m unittest test.test_unittest
     
         - name: Notify on success
@@ -73,7 +73,7 @@ jobs:
           run: echo "Data generation pipeline Unit Tests failed."
         
         - name: Run data ingestion unittests
-          working-directory: data-pipeline/data-ingestion/dags
+          working-directory: data-pipelines/data-ingestion/dags
           run: python -m unittest test.test_unittest
     
         - name: Notify on success
