@@ -48,9 +48,9 @@ default_args = {
 }
 
 dag = DAG(
-    dag_id='Data_Preprocessing_and_Generation_Pipeline',
+    dag_id='Data_Generation_Pipeline',
     default_args=default_args,
-    description='Data_Preprocessing_and_Generation_Pipeline',
+    description='Data_Generation_Pipeline',
     schedule_interval=None,
     catchup=False,
 )

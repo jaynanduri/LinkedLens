@@ -29,9 +29,9 @@ For details on setting up the required GCP resources to run these pipelines, ref
 ### Visualization
 
 #### Pipeline Diagram: 
-
+![Data Generation Pipeline](/images/data-generation-pipeline.png)
 #### Gantt Chart:
-
+![Data Generation Gantt Chart](/images/data-generation-gantt.png)
 ### LLM Utilization
 
 - We use the OpenRouter API via the LangChain OpenAI package to generate text-based content.
