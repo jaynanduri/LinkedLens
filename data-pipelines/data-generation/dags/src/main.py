@@ -4,7 +4,7 @@ from firebase_admin.firestore import DELETE_FIELD
 from datetime import datetime, timezone, timedelta
 from google.cloud.firestore_v1 import FieldFilter
 import numpy as np
-
+import pandas as pd
 
 # def update_post_collection(collection, db_client):
 #     # get all docs of collection
@@ -111,11 +111,34 @@ if __name__ == '__main__':
         firebase_admin.initialize_app(cred)
         db = firestore.client(database_id='linked-lens')
         print("DB:", db)
-        # update_user_collection("users", db)
-        # update_job_collection("jobs", db)
-        # update_post_collection("posts", db)
-        jobs = db.collection("jobs").where(filter = FieldFilter("vectorized", "==", True)).get()
-        print(f"Number of docs fetched for jobs: {len(jobs)}")
+        # get posts with job_ids
+        post_job_ids = []
+        post_jobs = db.collection("posts").where(filter=FieldFilter("job_id", "!=", "")).get()
+        print(f"Total posts with job_id: {len(post_jobs)}")
+        for post in post_jobs:
+            post_dict = post.to_dict()
+            post_job_ids.append(post_dict.get("job_id"))
+
+        print(f"Total job_ids in posts: {len(post_job_ids)}")
+
+        # get all job ids
+        jobs_data = []
+        for job_id in post_job_ids:
+            job = db.collection("jobs").document(job_id).get()
+            if not job.exists:
+                print(f"Job ID {job_id} does not exist in jobs collection.")
+            else:
+                job_dict = job.to_dict()
+                jobs_data.append({
+                    "job_id": job_id,
+                    "company_name": job_dict.get("company_name", ""),
+                    "title": job_dict.get("title", ""),
+                    "location": job_dict.get("location", ""),
+                })
+
+        df = pd.DataFrame(jobs_data)
+        df.to_csv("jobs.csv", index=False)
+        print("Job data saved to jobs.csv")
     except Exception as e:
         print(f"Failed: {e}")
 
