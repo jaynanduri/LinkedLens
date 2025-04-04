@@ -1,0 +1,103 @@
+name: Run Tests
+
+on:
+    push:
+      branches:
+        - main
+        - model-dev
+    workflow_dispatch:
+
+jobs:
+    run-model-tests:
+        permissions:
+            contents: 'read'
+            id-token: 'write'
+      
+        name: Model Unit Tests
+        runs-on: ubuntu-latest
+    
+        steps:
+        - name: 'Checkout'
+          uses: 'actions/checkout@v2'
+        
+        - name: 'Set up Python'
+          uses: actions/setup-python@v2
+          with:
+            python-version: 3.12
+        
+        - name: Install dependencies
+          working-directory: model-development/src/
+          run: pip install -r requirements.txt
+        
+        - name: Run unittests
+          working-directory: model-development
+          run: python -m unittest test.test_unittest
+    
+        - name: Notify on model test success
+          if: success()
+          run: echo "Model Unit tests passed successfully"
+        
+        - name: Notify on model test failure
+          if: failure()
+          run: echo "Model Unit Tests failed."
+    
+    run-data-pipeline-tests:
+        permissions:
+            contents: 'read'
+            id-token: 'write'
+      
+        name: Data Pipeline Unit Tests
+        runs-on: ubuntu-latest
+    
+        steps:
+        - name: 'Checkout'
+          uses: 'actions/checkout@v2'
+        
+        - name: 'Set up Python'
+          uses: actions/setup-python@v2
+          with:
+            python-version: 3.12
+        
+        - name: Install dependencies
+          run: pip install -r requirements.txt
+        
+        - name: Run data generation unittests
+          working-directory: data-pipelines/data-generation/dags
+          run: python -m unittest test.test_unittest
+    
+        - name: Notify on success
+          if: success()
+          run: echo "Data Generation Unit tests passed successfully"
+        
+        - name: Notify on data generation test failure
+          if: failure()
+          run: echo "Data generation pipeline Unit Tests failed."
+        
+        - name: Run data ingestion unittests
+          working-directory: data-pipelines/data-ingestion/dags
+          run: python -m unittest test.test_unittest
+    
+        - name: Notify on success
+          if: success()
+          run: echo "Data Ingestion Unit tests passed successfully"
+
+        - name: Notify on data ingestion test failure
+          if: failure()
+          run: echo "Data ingestion pipeline Unit Tests failed."
+
+        # - name: Notify on failure
+        #   uses: hilarion5/send-mail@v1
+        #   with:
+        #     smtp-server: smtp.example.com
+        #     smtp-port: 465
+        #     smtp-secure: true
+        #     from-email: sender@example.com
+        #     to-email: recipient1@example.com,recipient2@example.com
+        #     username: yourusername
+        #     password: yourpassword
+        #     subject: Unit Test failed.
+        #     body: This is a test email sent from GitHub Actions.
+        #     html: |
+        #       <h1>This is a test email</h1>
+        #       <p>Test Paragraph</p>
+        
