@@ -17,9 +17,16 @@ spec:
       containers:
       - name: model-dev
         image: us-east1-docker.pkg.dev/${{env.GCP_PROJECT_NAME}}}/${{env.ARTIFACT_REPO}}/model-dev:latest
+        imagePullPolicy: Always
         resources:
+          requests:
+            memory: "70Mi"
+            cpu: "50m"
           limits:
             memory: "128Mi"
             cpu: "500m"
         ports:
         - containerPort: 80
+        envFrom:
+            - configMapRef:
+                name: /kubernetes-manifests/model-config
