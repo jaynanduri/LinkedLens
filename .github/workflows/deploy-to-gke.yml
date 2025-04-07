@@ -59,7 +59,7 @@ jobs:
         run: docker push us-east1-docker.pkg.dev/${{env.GCP_PROJECT_ID}}}/${{env.ARTIFACT_REPO}}/model-dev:$GITHUB_SHA
       
       - name: 'Apply ConfigMap'
-        run: kubectl apply -f ../../kuberetes-manifests/config.yaml
+        run: kubectl apply -f ../../kubernetes/config.yaml
       
       - name: Deploy
         run: |-
