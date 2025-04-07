@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: model-dev
-        image: us-east1-docker.pkg.dev/${{env.GCP_PROJECT_NAME}}}/${{env.ARTIFACT_REPO}}/model-dev:latest
+        image: us-east1-docker.pkg.dev/${{env.GCP_PROJECT_NAME}}}/${{env.ARTIFACT_REPO}}/model-dev:$GITHUB_SHA
         imagePullPolicy: Always
         resources:
           requests:
