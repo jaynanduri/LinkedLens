@@ -156,7 +156,7 @@ sudo usermod -aG docker $USER
   
 6. Create Cloud Run Function
     - Cloud Run is used to trigger DAG runs on the Compute Engine.
-    - Follow the [steps](../cloud-functions/functions/dag-trigger/README.md) to set up and run functions
+    - Follow the [steps](../infra/functions/dag-trigger/README.md) to set up and run functions
 
 
 7. Add Secrets to GitHub

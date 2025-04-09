@@ -88,9 +88,9 @@ The results of a test run for all the files in data-generation/dags/src/
 ## Cloud Run Function
 Once the Data Generation Pipeline is triggered and data is loaded into FirestoreDB, a Cloud Function hosted on Cloud Run is configured to detect any additions or updates in FirestoreDB. This triggers the Data Ingestion Pipeline accordingly. 
 
-[[Setup](../cloud-functions/functions/dag-trigger/README.md)]
+[[Setup](../infra/functions/dag-trigger/README.md)]
 
-[[Function](../cloud-functions/functions/dag-trigger/dag-firebase-trigger.py)]
+[[Function](../infra/functions/dag-trigger/dag-firebase-trigger.py)]
 
 
 ## Data Ingestion Piepeline

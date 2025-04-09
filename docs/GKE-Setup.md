@@ -1,6 +1,6 @@
 ## Setting Up Google Kubernetes Engine and Connecting to GitHub Actions
 
-1. Create a cluster on GKE ([glcoud command to create cluster](cloud-functions/scripts/deploy_gke.sh)) using the following command:
+1. Create a cluster on GKE ([glcoud command to create cluster](infra/scripts/deploy_gke.sh)) using the following command:
     ```
         gcloud beta container --project "linkedlens-452503" clusters \
         create "cluster-1" --region "us-east1" --tier "standard" \
@@ -36,7 +36,7 @@
     --member=serviceAccount:$PROJECT_NUMBER-compute@developer.gserviceaccount.com \
     --role=roles/artifactregistry.reader
     ```
-3. Enable keyless authentication [[Script to setup workload identity provider keyless_authetication.sh](/cloud-functions/scripts/keyless_authentication.sh)]
+3. Enable keyless authentication [[Script to setup workload identity provider keyless_authetication.sh](/infra/scripts/keyless_authentication.sh)]
     - Along with the service accounts, this project makes use workload identity pools to authenticate GitHub Actions to GCloud.
 4. To run the GitHub workflow the following values have to be given as Env variables and Secrets:
    1.  env.GCP_PROJECT_ID (GCP Project ID )
