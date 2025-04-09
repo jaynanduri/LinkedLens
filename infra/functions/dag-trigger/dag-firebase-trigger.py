@@ -29,7 +29,7 @@ def make_airflow_request() -> requests.Response:
 
     #Airflow REST API endpoint for triggering DAG runs
     endpoint = f"api/v1/dags/{dagName}/dagRuns"
-    url = f"http://{serverIP}:8080/{endpoint}"
+    url = f"http://{serverIP}:9090/{endpoint}"
 
     #Create a session with basic authentication
     session = requests.Session()

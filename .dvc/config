@@ -1,0 +1,5 @@
+[core]
+    autostage = true
+    remote = myremote
+['remote "myremote"']
+    url = gs://linkedlens_data/dvc_files

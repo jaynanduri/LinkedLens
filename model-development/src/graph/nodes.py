@@ -50,7 +50,6 @@ def query_analyzer_node(state: State, chain)->dict:
           "query_type": "retrieve",
           "vector_namespace": ["user", "job", "user_post", "recruiter_post"]
       }
-
   return output
 
 
@@ -89,7 +88,6 @@ def retrieval_node(
     """
     # Generate the embedding for the standalone query
     query_embedding = embedding_client.generate_embedding(state['standalone_query'])
-
     retrieved_results = []
     current_time = int(datetime.now(timezone.utc).timestamp())
 
@@ -117,7 +115,7 @@ def retrieval_node(
                     retrieved_results.append(match_dict)
     return {'retrieved_docs': retrieved_results}
 
-
+@traceable
 def fetch_complete_doc_text(matches: List[dict], pinecone_client: PineconeClient)-> Dict[str, str]:
     """
     Fetch all chunks for each retrieved doc and returns the complete raw_data of each doc.
@@ -160,10 +158,9 @@ def fetch_complete_doc_text(matches: List[dict], pinecone_client: PineconeClient
         all_docs_dict[firestore_id].sort(key=lambda x: x[0])
         final_text = " ".join(text for _, text in all_docs_dict[firestore_id])
         all_docs_dict[firestore_id] = final_text
-
     return all_docs_dict
 
-
+@traceable
 def process_retrieved_docs(matches: List[dict], pinecone_client: PineconeClient) -> Dict[str, dict]:
     """
     Processes a list of Pinecone matches and aggregates them by unique Firestore ID.
@@ -223,9 +220,9 @@ def process_retrieved_docs(matches: List[dict], pinecone_client: PineconeClient)
             # Update the score if the new chunk has a higher score.
             if new_score > entry["score"]:
                 entry["score"] = new_score
-    
     return final_docs
 
+@traceable
 def format_context_for_llm(processed_docs: Dict[str, dict], max_docs: int = 20) -> str:
     """
     Formats the processed documents into a string for use as context in an LLM prompt.
@@ -250,7 +247,6 @@ def format_context_for_llm(processed_docs: Dict[str, dict], max_docs: int = 20) 
         )
 
         context_lines.append(line)
-    
     return "\n".join(context_lines)
 
 @with_logging
@@ -270,9 +266,7 @@ def final_response_node(state: State, chain):
     """
     Final node that produces the assistant response.
     """
-    response = chain.invoke({"context": state['final_context'], "input": state['query']}).content
-    if response:
-        state["messages"].append(AIMessage(content=response))
-
-
-    return {"response": response}
+    response = chain.invoke({"context": state['final_context'], "input": state['query']})
+    if response.content:
+        state["messages"].append(AIMessage(content=response.content))
+    return {"response": response.content}

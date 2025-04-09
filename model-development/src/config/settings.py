@@ -48,11 +48,11 @@ class Settings(BaseModel):
     LOG_NAME: str = constants.LOG_NAME
     NAMESPACE_URLS: Dict[str, str] = constants.NAMESPACE_URLS
     LANGSMITH_API_KEY:str = os.environ["LANGSMITH_API_KEY"]
-    settings.LANGSMITH_PROJECT_NAME_PROD = "linkedlens-prod"
-    settings.LANGSMITH_PROJECT_NAME_TEST = "linkedlens-test"
-    settings.LANGSMITH_DATASET_NAME_PROD = "LinkedLens"
-    settings.LANGSMITH_DATASET_NAME_TEST = "LinkedLensTest"
-    settings.LANGSMITH_EXPERIMENT_PREFIX_PROD = "prod_eval"
-    settings.LANGSMITH_EXPERIMENT_PREFIX_TEST = "test_eval"
+    LANGSMITH_PROJECT_NAME_PROD: str = "linkedlens-prod"
+    LANGSMITH_PROJECT_NAME_TEST: str = "linkedlens-test"
+    LANGSMITH_DATASET_NAME_PROD: str = "LinkedLens"
+    LANGSMITH_DATASET_NAME_TEST: str = "LinkedLensTest"
+    LANGSMITH_EXPERIMENT_PREFIX_PROD: str = "prod_eval"
+    LANGSMITH_EXPERIMENT_PREFIX_TEST: str = "test_eval"
 
 settings = Settings()

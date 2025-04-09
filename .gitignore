@@ -1,5 +1,6 @@
 
 /mlops
+/mlops
 /data-generation/logs/
 /data-generation/plugins
 /data-generation/working_data
@@ -9,17 +10,11 @@
 __pycache__
 *.log
 *.csv
-
-test.py
-secrets/
-*.json
-.env
-
 secrets/
 *.json
 .env
 .github/deploy-airflow.yml
-
+*.parquet
 # Created by https://www.toptal.com/developers/gitignore/api/pycharm,visualstudiocode,macos,windows,linux
 # Edit at https://www.toptal.com/developers/gitignore?templates=pycharm,visualstudiocode,macos,windows,linux
 

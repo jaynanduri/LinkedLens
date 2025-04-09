@@ -23,13 +23,19 @@ class PineconeSettings(BaseModel):
     environment: str = Field(default_factory=lambda: os.getenv("PINECONE_ENVIRONMENT", ""))
     cloud: str = 'aws'
     region : str = 'us-east-1'
-    index_name: str = "linkedlens-index"
+    index_name: str = "linked-lens-index"
     batch_size: int = 200
     dimension: int = 384  # Dimension for 'all-MiniLM-L6-v2' model
-    collections: Dict[str, str] = {
-        "users": "user",
-        "jobs": "job",
-        "posts": "post",
+    # collections: Dict[str, str] = {
+    #     "users": "user",
+    #     "jobs": "job",
+    #     "posts": "post",
+    # }
+    namespace_collection: Dict[str, str] = {
+        "user": "users",
+        "user_post" : "posts",
+        "recruiter_post": "posts",
+        "job": "jobs"
     }
     namespace_collection: Dict[str, str] = {
         "user": "users",
@@ -50,12 +56,7 @@ class FirestoreSettings(BaseModel):
     """Firestore configuration settings."""
     
     collections: List[str] = ["users", "jobs", "posts"]
-    credentials_path: str = Field(
-        default_factory=lambda: os.getenv(
-            "GOOGLE_APPLICATION_CREDENTIALS", 
-            str(BASE_DIR / "config" / "db-credentials.json")
-        )
-    )
+    credentials_path: str = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     database_id: Optional[str] = Field(
         default_factory=lambda: os.getenv("DB_NAME")
     )
@@ -75,7 +76,7 @@ class ProcessingSettings(BaseModel):
     """Processing configuration settings."""
     
     max_concurrent: int = 5  # Maximum concurrent embedding requests
-    index_name: str = 'linkedlens-index'
+    # index_name: str = 'linkedlens-index'
     update_strategy: str = "changed-fields-only"  # 'all', 'changed-fields-only'
     relevant_fields: Dict[str, List[str]] = {
         "job": ["title", "company_name", "author", "listed_time", "expiry"],
@@ -100,7 +101,6 @@ class Settings(BaseModel):
     firestore: FirestoreSettings = FirestoreSettings()
     embedding: EmbeddingSettings = EmbeddingSettings()
     processing: ProcessingSettings = ProcessingSettings()
-    # logging: LoggingSettings = LoggingSettings()
     SMTP_SERVER: str = os.getenv("SMTP_SERVER")
     SMTP_STARTTLS: bool = os.getenv("SMTP_STARTTLS")
     SMTP_USER: str = os.getenv("SMTP_USER")
@@ -113,7 +113,7 @@ class Settings(BaseModel):
     AIRFLOW_WWW_USER_USERNAME:str = os.getenv("AIRFLOW_WWW_USER_USERNAME")
     AIRFLOW_WWW_USER_PASSWORD:str = os.getenv("AIRFLOW_WWW_USER_PASSWORD")
     DB_NAME: str = os.getenv("DB_NAME")
-    DB_CREDENTIALS_PATH:str = os.getenv("DB_CREDENTIALS_PATH")
+    # DB_CREDENTIALS_PATH:str = os.getenv("DB_CREDENTIALS_PATH")
     AIRFLOW_UID:int = os.getenv("AIRFLOW_UID")
 
 

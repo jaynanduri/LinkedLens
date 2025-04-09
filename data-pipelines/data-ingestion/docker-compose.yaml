@@ -65,6 +65,8 @@ x-airflow-common:
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
     AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT: "google-cloud-platform://?extra__google_cloud_platform__key_path=/opt/airflow/credentials/linkedlens-firestore-srvc-acc.json"
+    GOOGLE_APPLICATION_CREDENTIALS: "/opt/airflow/credentials/linkedlens-firestore-srvc-acc.json"
+    NO_PROGRESS_BAR: 1
     # yamllint disable rule:line-length
     # Use simple http server on scheduler for health checks
     # See https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/logging-monitoring/check-health.html#scheduler-health-check-server
@@ -87,7 +89,7 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
     - ${AIRFLOW_PROJ_DIR:-.}/working_data:/opt/airflow/working_data
     - ./airflow.cfg:/opt/airflow/airflow.cfg
-    - ./dags/src/config/linkedlens-firestore-srvc-acc.json:/opt/airflow/credentials/linkedlens-firestore-srvc-acc.json
+    - ../credentials/linkedlens-firestore-srvc-acc.json:/opt/airflow/credentials/linkedlens-firestore-srvc-acc.json
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
@@ -200,8 +202,6 @@ services:
   airflow-init:
     <<: *airflow-common
     entrypoint: /bin/bash
-    env_file:
-      - ../.env
     # yamllint disable rule:line-length
     command:
       - -c

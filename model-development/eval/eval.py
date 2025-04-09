@@ -96,7 +96,7 @@ def run_evaluation(handler: LangSmithHandler, experiment_prefix: str):
             lambda example: example,
             data=dataset_id,
             evaluators=[CompletenessEvaluator(), FaithfulnessEvaluator(), RetrievalEvaluator()],
-            experiment_prefix="test_eval",
+            experiment_prefix=experiment_prefix,
             metadata={"version": "1.0.0"},
         )
         logger.info("Evaluation completed.")

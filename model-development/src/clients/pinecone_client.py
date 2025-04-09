@@ -1,5 +1,5 @@
 from typing import Any, Dict, List, Optional
-from pinecone import Pinecone, Index
+from pinecone import Pinecone, PineconeAsyncio, Index
 from config.settings import settings
 from logger import logger
 

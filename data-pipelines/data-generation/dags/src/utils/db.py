@@ -10,7 +10,7 @@ class FirestoreClient:
         Initialize Firestore client with the service account credentials.
         """
         try:
-            self.cred = credentials.Certificate(settings.DB_CREDENTIALS_PATH)
+            self.cred = credentials.Certificate(settings.GOOGLE_APPLICATION_CREDENTIALS)
             firebase_admin.initialize_app(self.cred)
             self.db = firestore.client(database_id=settings.DB_NAME)
             logger.info("Connected to Firestore")

@@ -56,6 +56,7 @@ def create_posts(input_df: pd.DataFrame, db_client: FirestoreClient,
         user_chain, user_format_instructions = get_llm_chain(user_chain_type)
         
         req_rate_limiter = get_request_limiter()
+        logger.info(f"Rate Limiter: {req_rate_limiter.num_requests}")
         generated_post_count = 0
         for _, row in input_df.iterrows():
             job_id = row['job_id']
@@ -90,7 +91,7 @@ def create_posts(input_df: pd.DataFrame, db_client: FirestoreClient,
             db_client.insert_entry('posts', post_data, post_data['post_id'])
             logger.info(f"Inserted Post data into DB for job_id: {job_id}")
             if user_type == 'user':
-                db_client.insert_entry('userPostJobIds', {"job_id": job_id}, job_id)
+                db_client.insert_entry('userPostJobIds', {"job_id": job_id, "post_id": post_data['post_id']}, job_id)
             
             job_ids.add(job_id)
             logger.info(f"Added job id {job_id} for tracking")

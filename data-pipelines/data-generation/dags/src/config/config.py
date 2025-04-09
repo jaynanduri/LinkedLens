@@ -1,31 +1,35 @@
 import os
 from dotenv import load_dotenv
+import os
 from pydantic_settings import BaseSettings
+from dotenv import load_dotenv
+
+load_dotenv(override=True)
 
 class Settings(BaseSettings):
     """Configuration settings loaded from environment variables."""
-    OPENAI_API_KEY: str
-    DB_NAME: str
-    DB_CREDENTIALS_PATH:str
-    AIRFLOW_UID:int
-    MAX_OPEN_AI_REQUEST_PER_MIN: int
-    MAX_OPEN_AI_REQUEST_PER_DAY: int
-    OPEN_ROUTER_BASE_URL: str
-    SMTP_SERVER:str
-    SMTP_STARTTLS:bool
-    SMTP_USER:str
-    SMTP_PASSWORD:str
-    SMTP_PORT:int
-    SMTP_EMAIL:str
-    SMTP_TIMEOUT:int
-    SMTP_RETRY_LIMIT:int
-    SMTP_RECIPIENT_EMAILS:str
-    AIRFLOW_WWW_USER_USERNAME:str
-    AIRFLOW_WWW_USER_PASSWORD:str
+    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY")
+    DB_NAME: str = os.getenv("DB_NAME")
+    GOOGLE_APPLICATION_CREDENTIALS:str = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    AIRFLOW_UID:int = os.getenv("AIRFLOW_UID")
+    MAX_OPEN_AI_REQUEST_PER_MIN: int = os.getenv("MAX_OPEN_AI_REQUEST_PER_MIN")
+    MAX_OPEN_AI_REQUEST_PER_DAY: int = os.getenv("MAX_OPEN_AI_REQUEST_PER_DAY")
+    OPEN_ROUTER_BASE_URL: str = os.getenv("OPEN_ROUTER_BASE_URL")
+    SMTP_SERVER:str = os.getenv("SMTP_SERVER")
+    SMTP_STARTTLS:bool = os.getenv("SMTP_STARTTLS")
+    SMTP_USER:str = os.getenv("SMTP_USER")
+    SMTP_PASSWORD:str = os.getenv("SMTP_PASSWORD")
+    SMTP_PORT:int = os.getenv("SMTP_PORT")
+    SMTP_EMAIL:str = os.getenv("SMTP_EMAIL")
+    SMTP_TIMEOUT:int = os.getenv("SMTP_TIMEOUT")
+    SMTP_RETRY_LIMIT:int = os.getenv("SMTP_RETRY_LIMIT")
+    SMTP_RECIPIENT_EMAILS:str = os.getenv("SMTP_RECIPIENT_EMAILS")
+    AIRFLOW_WWW_USER_USERNAME:str = os.getenv("AIRFLOW_WWW_USER_USERNAME")
+    AIRFLOW_WWW_USER_PASSWORD:str = os.getenv("AIRFLOW_WWW_USER_PASSWORD")
 
-    class Config():
-        env_file = ".env"
-        case_sensitive = True
+    # class Config():
+    #     env_file = ".env"
+    #     case_sensitive = True
         
 
 settings = Settings()
