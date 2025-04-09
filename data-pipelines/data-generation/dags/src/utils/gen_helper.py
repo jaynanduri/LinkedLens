@@ -17,7 +17,6 @@ from src.llm.llm_client import get_open_router_llm
 from typing import Any, List, Tuple
 import pandas as pd
 
-
 def read_input_file(filepath: str, column_names: List[str], filter=False, num_rows=20)->pd.DataFrame:
     """Reads specific column file from GCP bucket(filepath) """
     try:

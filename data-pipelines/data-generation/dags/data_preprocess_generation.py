@@ -55,7 +55,6 @@ dag = DAG(
     catchup=False,
 )
 
-
 # Task: Sensor to check file existence in GCP bucket.
 check_file_exists = GCSObjectExistenceSensor(
     task_id="check_file_exists",

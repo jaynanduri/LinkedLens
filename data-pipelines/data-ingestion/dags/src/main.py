@@ -199,7 +199,6 @@ def ingest_namespace(namespace: str, collection: str, only_new: bool = False) ->
                 }
             
             total_docs_fetched = total_docs_fetched + len(documents)
-
             # if batch size changes later
             for i in range(0, len(documents), batch_size):
                 batch = documents[i:i+batch_size]

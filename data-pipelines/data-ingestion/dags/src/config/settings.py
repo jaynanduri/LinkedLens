@@ -37,6 +37,12 @@ class PineconeSettings(BaseModel):
         "recruiter_post": "posts",
         "job": "jobs"
     }
+    namespace_collection: Dict[str, str] = {
+        "user": "users",
+        "user_post" : "posts",
+        "recruiter_post": "posts",
+        "job": "jobs"
+    }
     metadata_fields: Dict[str, List[str]] = {
         # firestoreId, createdAt, updatedAt included by default for all 
         "job": ["title", "company_name", "location", "ttl"],
