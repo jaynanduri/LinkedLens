@@ -1,6 +1,6 @@
 import os
 
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 from config import constants
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
@@ -26,9 +26,9 @@ class PineconeSettings(BaseModel):
 
 class PromptSettings(BaseModel):
     project_id: str = Field(default_factory=lambda: os.getenv("GOOGLE_PROJECT_ID"))
-    prompt_mapping: Dict[str, str] = Field(default_factory=lambda: {
-        "query_analysis_prompt": os.getenv("PROMPT_ID_QUERY_ANALYZER"),
-        "final_system_prompt": os.getenv("PROMPT_ID_FINAL_RESPONSE")
+    prompt_mapping: Dict[str, Tuple[str, str]] = Field(default_factory=lambda: {
+        "query_analysis_prompt": (os.getenv("PROMPT_ID_QUERY_ANALYZER"), os.getenv("PROMPT_VERSION_QUERY_ANALYZER")),
+        "final_system_prompt": (os.getenv("PROMPT_ID_FINAL_RESPONSE"), os.getenv("PROMPT_VERSION_FINAL_RESPONSE")),
     })
 
 

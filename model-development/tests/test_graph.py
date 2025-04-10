@@ -279,218 +279,104 @@ class TestGraph(unittest.TestCase):
         self.assertIn("retrieved_docs", result)
         self.assertEqual(result["retrieved_docs"], expected_docs)
 
-    def test_fetch_complete_doc_text(self):
-        """Test fetch_complete_doc_text aggregates document chunks correctly."""
-        
-        # Mock matches input
-        matches = [
+    @patch("graph.nodes.format_context_for_llm")
+    def test_augmentation_node(self, mock_format_context):
+        """Test augmentation_node updates final_context correctly."""
+
+        self.state["retrieved_docs"] = [
             {
-                "id": "job123_chunk_1",
+                "id": "job123",
                 "score": 0.92,
                 "metadata": {
+                    "docType": "job",
                     "firestoreId": "job123",
-                    "docType": "job",
-                    "chunk": 1,
-                    "total_chunks": 2,
-                    "raw_data": "This is chunk one."
-                }
-            },
-            {
-                "id": "job123_chunk_2",
-                "score": 0.90,
-                "metadata": {
-                    "firestoreId": "job123",
-                    "docType": "job",
-                    "chunk": 2,
-                    "total_chunks": 2,
-                    "raw_data": "This is chunk two."
-                }
-            },
-            {
-                "id": "job456_chunk_1",
-                "score": 0.87,
-                "metadata": {
-                    "firestoreId": "job456",
-                    "docType": "job",
-                    "chunk": 1,
-                    "total_chunks": 2,
-                    "raw_data": "This is chunk one."
-                }
-            },
-            {
-                "id": "job456_chunk_2",
-                "score": 0.85,
-                "metadata": {
-                    "firestoreId": "job456",
-                    "docType": "job",
-                    "chunk": 2,
-                    "total_chunks": 2,
-                    "raw_data": "This is chunk two."
+                    "location": "USA",
+                    "company_name": "Tech corp",
+                    "title": "AI Engineer",
+                    "raw_data": "This is chunk one.",
                 }
             }
         ]
 
-        # Mock return values from Pinecone fetch call
-        def mock_fetch_by_vector_ids(vector_id_list, namespace):
-            # Create mock vectors with correct metadata
-            vectors = {
-                vector_id: {
-                    "firestoreId": vector_id.split("_")[0],  # Extract job ID
-                    "chunk": int(vector_id.split("_")[-1]),  # Convert chunk number to int
-                    "raw_data": f"This is chunk {vector_id.split('_')[-1]}."
-                }
-                for vector_id in vector_id_list
-            }
-            return DummyFetchResponse(namespace, vectors)
-
-        self.mock_pinecone_client.fetch_by_vector_ids = MagicMock(side_effect=mock_fetch_by_vector_ids)
-
-        # Call the function under test
-        fetch_result = fetch_complete_doc_text(matches, self.mock_pinecone_client)
-
-        # Expected output: Combined text for each document ID
-        expected_output = {
-            "job123": "This is chunk 1. This is chunk 2.",
-            "job456": "This is chunk 1. This is chunk 2."
-        }
-
-        # Assertions
-        self.assertEqual(fetch_result, expected_output)
-        self.mock_pinecone_client.fetch_by_vector_ids.assert_called()
-
-
-    @patch("graph.nodes.process_retrieved_docs")
-    @patch("graph.nodes.format_context_for_llm")
-    def test_augmentation_node(self, mock_format_context, mock_process_docs):
-        """Test augmentation_node updates final_context correctly."""
-
-        # Mock the processed docs
-        mock_process_docs.return_value = {
-            "abc123": {
-                "score": 0.95,
-                "url": "https://example.com/job/abc123",
-                "combined_raw_text": "AI is evolving."
-            }
-        }
-
         # Mock the formatted context
-        mock_format_context.return_value = "[Metadata] Source: https://example.com/job/abc123, Relevance: 0.95\n[Content] AI is evolving."
+        mock_format_context.return_value = "[Metadata] Source: https://example.com/jobs/job123, Company Name: Tech corp, Title: AI Engineer, Location: USA, Relevance: 0.92\n[Content] This is chunk one.\n\n"
 
-        result = augmentation_node(self.state, self.mock_pinecone_client)
+        result = augmentation_node(self.state)
 
         self.assertIn("final_context", result)
         self.assertIsInstance(result["final_context"], str)
         self.assertNotEqual(result["final_context"], "")  # Ensure context is not empty
-
+        self.assertEqual(result["final_context"], "[Metadata] Source: https://example.com/jobs/job123, Company Name: Tech corp, Title: AI Engineer, Location: USA, Relevance: 0.92\n[Content] This is chunk one.\n\n")
         # Verify mocks were called
-        mock_process_docs.assert_called_once_with(self.state["retrieved_docs"], self.mock_pinecone_client)
-        mock_format_context.assert_called_once_with(mock_process_docs.return_value, self.mock_settings.pinecone.max_docs)
+        mock_format_context.assert_called_once_with(self.state["retrieved_docs"], self.mock_settings.pinecone.max_docs)
+        #mock_format_context.assert_called_once_with(mock_process_docs.return_value, self.mock_settings.pinecone.max_docs)
 
     
-    @patch("graph.nodes.fetch_complete_doc_text")
-    def test_process_retrieved_docs(self, mock_fetch_complete_doc_text):
-        # Mock response for fetch_complete_doc_text
-        mock_fetch_complete_doc_text.return_value = {
-            "job123": "This is chunk one. This is chunk two.",
-            "job456": "This is chunk one. This is chunk two."
-        }
+    def test_format_context_for_llm(self):
+        """Test formatting processed documents into context for LLM."""
 
-        # Mock matches input
-        matches = [
+        retrieved_docs = [
             {
-                "id": "job123_chunk_1",
+                "id": "job123",
                 "score": 0.92,
                 "metadata": {
-                    "firestoreId": "job123",
                     "docType": "job",
-                    "chunk": 1,
-                    "total_chunks": 2,
-                    "raw_data": "This is chunk one."
+                    "firestoreId": "job123",
+                    "location": "USA",
+                    "company_name": "Tech corp",
+                    "title": "AI Engineer",
+                    "raw_data": "This is chunk one.",
                 }
             },
             {
-                "id": "job456_chunk_2",
+                "id": "job456",
                 "score": 0.85,
                 "metadata": {
-                    "firestoreId": "job456",
                     "docType": "job",
-                    "chunk": 2,
-                    "total_chunks": 2,
-                    "raw_data": "This is chunk two."
+                    "firestoreId": "job456",
+                    "location": "USA",
+                    "company_name": "Tech corp 2",
+                    "title": "Data Scientist",
+                    "raw_data": "This is chunk two.",
                 }
             }
         ]
-        # Call the function
-        result = process_retrieved_docs(matches, None)  # No need for PineconeClient here
-
-        # Expected output
-        expected_output = {
-            "job123": {
-                "score": 0.92,
-                "combined_raw_text": "This is chunk one. This is chunk two.",
-                "url": "https://example.com/jobs/job123"
-            },
-            "job456": {
-                "score": 0.85,
-                "combined_raw_text": "This is chunk one. This is chunk two.",
-                "url": "https://example.com/jobs/job456"
-            }
-        }
-
-        # Validate output
-        self.assertEqual(result["job123"]["score"], expected_output["job123"]["score"])
-        self.assertEqual(result["job123"]["combined_raw_text"], expected_output["job123"]["combined_raw_text"])
-        self.assertEqual(result["job123"]["url"], expected_output["job123"]["url"])
-        self.assertEqual(result["job456"]["score"], expected_output["job456"]["score"])
-        self.assertEqual(result["job456"]["combined_raw_text"], expected_output["job456"]["combined_raw_text"])
-        self.assertEqual(result["job456"]["url"], expected_output["job456"]["url"])
-
-    def test_format_context_for_llm(self):
-        """Test formatting processed documents into context for LLM."""
-        processed_docs = { 
-            "job123": {
-                "score": 0.92,
-                "combined_raw_text": "This is chunk one. This is chunk two.",
-                "url": "https://example.com/jobs/job123"
-            },
-            "job456": {
-                "score": 0.85,
-                "combined_raw_text": "This is chunk one. This is chunk two.",
-                "url": "https://example.com/jobs/job456"
-            }
-        }
 
         expected_output = (
-            "[Metadata] Source: https://example.com/jobs/job123, Relevance: 0.92\n"
-            "[Content] This is chunk one. This is chunk two.\n\n"
-            "[Metadata] Source: https://example.com/jobs/job456, Relevance: 0.85\n"
-            "[Content] This is chunk one. This is chunk two.\n"
+            "[Metadata] Source: https://example.com/jobs/job123, Company Name: Tech corp, Title: AI Engineer, Location: USA, Relevance: 0.92\n"
+            "[Content] This is chunk one.\n\n\n"
+            "[Metadata] Source: https://example.com/jobs/job456, Company Name: Tech corp 2, Title: Data Scientist, Location: USA, Relevance: 0.85\n"
+            "[Content] This is chunk two.\n\n"
         )
 
-        result = format_context_for_llm(processed_docs)
+
+        result = format_context_for_llm(retrieved_docs)
         self.assertEqual(result.strip(), expected_output.strip())
 
     def test_format_context_for_llm_with_limit(self):
         """Test formatting processed documents into context for LLM."""
-        processed_docs = { 
-            "job123": {
+
+        retrieved_docs = [
+            {
+                "id": "job123",
                 "score": 0.92,
-                "combined_raw_text": "This is chunk one. This is chunk two.",
-                "url": "https://example.com/jobs/job123"
-            },
-            "job456": {
-                "score": 0.85,
-                "combined_raw_text": "This is chunk one. This is chunk two.",
-                "url": "https://example.com/jobs/job456"
+                "metadata": {
+                    "docType": "job",
+                    "firestoreId": "job123",
+                    "location": "USA",
+                    "company_name": "Tech corp",
+                    "title": "AI Engineer",
+                    "raw_data": "This is chunk one.",
+                }
             }
-        }
+        ]
 
         expected_output = (
-            "[Metadata] Source: https://example.com/jobs/job123, Relevance: 0.92\n"
-            "[Content] This is chunk one. This is chunk two.\n\n"
+            "[Metadata] Source: https://example.com/jobs/job123, Company Name: Tech corp, Title: AI Engineer, Location: USA, Relevance: 0.92\n"
+            "[Content] This is chunk one.\n\n"
         )
 
-        result = format_context_for_llm(processed_docs, 1)
+        result = format_context_for_llm(retrieved_docs, 1)
         self.assertEqual(result.strip(), expected_output.strip())
 
     def test_final_response_node(self):
@@ -509,8 +395,9 @@ class TestGraph(unittest.TestCase):
 
         # Ensure chain.invoke was called with the correct inputs
         self.mock_chain.invoke.assert_called_once_with({
-            "context": self.state["final_context"],
-            "input": self.state["query"]
+            "retrieved_context": self.state["final_context"],
+            'conversation_history': 'User: Hello\nAssistant: Hi!',
+            "user_query": self.state["query"]
         })
 
 

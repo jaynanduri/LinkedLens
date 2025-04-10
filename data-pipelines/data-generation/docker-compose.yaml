@@ -83,7 +83,7 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
     - ${AIRFLOW_PROJ_DIR:-.}/working_data:/opt/airflow/working_data
     - ./airflow.cfg:/opt/airflow/airflow.cfg
-    - ../credentials/linkedlens-firestore-srvc-acc.json:/opt/airflow/credentials/linkedlens-firestore-srvc-acc.json
+    - ../../credentials/linkedlens-firestore-srvc-acc.json:/opt/airflow/credentials/linkedlens-firestore-srvc-acc.json
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on

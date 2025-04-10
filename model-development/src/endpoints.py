@@ -1,24 +1,41 @@
 from fastapi import APIRouter, HTTPException, Body
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ValidationError, field_validator, ValidationInfo
 from typing import List, Literal, Dict, Any
+from pydantic.functional_validators import BeforeValidator
+from typing import Annotated, Literal, List
+
 from logger import logger
 from graph.graph_builder import Graph
 from graph.state import State
 from langchain.schema import HumanMessage, AIMessage
 from langsmith  import traceable
 import langsmith as ls
+from services.rag_evaluator import RAGEvaluator
+import json
+from starlette.status import (
+    HTTP_200_OK,
+    HTTP_500_INTERNAL_SERVER_ERROR,
+)
 
 
+def strip_and_validate_nonempty(value: str) -> str:
+    stripped = value.strip()
+    if not stripped:
+        raise ValueError("content cannot be empty or whitespace")
+    return stripped
+
+NonEmptyStr = Annotated[str, BeforeValidator(strip_and_validate_nonempty)]
 class Message(BaseModel):
     type: Literal["user", "ai"]
-    content: str
+    content: NonEmptyStr
 
 class InvokePayload(BaseModel):
-    user_id: str
-    session_id: str
-    chat_id: str
-    messages: List[Message]
+    user_id: NonEmptyStr
+    session_id: NonEmptyStr
+    chat_id: NonEmptyStr
+    messages: List[Message] = Field(..., min_items=1)
+
 
 def create_default_state() -> State:
   """Creates a default State dictionary."""
@@ -52,15 +69,10 @@ def prepare_state_object(messages: List[Message]) -> State:
         raise HTTPException(status_code=400, detail="Failed to extarct state object: {e}")
 
 def convert_response_state(response_state: State)->Dict[str, Any]:
-    response_dict = response_state.copy()
-    messages = []
-    for message in response_state["messages"]:
-        if isinstance(message, HumanMessage):
-            messages.append({"type":"user", "content":message.content})
-        elif isinstance(message, AIMessage):
-            messages.append({"type":"ai", "content":message.content})
-    response_dict['messages'] = messages
-
+    response_dict = {}
+    response_dict["query"] = response_state.get("query", "")
+    response_dict["final_context"] = response_state.get("final_context", "")
+    response_dict["response"] = response_state.get("response", "")
     return response_dict
 
 
@@ -68,6 +80,7 @@ class ClientApp:
     def __init__(self):
         logger.info("Initializing graph")
         self.graph_builder = Graph()
+        self.rag_evaluator = RAGEvaluator()
         self.graph = self.graph_builder.build_graph(isMemory=True)
         logger.info("Initializing graph complete")
 
@@ -89,8 +102,7 @@ async def invoke(payload: InvokePayload = Body(...)):
     # ensure user type
     if payload.messages[-1].type == "user":
         new_query = payload.messages[-1].content
-    if not new_query:
-        raise HTTPException(status_code=400, detail="Latest message content is empty or not a user query")
+
     state["query"] = new_query
     
     logger.info(f"Invoke called for user {payload.user_id} and session {payload.session_id} with query: {new_query}")
@@ -104,8 +116,30 @@ async def invoke(payload: InvokePayload = Body(...)):
         response_json["user_id"] = payload.user_id
         response_json["session_id"] = payload.session_id
         response_json["chat_id"] = payload.chat_id
+        # Log metrics
+        try:
+            metrics = clapp.rag_evaluator.evaluate(
+                query=response_json["query"],
+                standalone_query=response_state["standalone_query"],
+                context=response_json["final_context"],
+                response=response_json["response"]
+            )
+        except Exception as e:
+            logger.error(f"RAG evaluation failed: {e}")
+            metrics = {
+                "retrieval_relevance": None,
+                "response_relevance": None,
+                "faithfulness": None
+            }
+        metric_data = {
+            "user_id": payload.user_id,
+            "session_id": payload.session_id,
+            "chat_id": payload.chat_id,
+            **metrics
+        }
+        logger.info(f"Evaluation metrics: 'metrics_data':{json.dumps(metric_data)}")
     except Exception as e:
         logger.error(f"Error during graph processing: {e}")
-        raise HTTPException(status_code=500, detail="Error processing query")
+        raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail={"error": f"Error processing query: {e}" })
     
-    return JSONResponse(content=response_json, status_code=200)
+    return JSONResponse(content=response_json, status_code=HTTP_200_OK)

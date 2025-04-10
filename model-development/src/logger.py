@@ -16,7 +16,7 @@ def get_logger(env="dev"):
     gcp_client = gcloud_logging.Client()
     gcp_handler = CloudLoggingHandler(gcp_client, name=settings.LOG_NAME)
 
-    logger = logging.getLogger("custom_logger")
+    logger = logging.getLogger(settings.LOG_NAME)
     logger.setLevel(logging.INFO)
     
     # Log format
@@ -35,7 +35,7 @@ def get_logger(env="dev"):
     return logger
 
 # Set up logger (Change env to 'prod' when deploying)
-logger = get_logger(env="dev")
+logger = get_logger(env="prod")
 
 def with_logging(func):
     @wraps(func)

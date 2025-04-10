@@ -51,7 +51,7 @@ Create **two** service accounts:
    - Actions > Manage Keys > Add Key > JSON
    - Save the generated JSON securely
 5. Store JSON file
-   - Create a folder `credentials` inside `project-root/data-pipelines/`
+   - Create a folder `credentials` inside `project-root/`
    - Place the JSON file in `credentials` folder with name `linkedlens-firestore-srvc-acc.json`
 
 ## Create [GCP Bucket](https://cloud.google.com/storage/docs/creating-buckets)
