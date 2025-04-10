@@ -57,7 +57,7 @@ jobs:
           COMMIT_SHA=$(echo $GITHUB_SHA | cut -c1-7)
           pwd
           docker build . --file ./Dockerfile --tag us-east1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.ARTIFACT_REPO }}/model-dev:$GITHUB_SHA
-        working-directory: .
+        working-directory: ./model-development/src
       
       - name: Docker push
         run: docker push us-east1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}}/${{ vars.ARTIFACT_REPO }}/model-dev:$GITHUB_SHA
