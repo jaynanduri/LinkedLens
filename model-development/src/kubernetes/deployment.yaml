@@ -29,4 +29,4 @@ spec:
         - containerPort: 80
         envFrom:
             - configMapRef:
-                name: /kubernetes-manifests/model-config
+                name: 'model-config'
