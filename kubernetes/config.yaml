@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: model-config
+data:
+  PINECONE_API_KEY: ${{secrets.PINECONE_API_KEY}}
+  PINECONE_ENVIRONMENT: ${{ secrets.PINECONE_ENVIRONMENT }}
+  HF_TOKEN: ${{ secrets.HF_TOKEN }}
+  GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+  GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+  GOOGLE_PROJECT_ID: ${{ env.GCP_PROJECT_ID }}
+  PROMPT_ID_QUERY_ANALYZER: ${{ secrets.PROMPT_ID_QUERY_ANALYZER }}
+  PROMPT_ID_FINAL_RESPONSE: ${{ secrets.PROMPT_ID_FINAL_RESPONSE }}
+  LANGSMITH_TRACING: "true"
+  LANGSMITH_ENDPOINT: "https://api.smith.langchain.com"
+  LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
+  LANGSMITH_PROJECT: "linkedlens-test"

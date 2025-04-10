@@ -15,7 +15,7 @@ The main components of this project can be broken down to the following:
 1. [Data Pipelines](/data-pipelines/)
 2. [Model Development Pipeline](/model-development/)
 3. [Testing & Automation](/docs/CD_Pipeline.md)
-4. [Cloud Deployment](/cloud-functions/)
+4. [Cloud Deployment](/infra/)
 
 ## System Architecture
 
@@ -31,7 +31,7 @@ The logging for the project is currently being handled separately by Airflow Log
 LinkedLens
    |- .github/              # GitHub workflow automations
    |- data-pipelines/       # Airflow DAGs for data preprocessing and generation
-   |- cloud-functions/      # For any setup scripts, cloud functions/trigger
+   |- infra/      # For any setup scripts, cloud functions/trigger
    |- model-development/    # Model Development pipeline using LangGraph
    |- images/               # Images for documentation and visualizations
    |- docs/                 # Additional documentation and guides

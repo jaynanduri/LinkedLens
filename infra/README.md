@@ -3,7 +3,7 @@
 The GCP services used in this project include the following:
 
 1. Cloud Run
-   - Cloud Run is used to setup Cloud Functions that trigger the data ingestion pipeline when updates are made to the FirestoreDB. [[Setup](/cloud-functions/functions/dag-trigger/README.md)]
+   - Cloud Run is used to setup Cloud Functions that trigger the data ingestion pipeline when updates are made to the FirestoreDB. [[Setup](/infra/functions/dag-trigger/README.md)]
 2. Compute Engine
    - The VMs provisioned on Compute Engines are used to host the Airflow instances that run the Data DAGs. We use one Debian-based VM with Airflow deployed as a Docker container to run the DAGs. [[Setup](/docs/GCE-Setup.md)] 
 3. Google Kubernetes Engine
