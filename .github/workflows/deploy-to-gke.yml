@@ -87,7 +87,7 @@ jobs:
       
       - name: Deploy
         run: |-
-          kubectl apply -f ./kubernetes/deployment.yaml && \
+          kubectl apply -f deployment.yaml && \
           kubectl rollout status deployment/model-dev-deployment -n default && \
           kubectl apply -f ./kuberentes/service.yaml
       
