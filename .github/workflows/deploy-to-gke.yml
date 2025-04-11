@@ -83,7 +83,7 @@ jobs:
 
       - name: Apply image tag
         run: |-
-          sed -e "s/IMAGE_TAG/$COMMIT_SHA/g" deployment.template.yaml > deployment.yaml
+          sed -e "s/IMAGE_TAG/$COMMIT_SHA/g" ./kubernetes/deployment.template.yaml > deployment.yaml
       
       - name: Deploy
         run: |-
