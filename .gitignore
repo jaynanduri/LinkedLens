@@ -10,7 +10,7 @@ __pycache__
 *.log
 *.csv
 secrets/
-*.json
+/credentials
 .env
 .github/deploy-airflow.yml
 
