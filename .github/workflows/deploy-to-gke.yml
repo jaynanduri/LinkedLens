@@ -89,7 +89,7 @@ jobs:
         run: |-
           kubectl apply -f deployment.yaml && \
           kubectl rollout status deployment/model-dev-deployment -n default && \
-          kubectl apply -f ./kuberentes/service.yaml
+          kubectl apply -f ./kubernetes/service.yaml
       
       - name: Restart deployment
         run: kubectl rollout restart deployment model-dev-deployment
