@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: model-dev-deployment
+  namespace: app
   labels:
     app: model-dev
 
@@ -14,6 +15,9 @@ spec:
       labels:
         app: model-dev
     spec:
+      serviceAccountName: linkedlens-ksa
+      nodeSelector:
+        iam.gke.io/gke-metadata-server-enabled: "true"
       containers:
       - name: model-dev
         image: us-east1-docker.pkg.dev/linkedlens-452503/linkedlens-repo/model-dev:IMAGE_TAG
