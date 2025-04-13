@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'model-development/src/'
+      - 'model-development/src/**'
       - '.github/workflows/deploy-to-gke.yml'
   workflow_dispatch:
 
