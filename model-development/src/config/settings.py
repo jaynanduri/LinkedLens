@@ -1,6 +1,6 @@
 import os
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 from config import constants
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
@@ -32,6 +32,15 @@ class PromptSettings(BaseModel):
     })
 
 
+class FireStoreSettings(BaseModel):
+    database_name: str = os.getenv("DB_NAME")
+    test_data: Dict[str, Any] = constants.FIRESTORE_TEST_DATA
+
+class RagasSettings(BaseModel):
+    RAGAS_SIMPLE_QUERIES: float = constants.RAGAS_SIMPLE_QUERIES
+    RAGAS_MULTI_HOP_DIRECT: float = constants.RAGAS_MULTI_HOP_DIRECT
+    RAGAS_MULTI_HOP_COMPLEX: float = constants.RAGAS_MULTI_HOP_COMPLEX
+
 class EmbeddingSettings(BaseModel):
     """Embedding configuration settings."""
     model_name: str = constants.EMBEDDING_MODEL_NAME
@@ -42,17 +51,27 @@ class Settings(BaseModel):
     pinecone: PineconeSettings = PineconeSettings()
     embedding: EmbeddingSettings = EmbeddingSettings()
     prompt_setting: PromptSettings = PromptSettings()
+    ragas_settings: RagasSettings = RagasSettings()
+    firestore_setting: FireStoreSettings = FireStoreSettings()
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY")
-    GOOGLE_APPLICATION_CREDENTIALS: str = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    # GOOGLE_APPLICATION_CREDENTIALS: str = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     GEMINI_MODEL_NAME: str = constants.GEMINI_MODEL_NAME
+    GEMINI_EMBEDDING_MODEL: str = constants.GEMINI_EMBEDDING_MODEL
     LOG_NAME: str = constants.LOG_NAME
+    PRE_EVAL_LOG_NAME: str = constants.PRE_EVAL_LOG_NAME
+    POST_EVAL_LOG_NAME: str = constants.POST_EVAL_LOG_NAME
+    TEST_LOG_NAME: str = constants.TEST_LOG_NAME
     NAMESPACE_URLS: Dict[str, str] = constants.NAMESPACE_URLS
-    LANGSMITH_API_KEY:str = os.environ["LANGSMITH_API_KEY"]
-    LANGSMITH_PROJECT_NAME_PROD: str = "linkedlens-prod"
-    LANGSMITH_PROJECT_NAME_TEST: str = "linkedlens-test"
-    LANGSMITH_DATASET_NAME_PROD: str = "LinkedLens"
-    LANGSMITH_DATASET_NAME_TEST: str = "LinkedLensTest"
-    LANGSMITH_EXPERIMENT_PREFIX_PROD: str = "prod_eval"
-    LANGSMITH_EXPERIMENT_PREFIX_TEST: str = "test_eval"
+    LANGSMITH_API_KEY:str = os.getenv("LANGSMITH_API_KEY")
+    LANGSMITH_PROJECT: str = os.getenv("LANGSMITH_PROJECT")
+    PROD_RUN_ENV:str=constants.PROD_RUN_ENV
+    TEST_RUN_ENV:str=constants.TEST_RUN_ENV
+    TEST_METRIC_THRESHOLD: Dict[str, float] = constants.TEST_METRIC_THRESHOLD
+    LOG_LEVEL:str=os.getenv("LOG_LEVEL", "INFO")
+    # LANGSMITH_PROJECT_NAME_TEST: str = "linkedlens-test"
+    # LANGSMITH_DATASET_NAME_PROD: str = "LinkedLens"
+    # LANGSMITH_DATASET_NAME_TEST: str = "LinkedLensTest"
+    # LANGSMITH_EXPERIMENT_PREFIX_PROD: str = "prod_eval"
+    # LANGSMITH_EXPERIMENT_PREFIX_TEST: str = "test_eval"
 
 settings = Settings()

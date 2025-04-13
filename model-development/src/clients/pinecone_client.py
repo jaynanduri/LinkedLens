@@ -41,7 +41,7 @@ class PineconeClient:
             
             logger.info("Pinecone client initialized successfully")
         except Exception as e:
-            logger.error("Failed to initialize Pinecone client: {}", str(e))
+            logger.error(f"Failed to initialize Pinecone client: {str(e)}")
             raise
     
     @property
@@ -84,10 +84,12 @@ class PineconeClient:
             # Cache for future use
             self._indexes[index_name] = index
             
-            logger.debug(f"Successfully connected to Pinecone index: {index_name}")
+            logger.debug(f"Successfully connected to Pinecone index: {index_name}", 
+                         extra={"json_fields": {"index_name": index_name}})
             return index
         except Exception as e:
-            logger.error(f"Error getting Pinecone index '{index_name}': {str(e)}")
+            logger.error(f"Error getting Pinecone index '{index_name}': {str(e)}",
+                         extra={"json_fields": {"index_name": index_name, "error": str(e)}})
             raise
 
     def get_stats(self) -> Dict[str, Any]:
@@ -119,10 +121,10 @@ class PineconeClient:
             
             logger.info(
                 "Retrieved Pinecone index statistics",
-                extra={
+                extra={"json_fields": {
                     "totalVectorCount": total_vector_count,
                     "namespaces": list(namespaces.keys()),
-                }
+                }}
             )
             
             return {
@@ -162,11 +164,11 @@ class PineconeClient:
             
             logger.debug(
                 "Querying Pinecone for similar vectors",
-                extra={
+                extra={"json_fields": {
                     "namespace": namespace,
                     "topK": top_k,
                     "filter": filter,
-                }
+                }}
             )
             
             # Prepare query
@@ -186,7 +188,8 @@ class PineconeClient:
             # Execute query
             results = index.query(**query_params)
             
-            logger.info(f"Query returned {len(results.matches)} results")
+            logger.info(f"Query returned {len(results.matches)} results",
+                        extra={"json_fields": {"results": len(results.matches)}})
             return results
         except Exception as e:
             logger.error(f"Error querying Pinecone: {str(e)}")
@@ -216,10 +219,10 @@ class PineconeClient:
                 
                 logger.debug(
                     "Querying Pinecone for similar vectors",
-                    extra={
+                    extra={"json_fields": {
                         "namespace": namespace,
                         "vector_id_list": vector_id_list
-                    }
+                    }}
                 )
                 
                 # Fetch docs

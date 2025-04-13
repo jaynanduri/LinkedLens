@@ -1,8 +1,12 @@
 import unittest
 from unittest.mock import MagicMock, patch
 import os
+os.environ['LANGSMITH_TRACING'] = "false"
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+from config.settings import settings
+from logger import set_logger
+set_logger(env="prod", name=settings.TEST_LOG_NAME)
 from graph.graph_builder import Graph
 from graph.state import State
 from graph.nodes import query_analyzer_node, retrieval_node, augmentation_node, final_response_node
@@ -12,6 +16,7 @@ from services.llm_chain_factory import LLMChainFactory
 from clients.embedding_client import EmbeddingClient
 from clients.pinecone_client import PineconeClient
 from langchain_google_genai import ChatGoogleGenerativeAI
+
 
 class TestServices(unittest.TestCase):
     def setUp(self):

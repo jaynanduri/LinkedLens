@@ -28,12 +28,14 @@ class EmbeddingClient:
     def _initialize_model(self):
         """Initialize the Sentence Transformer model."""
         try:
-            logger.debug(f"Initializing embedding model: {settings.embedding.model_name}")
+            logger.debug(f"Initializing embedding model: {settings.embedding.model_name}", 
+                         extra={"json_fields": {"model": settings.embedding.model_name}})
             
             # Load the model
             self._model = SentenceTransformer(settings.embedding.model_name)
             
-            logger.info(f"Embedding model initialized successfully: {settings.embedding.model_name}")
+            logger.info(f"Embedding model initialized successfully: {settings.embedding.model_name}",
+                         extra={"json_fields": {"model": settings.embedding.model_name}})
         except Exception as e:
             logger.error(f"Failed to initialize embedding model: {str(e)}")
             raise
@@ -64,17 +66,16 @@ class EmbeddingClient:
             embedding = self._model.encode(text).tolist()
             logger.debug(
                 "Successfully generated embedding",
-                extra={"dimension": len(embedding), "model": settings.embedding.model_name}
+                extra={"json_fields": {"dimension": len(embedding), "model": settings.embedding.model_name}}
             )
             
             return embedding
         except Exception as e:
             logger.error(
                 f"Error generating embedding: {str(e)}",
-                extra={
-                    "textLength": len(text) if isinstance(text, str) else "N/A",
+                extra={"json_fields": {"textLength": len(text) if isinstance(text, str) else "N/A",
                     "model": settings.embedding.model_name
-                }
+                }}
             )
             raise
 

@@ -11,31 +11,47 @@ import json
 import asyncio
 
 
-def get_logger(env="dev"):
+def get_logger(env: str="prod", name:str =settings.LOG_NAME):
     # Initialize Google Cloud Logging client
     gcp_client = gcloud_logging.Client()
-    gcp_handler = CloudLoggingHandler(gcp_client, name=settings.LOG_NAME)
+    gcp_handler = CloudLoggingHandler(gcp_client, name=name)
 
-    logger = logging.getLogger(settings.LOG_NAME)
-    logger.setLevel(logging.INFO)
+    logger = logging.getLogger(name)
+    logger.setLevel(settings.LOG_LEVEL)
     
     # Log format
-    log_formatter = logging.Formatter("[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s")
+    # log_formatter = logging.Formatter("[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s")
     
     # Google Cloud Logging
-    gcp_handler.setFormatter(log_formatter)
+    # gcp_handler.setFormatter(log_formatter)
+
+    # clear handlers to avoid duplicate logs
+    logger.handlers.clear()
+
     logger.addHandler(gcp_handler)
     
     # Stdout logging (only for development)
     if env == "dev":
         stdout_handler = logging.StreamHandler(sys.stdout)
-        stdout_handler.setFormatter(log_formatter)
+        # stdout_handler.setFormatter(log_formatter)
         logger.addHandler(stdout_handler)
     
     return logger
 
 # Set up logger (Change env to 'prod' when deploying)
-logger = get_logger(env="prod")
+logger = get_logger(env="prod", name=settings.LOG_NAME)
+
+def set_logger(name:str=settings.LOG_NAME, env:str="prod"):
+    """
+    Set up the logger with Google Cloud Logging and stdout logging.
+    
+    Args:
+        name (str): The name of the logger.
+        env (str): The environment ('prod' or 'dev').
+    """
+    global logger
+    logger = get_logger(name=name, env=env)
+    print(f"Logger HANDLERS : {logger.handlers}")
 
 def with_logging(func):
     @wraps(func)
@@ -56,7 +72,8 @@ def with_logging(func):
                 "error": str(e),
                 "timestamp": time.time_ns()
             }
-            logger.error(json.dumps(error_log))
+            logger.error(f"Node Process Failed : {json.dumps(error_log)}", 
+                         extra={"json_fields": {"error":error_log}})
             raise
         
         duration_ns = time.time_ns() - start
@@ -68,7 +85,8 @@ def with_logging(func):
             "func_output": str_func_output,
             "timestamp": time.time_ns()
         }
-        logger.info(json.dumps(log_data))
+        logger.info(f"Node Executed: {json.dumps(log_data)}",
+                    extra={"json_fields": {"event": log_data}})
         
         print(f"Scheduled log write for {func.__name__}")
         return func_output

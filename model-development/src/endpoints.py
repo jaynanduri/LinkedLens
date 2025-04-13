@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator, Validat
 from typing import List, Literal, Dict, Any
 from pydantic.functional_validators import BeforeValidator
 from typing import Annotated, Literal, List
-
+from config.settings import settings
 from logger import logger
 from graph.graph_builder import Graph
 from graph.state import State
@@ -50,6 +50,7 @@ def create_default_state() -> State:
       "messages": []
   }
 
+
 def prepare_state_object(messages: List[Message]) -> State:
     try:
         state = create_default_state()
@@ -65,7 +66,8 @@ def prepare_state_object(messages: List[Message]) -> State:
         state["messages"] = state_messages
         return state
     except Exception as e:
-        logger.error(f"Failed to prepare state object: {e}")
+        logger.error(f"Failed to prepare state object: {e}",
+                     extra={"json_fields": {"error": str(e)}})
         raise HTTPException(status_code=400, detail="Failed to extarct state object: {e}")
 
 def convert_response_state(response_state: State)->Dict[str, Any]:
@@ -105,9 +107,22 @@ async def invoke(payload: InvokePayload = Body(...)):
 
     state["query"] = new_query
     
-    logger.info(f"Invoke called for user {payload.user_id} and session {payload.session_id} with query: {new_query}")
+    logger.info(f"Invoke called for user {payload.user_id} and session {payload.session_id} with query: {new_query}",
+                extra={"json_fields": {
+                    "query": new_query,
+                    "user_id": payload.user_id,
+                    "session_id": payload.session_id,
+                    "chat_id": payload.chat_id,
+                    "run_env": settings.PROD_RUN_ENV
+                }})
     
-    config = {"configurable": {"thread_id": payload.session_id, "user_id": payload.user_id, "chat_id": payload.chat_id}}
+    config = {"configurable": {
+                            "thread_id": payload.session_id, 
+                            "user_id": payload.user_id, 
+                            "chat_id": payload.chat_id,
+                            "run_env": settings.PROD_RUN_ENV
+                        }
+            }
 
     try:
         response_state = await clapp.graph.ainvoke(state, config=config)
@@ -125,7 +140,8 @@ async def invoke(payload: InvokePayload = Body(...)):
                 response=response_json["response"]
             )
         except Exception as e:
-            logger.error(f"RAG evaluation failed: {e}")
+            logger.error(f"RAG evaluation failed: {e}", 
+                         extra={"json_fields": {"error": str(e)}})
             metrics = {
                 "retrieval_relevance": None,
                 "response_relevance": None,
@@ -137,9 +153,11 @@ async def invoke(payload: InvokePayload = Body(...)):
             "chat_id": payload.chat_id,
             **metrics
         }
-        logger.info(f"Evaluation metrics: 'metrics_data':{json.dumps(metric_data)}")
+        logger.info(f"Evaluation metrics: 'metrics_data':{json.dumps(metric_data)}",
+                    extra={"json_fields": {"metrics_data": metric_data}})
     except Exception as e:
-        logger.error(f"Error during graph processing: {e}")
+        logger.error(f"Error during graph processing: {e}",
+                     extra={"json_fields": {"error": str(e)}})
         raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail={"error": f"Error processing query: {e}" })
     
     return JSONResponse(content=response_json, status_code=HTTP_200_OK)

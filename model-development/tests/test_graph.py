@@ -1,7 +1,11 @@
 import unittest
 import os
+os.environ['LANGSMITH_TRACING'] = "false"
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+from config.settings import settings
+from logger import set_logger
+set_logger(env="prod", name=settings.TEST_LOG_NAME)
 from unittest.mock import patch, MagicMock
 from graph.graph_builder import Graph
 from graph.state import State
@@ -15,6 +19,7 @@ from langchain.schema import HumanMessage, AIMessage
 from services.llm_chain_factory import LLMChainFactory
 from services.llm_provider import LLMProvider
 from services.prompt_manager import PromptManager
+
 
 
 class TestGraph(unittest.TestCase):
@@ -402,4 +407,5 @@ class TestGraph(unittest.TestCase):
 
 
 if __name__ == "__main__":
+    # set_logger(env="prod", name=settings.TEST_LOG_NAME)
     unittest.main()

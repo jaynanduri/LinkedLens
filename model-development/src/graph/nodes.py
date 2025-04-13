@@ -15,7 +15,7 @@ class QueryAnalysis(BaseModel):
     query_type: str = Field(..., description="The type of the query: either 'generic' or 'retrieve'.")
     vector_namespace: List[str] = Field(
         ...,
-        description="List of relevant namespaces chosen from ['user', 'job', 'user_post', 'recruiter_post']. If unsure, include all."
+        description="List of relevant namespaces chosen from ['job', 'user_post', 'recruiter_post']. If unsure, include all."
     )
 
 
