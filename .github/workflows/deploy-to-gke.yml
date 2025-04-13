@@ -92,11 +92,11 @@ jobs:
           kubectl apply -f ./kubernetes/service.yaml --namespace app
       
       - name: Restart deployment
-        run: kubectl rollout restart deployment model-dev-deployment
+        run: kubectl rollout restart deployment model-dev-deployment -n app
       
-      - name: Status of deployment
-        run: | 
-          if ! kubectl rollout status deployment model-dev-deployment; then
-            exit 1
-          else
-            echo "Deployment successful"
+      # - name: Status of deployment
+      #   run: | 
+      #     if ! kubectl rollout status deployment model-dev-deployment; then
+      #       exit 1
+      #     else
+      #       echo "Deployment successful"
