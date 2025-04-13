@@ -1,4 +1,5 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
+from logger import logger
 
 class LLMProvider:
     _instance = None
@@ -12,6 +13,7 @@ class LLMProvider:
     def __init__(self, api_key: str, model_name: str):
         if self._llm is None:
             self._llm = ChatGoogleGenerativeAI(api_key=api_key, model=model_name)
+            logger.info("LLM initialized successfully", extra={"json_fields": {"model": model_name}})
 
     def get_llm(self):
         return self._llm

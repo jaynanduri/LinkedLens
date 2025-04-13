@@ -16,11 +16,11 @@ class LLMChainFactory:
         return prompt | llm.with_structured_output(output_model, include_raw=include_raw)
 
     def create_final_response_chain(self, system_prompt: str):
-        prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", system_prompt),
-                ("human", "{input}")
-            ]
+
+        prompt = PromptTemplate(
+            input_variables=["conversation_history", "user_query", "retrieved_context"],
+            template=system_prompt
         )
+
         llm = self.llm_provider.get_llm()
         return prompt | llm
