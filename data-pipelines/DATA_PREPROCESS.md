@@ -4,32 +4,7 @@ This section explains how to preprocess Kaggle job postings data, version it usi
 
 ## 1. Prerequisites
 ### Credentials
-You will need a GCP Service Account to authenticate and interact with the GCP bucket and FirestoreDB, Cloud logging and Trigger events.
-
-### Steps to Create Service Account and Key:
-1. Go to the Google Cloud Console and select project.
-2. Create Service Account
-   - Navigate to Service Accounts. 
-   - Create new Service Account > Enter name > Create and Continue 
-3. Assign required roles:
-   - Assign the following roles - `Storage Object User`, `Cloud Datastore User`, `Log Writer`, `Eventarc Event Receiver`. 
-
-4. Download the service account key (JSON file).
-   - Locate the newly created service account
-   - Actions > Manage Keys > Add Key > JSON
-   - Save the generated JSON securely
-5. Store JSON file
-   - Create a folder `credentials` inside `project-root/data-pipelines/`
-   - Place the JSON file in `credentials` folder with name `linkedlens-firestore-srvc-acc.json`
-
-## Buckets
-  1. Go to Google Cloud Console > Cloud Storage > Buckets
-  2. Create Bucket:
-     - Click Create
-     - Enter Name
-     - Add Region
-     - Click Create
-  3. Create two buckets - `linkedlens_data` and `linkedlens-airflow-logs`
+You will need a GCP Service Account to authenticate and interact with the GCP bucket and FirestoreDB, Cloud logging and Trigger events. Checkout how to set this up [GCP SetUp](/docs/DATA_PIPELINES_Setup.md)
 
 ## 2. Data Preprocessing
 The `preprocessing.py` script is responsible for cleaning and preparing the data. It performs the following tasks:

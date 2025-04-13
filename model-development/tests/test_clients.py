@@ -1,11 +1,20 @@
 import os
+
+os.environ['LANGSMITH_TRACING'] = "false"
 import sys
 from mock_classes import *
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+
+from config.settings import settings
+from logger import set_logger
+
+set_logger(env="prod", name=settings.TEST_LOG_NAME)
+
 from clients.embedding_client import EmbeddingClient
 from clients.pinecone_client import PineconeClient
 from unittest.mock import patch, MagicMock
 import unittest     
+
 
 
 
@@ -87,4 +96,5 @@ class TestEmbeddingClient(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    # set_logger(env="prod", name=settings.TEST_LOG_NAME)
     unittest.main()

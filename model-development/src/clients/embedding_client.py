@@ -3,7 +3,7 @@ Embedding client for the LinkedLens Vector Integration.
 """
 
 from typing import Dict, List, Union
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer, util
 from config.settings import settings
 from logger import logger
 
@@ -28,12 +28,14 @@ class EmbeddingClient:
     def _initialize_model(self):
         """Initialize the Sentence Transformer model."""
         try:
-            logger.debug(f"Initializing embedding model: {settings.embedding.model_name}")
+            logger.debug(f"Initializing embedding model: {settings.embedding.model_name}", 
+                         extra={"json_fields": {"model": settings.embedding.model_name}})
             
             # Load the model
             self._model = SentenceTransformer(settings.embedding.model_name)
             
-            logger.info(f"Embedding model initialized successfully: {settings.embedding.model_name}")
+            logger.info(f"Embedding model initialized successfully: {settings.embedding.model_name}",
+                         extra={"json_fields": {"model": settings.embedding.model_name}})
         except Exception as e:
             logger.error(f"Failed to initialize embedding model: {str(e)}")
             raise
@@ -64,50 +66,26 @@ class EmbeddingClient:
             embedding = self._model.encode(text).tolist()
             logger.debug(
                 "Successfully generated embedding",
-                extra={"dimension": len(embedding), "model": settings.embedding.model_name}
+                extra={"json_fields": {"dimension": len(embedding), "model": settings.embedding.model_name}}
             )
             
             return embedding
         except Exception as e:
             logger.error(
                 f"Error generating embedding: {str(e)}",
-                extra={
-                    "textLength": len(text) if isinstance(text, str) else "N/A",
+                extra={"json_fields": {"textLength": len(text) if isinstance(text, str) else "N/A",
                     "model": settings.embedding.model_name
-                }
+                }}
             )
             raise
+
+    def cos_sim(self, text1: str, text2: str) -> float:
+        try:
+            emb1 = self._model.encode(text1, convert_to_tensor=True)
+            emb2 = self._model.encode(text2, convert_to_tensor=True)
+            similarity = util.cos_sim(emb1, emb2).item()
+            return round(similarity, 4)
+        except Exception as e:
+            logger.error(f"Error computing cosine similarity: {str(e)}")
+            raise
     
-    # def generate_embeddings(
-    #     self, 
-    #     texts: List[Union[str, List, Dict, None]]
-    # ) -> List[List[float]]:
-    #     """
-    #     Generate embeddings for multiple texts.
-        
-    #     Args:
-    #         texts: Array of texts to embed.
-            
-    #     Returns:
-    #         Array of embedding vectors.
-            
-    #     Raises:
-    #         Exception: If embedding generation fails.
-    #     """
-    #     try:
-    #         logger.debug(f"Generating embeddings for {len(texts)} texts")
-            
-    #         embeddings = [None] * len(texts)
-            
-    #         if None in embeddings:
-    #             logger.warning(f"Some embeddings were not generated: {embeddings.count(None)} of {len(embeddings)}")
-    #             # Fill in any missing embeddings with empty vectors (this shouldn't happen, but just in case)
-    #             dimension = len(embeddings[0]) if embeddings[0] is not None else settings.embedding.dimension
-    #             empty_vector = [0.0] * dimension
-    #             embeddings = [embedding if embedding is not None else empty_vector for embedding in embeddings]
-            
-    #         logger.info(f"Successfully generated {len(embeddings)} embeddings")
-    #         return embeddings
-    #     except Exception as e:
-    #         logger.error(f"Error generating embeddings in batch: {str(e)}")
-    #         raise
