@@ -8,7 +8,7 @@ Both DAGs are deployed on a VM on GCP. [Deployment details link]
 - A Cloud Run function is set up to detect any changes in FirestoreDB.
 - When a change is detected, the Cloud Run function triggers the Data Ingestion Pipeline.
 
-For details on setting up the required GCP resources to run these pipelines, refer to [GCP Setup](/docs/DATA_PIPELINES_GCP_Setup.md)
+For details on setting up the required GCP resources to run these pipelines, refer to [GCP Setup](/docs/DATA_PIPELINES_Setup.md)
 
 ## Data Generation Pipeline
 

@@ -1,8 +1,12 @@
 import unittest
 from unittest.mock import MagicMock, patch
 import os
+os.environ['LANGSMITH_TRACING'] = "false"
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+from config.settings import settings
+from logger import set_logger
+set_logger(env="prod", name=settings.TEST_LOG_NAME)
 from graph.graph_builder import Graph
 from graph.state import State
 from graph.nodes import query_analyzer_node, retrieval_node, augmentation_node, final_response_node
@@ -12,6 +16,7 @@ from services.llm_chain_factory import LLMChainFactory
 from clients.embedding_client import EmbeddingClient
 from clients.pinecone_client import PineconeClient
 from langchain_google_genai import ChatGoogleGenerativeAI
+
 
 class TestServices(unittest.TestCase):
     def setUp(self):
@@ -41,7 +46,7 @@ class TestServices(unittest.TestCase):
         self.settings_patcher = patch('services.prompt_manager.settings')
         self.mock_settings = self.settings_patcher.start()
         self.mock_settings.prompt_setting.project_id = 'test_project_id'
-        self.mock_settings.prompt_setting.prompt_mapping = {'test_prompt': 'test_prompt_id'}
+        self.mock_settings.prompt_setting.prompt_mapping = {'test_prompt': ('test_prompt_id', 'test_prompt_version')}
 
         # Patch vertexai.init
         self.vertexai_patcher = patch('services.prompt_manager.vertexai.init')
@@ -57,6 +62,7 @@ class TestServices(unittest.TestCase):
         # Mock prompt responses
         self.mock_prompt = MagicMock()
         self.mock_prompt.prompt_id = 'test_prompt_id'
+        self.mock_prompt.version_id = 'test_prompt_version'
         self.mock_prompts_list.return_value = [self.mock_prompt]
         self.mock_prompts_get.return_value.prompt_data = 'Mocked prompt data'
 
@@ -66,13 +72,14 @@ class TestServices(unittest.TestCase):
         self.prompt_template_patcher = patch('services.llm_chain_factory.PromptTemplate')
         self.mock_prompt_template = self.prompt_template_patcher.start()
 
-        self.chat_prompt_template_patcher = patch('services.llm_chain_factory.ChatPromptTemplate')
-        self.mock_chat_prompt_template = self.chat_prompt_template_patcher.start()
+        # self.chat_prompt_template_patcher = patch('services.llm_chain_factory.PromptTemplate')
+        # self.mock_chat_prompt_template = self.chat_prompt_template_patcher.start()
 
 
         # Initialize LLMChainFactory with the mocked LLMProvider
         self.chain_factory = LLMChainFactory(self.mock_llm_provider)
 
+    def tearDown(self):
         # Add cleanup to stop patches
         self.addCleanup(self.chat_llm_patcher.stop)
         self.addCleanup(self.settings_patcher.stop)
@@ -80,7 +87,7 @@ class TestServices(unittest.TestCase):
         self.addCleanup(self.prompts_list_patcher.stop)
         self.addCleanup(self.prompts_get_patcher.stop)
         self.addCleanup(self.prompt_template_patcher.stop)
-        self.addCleanup(self.chat_prompt_template_patcher.stop)
+        # self.addCleanup(self.chat_prompt_template_patcher.stop)
 
 
     def test_singleton_behavior(self):
@@ -132,11 +139,9 @@ class TestServices(unittest.TestCase):
         result = self.chain_factory.create_final_response_chain(system_prompt)
 
         # Check if ChatPromptTemplate was created correctly
-        self.mock_chat_prompt_template.from_messages.assert_called_once_with([
-            ("system", system_prompt),
-            ("human", "{input}")
-        ])
 
+        self.mock_prompt_template.assert_called_once_with(input_variables=["conversation_history", "user_query", "retrieved_context"], template="Test system prompt")
+        
         # Ensure get_llm() was called
         self.mock_llm_provider.get_llm.assert_called_once()
 
