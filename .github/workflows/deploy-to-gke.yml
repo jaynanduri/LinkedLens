@@ -88,7 +88,7 @@ jobs:
       - name: Deploy
         run: |-
           kubectl apply -f deployment.yaml --namespace app && \
-          kubectl rollout status deployment/model-dev-deployment -n default && \
+          kubectl rollout status deployment/model-dev-deployment -n app && \
           kubectl apply -f ./kubernetes/service.yaml --namespace app
       
       - name: Restart deployment
