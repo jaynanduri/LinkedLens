@@ -43,11 +43,11 @@ class Settings(BaseModel):
     embedding: EmbeddingSettings = EmbeddingSettings()
     prompt_setting: PromptSettings = PromptSettings()
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY")
-    GOOGLE_APPLICATION_CREDENTIALS: str = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    #GOOGLE_APPLICATION_CREDENTIALS: str = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     GEMINI_MODEL_NAME: str = constants.GEMINI_MODEL_NAME
     LOG_NAME: str = constants.LOG_NAME
     NAMESPACE_URLS: Dict[str, str] = constants.NAMESPACE_URLS
-    LANGSMITH_API_KEY:str = os.environ["LANGSMITH_API_KEY"]
+    LANGSMITH_API_KEY:str = os.getenv("LANGSMITH_API_KEY")
     LANGSMITH_PROJECT_NAME_PROD: str = "linkedlens-prod"
     LANGSMITH_PROJECT_NAME_TEST: str = "linkedlens-test"
     LANGSMITH_DATASET_NAME_PROD: str = "LinkedLens"

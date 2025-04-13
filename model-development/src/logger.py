@@ -35,7 +35,7 @@ def get_logger(env="dev"):
     return logger
 
 # Set up logger (Change env to 'prod' when deploying)
-logger = get_logger(env="dev")
+logger = get_logger(env="prod")
 
 def with_logging(func):
     @wraps(func)

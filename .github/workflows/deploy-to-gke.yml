@@ -1,9 +1,12 @@
 name: Setup, Build, Deploy
 
 on:
-  # push:
-  #   branches:
-  #     - main
+  push:
+    branches:
+      - main
+    paths:
+      - 'model-development/src/**'
+      - '.github/workflows/deploy-to-gke.yml'
   workflow_dispatch:
 
 jobs:
@@ -26,15 +29,18 @@ jobs:
       - id: 'auth'
         uses: 'google-github-actions/auth@v2'
         with:
-          project_id: ${{env.GCP_PROJECT_ID}}
+          project_id: ${{ vars.GCP_PROJECT_ID }}
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{secrets.SERVICE_ACCOUNT}}
+          service_account: ${{ secrets.SERVICE_ACCOUNT }}
       
+      - id: 'test-vars'
+        run: echo "Cluster name is ${{ vars.GKE_CLUSTER_NAME }}"  
+
       - id: 'get-credentials'
         uses: 'google-github-actions/get-gke-credentials@v2'
         with:
-          cluster_name: ${{env.GKE_CLUSTER_NAME}}
-          location: ${{env.GCP_REGION}}
+          cluster_name: 'linkedlens-cluster'
+          location: ${{ vars.GCP_REGION }}
       
       - id: 'get-pods'
         run: 'kubectl get pods'
@@ -49,29 +55,48 @@ jobs:
         run: |-
           gcloud auth configure-docker us-east1-docker.pkg.dev
       
+      - name: 'Set Tag name'
+        run: echo "COMMIT_SHA=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_ENV
+      
       - name: Build image
         run: |-
-          COMMIT_SHA=$(echo $GITHUB_SHA | cut -c1-7)
-          docker build . --file ./Dockerfile --tag us-east1-docker.pkg.dev/${{env.GCP_PROJECT_ID}}/${{env.ARTIFACT_REPO}}/model-dev:$GITHUB_SHA
-        working-directory: .
+          
+          pwd
+          docker build . --file ./Dockerfile --tag us-east1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.ARTIFACT_REPO }}/model-dev:$COMMIT_SHA
+          #working-directory: ./model-development/src
       
       - name: Docker push
-        run: docker push us-east1-docker.pkg.dev/${{env.GCP_PROJECT_ID}}}/${{env.ARTIFACT_REPO}}/model-dev:$GITHUB_SHA
+        run: |-
+          echo $COMMIT_SHA
+          docker push us-east1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.ARTIFACT_REPO }}/model-dev:$COMMIT_SHA
       
-      - name: 'Apply ConfigMap'
-        run: kubectl apply -f ../../kubernetes/config.yaml
+      - name: Check if ConfigMap exists
+        id: check-configmap
+        run: |
+          kubectl get configmap model-config -n default || echo "ConfigMap not found"
+
+      - name: Apply ConfigMap if it doesn't exist
+        if: steps.check-configmap.outputs.result == 'ConfigMap not found'
+        run: |
+          echo "ConfigMap not found. Applying..."
+          kubectl apply -f ../../kubernetes/config.yaml
+
+      - name: Apply image tag
+        run: |-
+          sed -e "s/IMAGE_TAG/$COMMIT_SHA/g" ./kubernetes/deployment.template.yaml > deployment.yaml
       
       - name: Deploy
         run: |-
-          kubectl apply -f ./kubernetes/deployment.yaml
-          kubectl apply -f ./kuberentes/service.yaml
+          kubectl apply -f deployment.yaml --namespace app && \
+          kubectl rollout status deployment/model-dev-deployment -n app && \
+          kubectl apply -f ./kubernetes/service.yaml --namespace app
       
       - name: Restart deployment
-        run: kubectl rollout restart deployment model-dev-deployment
+        run: kubectl rollout restart deployment model-dev-deployment -n app
       
-      - name: Status of deployment
-        run: | 
-          if ! kubectl rollout status deployment model-dev-deployment; then
-            exit 1
-          else
-            echo "Deployment successful"
+      # - name: Status of deployment
+      #   run: | 
+      #     if ! kubectl rollout status deployment model-dev-deployment; then
+      #       exit 1
+      #     else
+      #       echo "Deployment successful"

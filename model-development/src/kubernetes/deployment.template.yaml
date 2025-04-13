@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: model-dev-deployment
+  namespace: app
   labels:
     app: model-dev
 
@@ -14,19 +15,22 @@ spec:
       labels:
         app: model-dev
     spec:
+      serviceAccountName: linkedlens-ksa
+      nodeSelector:
+        iam.gke.io/gke-metadata-server-enabled: "true"
       containers:
       - name: model-dev
-        image: us-east1-docker.pkg.dev/${{env.GCP_PROJECT_NAME}}}/${{env.ARTIFACT_REPO}}/model-dev:$GITHUB_SHA
+        image: us-east1-docker.pkg.dev/linkedlens-452503/linkedlens-repo/model-dev:IMAGE_TAG
         imagePullPolicy: Always
         resources:
           requests:
-            memory: "70Mi"
-            cpu: "50m"
+            memory: "512Mi"
+            cpu: "250m"
           limits:
-            memory: "128Mi"
-            cpu: "500m"
+            memory: "2Gi"
+            cpu: "1"
         ports:
         - containerPort: 80
         envFrom:
             - configMapRef:
-                name: /kubernetes-manifests/model-config
+                name: 'model-config'
