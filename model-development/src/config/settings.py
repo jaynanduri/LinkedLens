@@ -64,6 +64,7 @@ class Settings(BaseModel):
     NAMESPACE_URLS: Dict[str, str] = constants.NAMESPACE_URLS
     LANGSMITH_API_KEY:str = os.getenv("LANGSMITH_API_KEY")
     LANGSMITH_PROJECT: str = os.getenv("LANGSMITH_PROJECT")
+    GOOGLE_PROJECT_ID: str = os.getenv("GOOGLE_PROJECT_ID")
     PROD_RUN_ENV:str=constants.PROD_RUN_ENV
     TEST_RUN_ENV:str=constants.TEST_RUN_ENV
     TEST_METRIC_THRESHOLD: Dict[str, float] = constants.TEST_METRIC_THRESHOLD
