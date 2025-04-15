@@ -10,8 +10,8 @@ load_dotenv(override=True)
 
 class Config(BaseModel):
     # include Google Project ID and other langsmith related vars in env
-    POST_EVAL_LOG_NAME: str = "linkedlens_post_eval_2"
-    PRE_EVAL_LOG_NAME: str = "linkedlens_pre_eval_2"
+    POST_EVAL_LOG_NAME: str = "linkedlens_post_eval_test"
+    PRE_EVAL_LOG_NAME: str = "linkedlens_pre_eval_test"
     LANGSMITH_API_KEY:str = os.getenv("LANGSMITH_API_KEY")
     LANGSMITH_PROJECT: str = os.getenv("LANGSMITH_PROJECT")
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY")
@@ -29,10 +29,7 @@ config = Config()
 def get_logger(name:str ="linkedlens_post_eval"):
     # Initialize Google Cloud Logging client
     gcp_client = gcloud_logging.Client()
-    # gcp_client.setup_logging()  # Set up logging for the client
-    # logger = gcp_client.logger(name)  # Structured GCP logger
-    # logger.log_struct()
-    # return logger
+
     gcp_handler = CloudLoggingHandler(gcp_client, name=name)
 
     logger = logging.getLogger(name)

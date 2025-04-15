@@ -121,51 +121,58 @@ def convert_to_langchain_docs(db_docs: List[Dict[str, str]]) -> List[Document]:
   logger.info(f"Successfully converted {len(documents_list)} documents to Langchain format")
   return documents_list
 
-# Add retry - 2 times..
-if __name__ == "__main__":
-    """
-    Main PreEval script to generate test queries, run them, and evaluate results.
+
+def main():
+  """
+  Main PreEval script to generate test queries, run them, and evaluate results.
+  
+  This script:
+  1. Retrieves test documents from Firestore
+  2. Generates test queries using RAGAS
+  3. Runs the queries through the graph
+  4. Extracts traces from LangSmith
+  5. Evaluates the responses
+  6. Checks if evaluation metrics pass threshold requirements
+  """
+  try:
+    logger.info("Starting PreEval script...", extra={"json_fields": {
+            "project": settings.LANGSMITH_PROJECT,
+            "run_env": settings.TEST_RUN_ENV
+        }})
+    logger.info("Initializing LangSmith trace extractor")
+    trace_extractor = LangsmithTraceExtractor(project_name=settings.LANGSMITH_PROJECT, 
+                                    run_env=settings.TEST_RUN_ENV, 
+                                    api_key = settings.LANGSMITH_API_KEY)
     
-    This script:
-    1. Retrieves test documents from Firestore
-    2. Generates test queries using RAGAS
-    3. Runs the queries through the graph
-    4. Extracts traces from LangSmith
-    5. Evaluates the responses
-    6. Checks if evaluation metrics pass threshold requirements
-    """
-    try:
-      logger.info("Starting PreEval script...", extra={"json_fields": {
-              "project": settings.LANGSMITH_PROJECT,
-              "run_env": settings.TEST_RUN_ENV
-          }})
-      logger.info("Initializing LangSmith trace extractor")
-      trace_extractor = LangsmithTraceExtractor(project_name=settings.LANGSMITH_PROJECT, 
-                                      run_env=settings.TEST_RUN_ENV, 
-                                      api_key = settings.LANGSMITH_API_KEY)
-      
-      logger.info("Initializing Firestore client to retrieve test documents")
-      db_client = FirestoreClient()
-      firestore_test_docs = db_client.get_test_docs()
-      logger.info(f"Retrieved {len(firestore_test_docs)} test documents from Firestore")
-      docs = convert_to_langchain_docs(firestore_test_docs)
-      logger.info(f"Converted documents to Langchain format, total: {len(docs)}")
+    logger.info("Initializing Firestore client to retrieve test documents")
+    db_client = FirestoreClient()
+    firestore_test_docs = db_client.get_test_docs()
+    logger.info(f"Retrieved {len(firestore_test_docs)} test documents from Firestore")
+    docs = convert_to_langchain_docs(firestore_test_docs)
+    logger.info(f"Converted documents to Langchain format, total: {len(docs)}")
 
-      logger.info("Initializing RAGAS query generator")
-      ragas_generator = RAGASQueryGenerator(settings.GEMINI_API_KEY)
+    
+    retry_count = 2
+    current_count = 0
+    passed, detail_results = False, {}
+    while current_count < retry_count and not passed:
 
-      logger.info("Setting query distribution based on configuration")
-      ragas_generator.set_query_distribution(query_distribution={
-                                                        "SIMPLE_QUERIES": settings.ragas_settings.RAGAS_SIMPLE_QUERIES, 
-                                                        "MULTI_HOP_DIRECT":settings.ragas_settings.RAGAS_MULTI_HOP_DIRECT, 
-                                                        "MULTI_HOP_COMPLEX":settings.ragas_settings.RAGAS_MULTI_HOP_COMPLEX
-                                                      })
-      retry_count = 2
-      current_count = 0
-      passed, detail_results = False, {}
-      while current_count < retry_count and not passed:
+        try:
+          passed, detail_results = False, {}
+          current_count += 1
           logger.info(f"Attempt {current_count}")
+          print(f"Attempt {current_count}")
 
+          logger.info("Initializing RAGAS query generator")
+          ragas_generator = RAGASQueryGenerator(settings.GEMINI_API_KEY)
+
+          logger.info("Setting query distribution based on configuration")
+          ragas_generator.set_query_distribution(query_distribution={
+                                                            "SIMPLE_QUERIES": settings.ragas_settings.RAGAS_SIMPLE_QUERIES, 
+                                                            "MULTI_HOP_DIRECT":settings.ragas_settings.RAGAS_MULTI_HOP_DIRECT, 
+                                                            "MULTI_HOP_COMPLEX":settings.ragas_settings.RAGAS_MULTI_HOP_COMPLEX
+                                                          })
+    
           logger.info(f"Generating test queries with testset size: 12")
           test_dataset = ragas_generator.generate_queries(docs, 
                                                         testset_size=12
@@ -204,28 +211,29 @@ if __name__ == "__main__":
           else:
             logger.info(f"No trace data extracted.. Skipping Evaluation")
 
-          current_count += 1
           if passed:
             logger.info(f"Pre Evaluation passed in {current_count} attempt.")
             break
           else:
-             logger.warning(f"Pre Evaluation Failed in attempt {current_count}. Retrying...")
+            logger.warning(f"Pre Evaluation Failed in attempt {current_count}. Retrying...")
 
-          
-          passed, detail_results = False, {}
-          
-      
-      
-      logger.info(f"Pre Eval Result {passed}", 
-                  extra={"json_fields": {"passed": passed, "details": detail_results}})
+        except Exception as err:
+          logger.error(f"Error in attempt {current_count + 1}: {str(err)}", exc_info=True)
+    
+    
+    logger.info(f"Pre Eval Result {passed}", 
+                extra={"json_fields": {"passed": passed, "details": detail_results}})
+    print(f"Pre Eval Result: {passed}")
+    logger.info("Pre evaluation process completed")
+  except Exception as e:
+      passed = False
       print(f"Pre Eval Result: {passed}")
-      logger.info("Pre evaluation process completed")
-    except Exception as e:
-        logger.error(f"Pre Evaluation script Failed: {str(e)}")
+      logger.error(f"Pre Evaluation script Failed: {str(e)}")
 
-# # struct log : one at time.. 
-# # add separate logger to gcp..(struct)
-# # use os.getenv() for env variables
 
-# # ReadME
+
+
+if __name__ == "__main__":
+    main()
+
 

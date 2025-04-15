@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     SMTP_RECIPIENT_EMAILS:str = os.getenv("SMTP_RECIPIENT_EMAILS")
     AIRFLOW_WWW_USER_USERNAME:str = os.getenv("AIRFLOW_WWW_USER_USERNAME")
     AIRFLOW_WWW_USER_PASSWORD:str = os.getenv("AIRFLOW_WWW_USER_PASSWORD")
-
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY")
     # class Config():
     #     env_file = ".env"
     #     case_sensitive = True

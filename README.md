@@ -1,25 +1,29 @@
 # LinkedLens
 
-LinkedLens aims to enhance and streamline existing job search portals and professional social media platforms. The project integrates a conversational chatbot with Retrieval Augmented Generation (RAG) to allow users to retrieve and summarize information using natural language queries. LinkedLens seeks to aid job seekers and recruiters in their job search experience in an already competitive market by making information ranging from company listings, recruiter posts, and other user posts easily searchable and available. 
+The **LinkedLens** project is an AI-powered conversational assistant designed to enhance the job search experience on platforms like **LinkedIn**, which already offer a wealth of professional opportunities and content. However, with the growing volume of posts, listings, and user activity, it can become difficult for job seekers to find relevant information quickly and effectively. By integrating **Retrieval-Augmented Generation (RAG)** with **natural language processing**, LinkedLens enables users to retrieve and summarize **job listings**, **recruiter posts**, and **user-generated content** through intuitive conversational queries. The system is designed to support job seekers by making scattered, often unstructured professional data easily accessible and actionable.
 
-### Key Features
-* Search beyond current user network and connections
-* Continuous data integration for an updated database of job openings
-* Tracking Time-To-Live for posts to ensure latest insights
-* Providing links to original posts along with summaries
+The internal architecture is built using a structured **LangChain** workflow orchestrated with **LangGraph**, enabling a clean, modular pipeline. The chatbot operates in three stages: **query analysis**, which examines the user input, rewrites it if needed, and determines whether vector retrieval is necessary; **document retrieval and filtering**, which queries the vector store and discards low-relevance entries; and **final response generation**, which uses prompt engineering along with **Gemini Flash 2.0** to deliver accurate and context-aware answers.
+
+LinkedLens uses **Pinecone** as its vector store to index job listings, user posts, and associated metadata. The backend is developed using **FastAPI** and deployed on **Google Kubernetes Engine (GKE)** as **stateless endpoints**, with session management and state handled on the web frontend. **FirestoreDB** is used to store raw data and preprocessed metadata, while **PostgreSQL** powers the website layer through **OpenWebUI**, managing chat history, feedback, and session-level interactions.
+
+**GitHub Actions** is used to automate continuous integration and deployment pipelines. The evaluation framework for LinkedLens is split into three stages: **pre-evaluation**, where **RAGAS** is used to generate synthetic queries on known contexts and evaluate outputs using **LLM-as-Judge** via **RAGAS** and **EvidentlyAI**; **real-time evaluation**, which uses **cosine similarity** (via **sentence-transformers**) to estimate **context relevance**, **response relevance**, and **faithfulness** for quick feedback without introducing LLM latency; and **post-evaluation**, which periodically fetches user traces from **LangSmith** and runs full LLM-based evaluations to monitor long-term system behavior.
+
+**LangSmith** is integrated for end-to-end tracing of all LLM interactions, supporting debugging and qualitative analysis. Logs from the system are captured through **GCP Logging**, visualized with **Grafana** dashboards, and monitored for system alerts. Although the backend is stateless and internally accessible, architectural boundaries and containerized deployment within **GKE** help ensure a secure and controlled runtime environment.
+
+## System Architecture
+
+![Diagram to show System architecture](/images/Architecture_updated.jpeg)
 
 ## Project Components
 
 The main components of this project can be broken down to the following:
 
-1. [Data Pipelines](/data-pipelines/)
+1. [Data Pipelines](/data-pipelines/DATA_PIPELINES.md)
 2. [Model Development Pipeline](/model-development/)
 3. [Testing & Automation](/docs/CD_Pipeline.md)
 4. [Cloud Deployment](/infra/)
 
-## System Architecture
 
-![Diagram to show System architecture](/images/Architecture_updated.jpeg)
 
 ## Logging and Monitoring
 

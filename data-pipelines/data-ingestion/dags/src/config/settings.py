@@ -26,11 +26,6 @@ class PineconeSettings(BaseModel):
     index_name: str = "linked-lens-index"
     batch_size: int = 200
     dimension: int = 384  # Dimension for 'all-MiniLM-L6-v2' model
-    # collections: Dict[str, str] = {
-    #     "users": "user",
-    #     "jobs": "job",
-    #     "posts": "post",
-    # }
     namespace_collection: Dict[str, str] = {
         "user": "users",
         "user_post" : "posts",

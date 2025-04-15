@@ -1,20 +1,4 @@
-# Pinecone Setup
-  1. Sign Up
-     - Go to [Pinecone](https://app.pinecone.io/) and create an account.
-  2. Create/Rename Project
-     - Navigate to the Projects section.
-     - Rename the default project to `LinkedLens` (or create a new one with that name).
-  3. Generate API Key
-     - Open the `LinkedLens` project.
-     - Under the Get Started section, click “Generate API Key”.
-     - Copy the API key.
-  4. Set Environment Variables
-     - Add the following to your .env file 
-     ```bash
-     PINECONE_API_KEY=your-api-key-here
-     ```
-
-# GCP Setup for Data Pipelines
+# GCP Setup
 
 ## Create GCP Project
 *If you have already created a GCP project for this setup, you can skip this step.*
@@ -33,19 +17,22 @@
 
 ## Create Service Accounts
 
-Create **two** service accounts:
-- **Data Pipelines**: Create and save key `json`
-- **Infrastructure Management**: `Editor` (to create Firestore DB, VM, and bucket)
+Create the following service accounts:
+- **Data Pipelines**: Handles interaction with GCP services such as Firestore, Cloud Storage, and Cloud Run triggers for data generation and ingestion workflows. **Roles: `Storage Object User`, `Cloud Datastore User`, `Log Writer`, `Eventarc Event Receiver`**
+
+- **Infrastructure Management**: Used for provisioning and managing GCP resources during infrastructure setup. **Roles: `Editor`**
+
+- **Logging and Monitoring**: Grants Grafana access to GCP logs for real-time monitoring. **Roles: `Logs View Accessor`, `Logs Viewer`**
+
+- **Model Server**: Used by the model server to access FirestoreDB, Cloud Logging, and other required GCP services. **Roles: `Cloud Datastore User`, `Log Writer`**
+
 
 ### Steps to create service account and key
 1. Go to the Google Cloud Console and select project.
 2. Create Service Account
    - Navigate to Service Accounts. 
    - Create new Service Account > Enter name > Create and Continue 
-3. Assign required roles:
-   - Assign the following roles for **Data Pipelines account** - `Storage Object User`, `Cloud Datastore User`, `Log Writer`, `Eventarc Event Receiver`.
-   - Assign `Editor` role for **Infrastructure Management**.
-
+3. Assign required roles
 4. Download the service account key (JSON file).
    - Locate the newly created service account
    - Actions > Manage Keys > Add Key > JSON
@@ -154,12 +141,11 @@ sudo usermod -aG docker $USER
 - Restart the VM
 
   
-6. Create Cloud Run Function
+## Create Cloud Run Function
     - Cloud Run is used to trigger DAG runs on the Compute Engine.
     - Follow the [steps](../infra/functions/dag-trigger/README.md) to set up and run functions
 
-
-7. Add Secrets to GitHub
+<!-- 7. Add Secrets to GitHub
     - Go to GitHub Repository
     - Navigate to Settings
     - Select `Secrets` under Security
@@ -169,4 +155,4 @@ sudo usermod -aG docker $USER
   - `SERVER_IP`: Public IP of VM
   - `SERVER_USERNAME`: $USER
   - `SSH_PORT`: 22
-  - `SERVER_KEY`: Private SSH Key
+  - `SERVER_KEY`: Private SSH Key -->

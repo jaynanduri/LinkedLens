@@ -70,21 +70,21 @@ check_file_exists = GCSObjectExistenceSensor(
 
 
 # Task: Load all job postings.
-load_jobs_task = PythonOperator(
-    task_id="load_jobs",
-    python_callable=load_jobs,
-    op_args=[POSTING_PATH_BUCKET, 1000],
-    on_success_callback=notify_success,
-    on_failure_callback=notify_failure, 
-    dag=dag,
-)
+# load_jobs_task = PythonOperator(
+#     task_id="load_jobs",
+#     python_callable=load_jobs,
+#     op_args=[POSTING_PATH_BUCKET, 1000],
+#     on_success_callback=notify_success,
+#     on_failure_callback=notify_failure, 
+#     dag=dag,
+# )
 
 # Task: Create recruiter posts.
 create_recruiter_posts_task = PythonOperator(
     task_id="create_recruiter_posts",
     python_callable=generate_posts,
     # bucket_filepath: str, column_names: List[str], filter: bool, num_rows: int, user_type: str
-    op_args=[POSTING_PATH_BUCKET, ["job_id", "description", "title", "company_name"], True, 201, 'recruiter'],
+    op_args=[POSTING_PATH_BUCKET, ["job_id", "description", "title", "company_name"], True, 5000, 'recruiter'],
     on_success_callback=notify_success,
     on_failure_callback=notify_failure,
     dag=dag,
@@ -95,11 +95,12 @@ create_interview_exp_posts_task = PythonOperator(
     task_id="create_interview_exp_posts",
     python_callable=generate_posts,
     # bucket_filepath: str, column_names: List[str], filter: bool, num_rows: int, user_type: str
-    op_args=[POSTING_PATH_BUCKET, ["job_id", "title", "company_name"], True, 200, 'user'],
+    op_args=[POSTING_PATH_BUCKET, ["job_id", "title", "company_name"], True, 5000, 'user'],
     on_success_callback=notify_success,
     on_failure_callback=notify_failure,
     dag=dag,
 )
 
 # Set up task dependencies.
-check_file_exists >> load_jobs_task >> create_recruiter_posts_task >> create_interview_exp_posts_task
+check_file_exists >> create_recruiter_posts_task >> create_interview_exp_posts_task
+#  load_jobs_task >>

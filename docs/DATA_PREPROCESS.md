@@ -3,8 +3,8 @@
 This section explains how to preprocess Kaggle job postings data, version it using DVC, and upload it to a GCP bucket. It also outlines how to pull the data from GCP and upload it for use in data pipelines.
 
 ## 1. Prerequisites
-### Credentials
-You will need a GCP Service Account to authenticate and interact with the GCP bucket and FirestoreDB, Cloud logging and Trigger events. Checkout how to set this up [GCP SetUp](/docs/DATA_PIPELINES_Setup.md)
+### GCP Setup
+You will need a GCP Service Account to authenticate and interact with the GCP bucket and FirestoreDB, Cloud logging and Trigger events. Checkout how to set this up in [GCP SetUp](/docs/DATA_PIPELINES_Setup.md)
 
 ## 2. Data Preprocessing
 The `preprocessing.py` script is responsible for cleaning and preparing the data. It performs the following tasks:
@@ -19,6 +19,13 @@ The `preprocessing.py` script is responsible for cleaning and preparing the data
   |___ raw_data/           # Original dataset
   |___ preprocessed_data/  # Preprocessed data
   |___ filtered_data/      # Data filtered to include only technical roles/jobs
+```
+
+### Run
+To run the preprocessing script, use the following command:
+
+```bash
+python data-pipelines/preprocessing.py
 ```
 
 ## 3. DVC
@@ -71,5 +78,12 @@ dvc pull
 
 ## 4. Upload to GCP
 The `upload_to_gcp.py` script uploads the processed data to the GCP bucket, making it available for use by downstream pipelines. The data is uploaded with the same structure as the output of the data preprocessing step to the `linkedlens_data` GCP bucket.
+
+### Run
+To run the preprocessing script, use the following command:
+
+```bash
+python data-pipelines/upload_to_gcp.py
+```
 
 **Note:** After the data has been successfully uploaded, the script will delete the local data folder 

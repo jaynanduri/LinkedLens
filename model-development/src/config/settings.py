@@ -68,10 +68,5 @@ class Settings(BaseModel):
     TEST_RUN_ENV:str=constants.TEST_RUN_ENV
     TEST_METRIC_THRESHOLD: Dict[str, float] = constants.TEST_METRIC_THRESHOLD
     LOG_LEVEL:str=os.getenv("LOG_LEVEL", "INFO")
-    # LANGSMITH_PROJECT_NAME_TEST: str = "linkedlens-test"
-    # LANGSMITH_DATASET_NAME_PROD: str = "LinkedLens"
-    # LANGSMITH_DATASET_NAME_TEST: str = "LinkedLensTest"
-    # LANGSMITH_EXPERIMENT_PREFIX_PROD: str = "prod_eval"
-    # LANGSMITH_EXPERIMENT_PREFIX_TEST: str = "test_eval"
 
 settings = Settings()

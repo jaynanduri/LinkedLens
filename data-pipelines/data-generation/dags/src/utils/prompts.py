@@ -55,6 +55,8 @@ PROMTPS = {
     - Use clean line breaks between sections
     - Avoid markdown formatting
     - Maintain corporate tone with personality
+    - Do not mention that company name is redacted for privacy
+    - Return ONLY a valid JSON object. Do not include any explanation or formatting. No markdown.
     
     Return a JSON strictly in the following format:
 
@@ -75,7 +77,8 @@ Ensure the following:
 - User IDs should be taken sequentially from 1.  
 - The generated names (first and last) should not repeat any previous names. 
 - Set username blank. 
-- The company should be randomly selected from the tech industry.  
+- The company should be randomly selected from the tech industry. 
+- Return ONLY a valid JSON object. Do not include any explanation or formatting. No markdown.
 """,
     
     "basic-user-details": """Generate a unique name pair ensuring diversity in gender and ethnicity. The name should be realistic and culturally appropriate, representing various backgrounds such as European, African, Asian, Hispanic, Middle Eastern, and Indigenous origins.
@@ -113,6 +116,9 @@ Ensure the following:
     
     #{company_name}Interview #{position_role} #TechCareerGrowth #CodingJourney"
     Return a JSON strictly in the following format:
+
+    Maintain these formatting rules:
+    - Return ONLY a valid JSON object. Do not include any explanation or formatting. No markdown.
 
     {format_instructions}
     """,

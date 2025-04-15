@@ -8,7 +8,6 @@ from google.cloud.logging.handlers import CloudLoggingHandler
 from config.settings import settings
 from functools import wraps
 import json
-import asyncio
 
 
 def get_logger(env: str="prod", name:str =settings.LOG_NAME):
@@ -59,6 +58,7 @@ def with_logging(func):
         pre_state = state.copy()
         str_pre_state = str(pre_state)
         start = time.time_ns()
+        kwargs.pop("config", None)
         try:
             func_output = func(state, *args, **kwargs)
             str_func_output = str(func_output)
@@ -88,6 +88,6 @@ def with_logging(func):
         logger.info(f"Node Executed: {json.dumps(log_data)}",
                     extra={"json_fields": {"event": log_data}})
         
-        print(f"Scheduled log write for {func.__name__}")
+        # print(f"Scheduled log write for {func.__name__}")
         return func_output
     return wrapper

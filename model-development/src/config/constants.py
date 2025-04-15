@@ -47,9 +47,9 @@ GEMINI_EMBEDDING_MODEL = "models/text-embedding-004"
 GEMINI_MODEL_NAME = "gemini-2.0-flash-001" #"gemini-1.5-pro"
 
 # log name for gcp client
-LOG_NAME="linkedlens_chat_2"
-PRE_EVAL_LOG_NAME="linkedlens_pre_eval_2"
-POST_EVAL_LOG_NAME = "linkedlens_post_eval_2"
+LOG_NAME="linkedlens_chat"
+PRE_EVAL_LOG_NAME="linkedlens_pre_eval_test"
+POST_EVAL_LOG_NAME = "linkedlens_post_eval_test"
 TEST_LOG_NAME = "linkedlens_test"
 
 PROD_RUN_ENV="prod"
@@ -70,6 +70,6 @@ RAGAS_MULTI_HOP_COMPLEX =0.10
 
 TEST_METRIC_THRESHOLD = {
     "faithfulness": 0.5, 
-    "response_relevancy": 0.35, 
+    "response_relevancy": 0.5, 
     "retrieval_relevance": 0.5
 }
