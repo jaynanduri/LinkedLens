@@ -19,13 +19,62 @@ LinkedLens uses **Pinecone** as its vector store to index job listings, user pos
 The main components of this project can be broken down to the following:
 
 1. [Data Pipelines](/data-pipelines/DATA_PIPELINES.md)
-2. [Model Development Pipeline](/model-development/)
-3. [Testing & Automation](/docs/CD_Pipeline.md)
-4. [Cloud Deployment](/infra/)
+2. [Model Development Pipeline](/model-development/README.md)
+3. [CI/CD Workflows](/docs/CI_CD_Workflows.md)
+4. [GCP Infrastructure & Deployment](/infra/README.md)
+5. [Web Interface (OpenWebUI) – External Repo](<insert new repo link>)
 
 
+## Project Setup Guidelines
 
-## Logging and Monitoring
+For detailed instructions on setting up the project both **locally** and on **GCP**, refer to the full [Project Setup Guide](/docs/PROJECT_SETUP.md).
+
+
+## Project Folder Structure
+
+Below is a high-level view of the project’s folder layout:
+
+```
+root/
+├─── .dvc/
+|    ├── config                 # DVC core settings and remote storage
+├─── .github/
+|    ├── workflows/             # CI/CD workflows
+├─── data-pipelines/            # Data preprocessing and pipeline scripts
+|    ├── data-generation/       # Data Genaration DAG
+|    ├── data-ingestion/        # Data Ingestion DAG
+|    ├── preprocessing.py       # Raw Kaggle data preprocessing script
+|    ├── upload_data_gcp.py     # Upload preprocessed data to GCP bucket
+|    ├── data.dvc               # DVC tracking file for data
+├─── kubernetes/
+|    ├── config.yaml            # Kubernetes config YAML
+├─── model-development/         # RAG model backend and API endpoint code
+|    ├── eval/                  # pre- and post-deployment evaluation scripts
+|    ├── src/                   # Source code for RAG model and endpoint
+|    |   ├── clients/           # Service clients for Pinecone, Firestore, and embedding
+|    |   ├── config/            # App settings and constants
+|    |   ├── graph/             # State, nodes and langgraph workflow
+|    |   ├── kubernetes/        # Kubernetes deployment and service YAMLs
+|    |   ├── services/          # LLM setup, prompt utils, and similarity scoring logic
+|    |   ├── Dockerfile         # Docker for containerizing RAG model
+|    |   ├── endpoints.py       # Defines FastAPI routes
+|    |   ├── logger.py          # logger
+|    |   ├── main.py            # Entry point for the FastAPI app
+|    |   ├── requirements.txt   # Dependency requirements for RAG app
+|    ├── tests/                 # Unit tests for model
+├─── infra/
+|    ├── functions/             # Cloud Run function scripts and container
+|    ├── scripts/               # Bash scripts for GKE deployment
+├─── docs/                      # Readme files for the project
+├─── images/                    # Images for the readme folder
+├─── .env_template/             # .env file template
+├─── requirements.txt/          # Dependency requirements for the project
+├─── README.md/                 # Project documentation
+```
+
+For detailed descriptions of each folder and key files, see the [[Folder Structure Details](/docs/FOLDER_STRUCTURE.md)]
+
+<!-- ## Logging and Monitoring
 
 The logging for the project is currently being handled separately by Airflow Logger (data pipelines) and Cloud Logger. 
 
@@ -77,4 +126,4 @@ Alternatively, the pipeline can be run using the Dockerfile providd. Navigate to
 docker build -t model-image:latest .
 
 docker run -it -p 80:80 model-image:latest
-```
+``` -->

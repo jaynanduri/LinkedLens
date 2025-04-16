@@ -32,6 +32,8 @@ Both DAGs are deployed on a VM on GCP. [Deployment details link]
 
 - `create_interview_exp_posts`: Uses company name and job title from the dataset to create user profiles and generate posts about their interview experiences for specific roles and companies.
 
+*Note: Prompts for generating data are in `prompts.py` file*
+
 ### Visualization
 
 #### Pipeline Diagram: 

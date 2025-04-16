@@ -70,14 +70,14 @@ check_file_exists = GCSObjectExistenceSensor(
 
 
 # Task: Load all job postings.
-# load_jobs_task = PythonOperator(
-#     task_id="load_jobs",
-#     python_callable=load_jobs,
-#     op_args=[POSTING_PATH_BUCKET, 1000],
-#     on_success_callback=notify_success,
-#     on_failure_callback=notify_failure, 
-#     dag=dag,
-# )
+load_jobs_task = PythonOperator(
+    task_id="load_jobs",
+    python_callable=load_jobs,
+    op_args=[POSTING_PATH_BUCKET, 1000],
+    on_success_callback=notify_success,
+    on_failure_callback=notify_failure, 
+    dag=dag,
+)
 
 # Task: Create recruiter posts.
 create_recruiter_posts_task = PythonOperator(
@@ -102,5 +102,4 @@ create_interview_exp_posts_task = PythonOperator(
 )
 
 # Set up task dependencies.
-check_file_exists >> create_recruiter_posts_task >> create_interview_exp_posts_task
-#  load_jobs_task >>
+check_file_exists >> load_jobs_task >> create_recruiter_posts_task >> create_interview_exp_posts_task
