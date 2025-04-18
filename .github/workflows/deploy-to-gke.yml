@@ -8,7 +8,7 @@ on:
   #   paths:
   #     - 'model-development/src/**'
   #     - '.github/workflows/deploy-to-gke.yml'
-  # workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
   setup-build-deploy-push:
