@@ -46,9 +46,10 @@ class FirestoreSettings(BaseModel):
     
     collections: List[str] = ["users", "jobs", "posts"]
     credentials_path: str = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-    database_id: Optional[str] = Field(
-        default_factory=lambda: os.getenv("DB_NAME")
-    )
+    # database_id: Optional[str] = Field(
+    #     default_factory=lambda: os.getenv("DB_NAME")
+    # )
+    database_id: Optional[str] = "linked-lens"
     batch_size: int = 500  # Maximum documents to process in one batch
 
 
