@@ -116,4 +116,4 @@ jobs:
     deploy-model:
       needs: run-model-tests
       if: success()
-      uses: ./.github/workflows/deploy-to-gke.yaml
+      uses: ./.github/workflows/deploy-to-gke.yml
