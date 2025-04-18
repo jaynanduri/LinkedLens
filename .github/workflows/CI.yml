@@ -93,7 +93,7 @@ jobs:
           run: python -m unittest test.test_unittest || echo "Test failed"
 
         - name: Log data generation test result
-          uses: .github/actions/log-results
+          uses:   ./.github/actions/log-results
           with:
             severity: ${{ steps.data-gen-test.outputs.result == 'Test failed' && 'ERROR' || 'INFO' }}
             message: ${{ steps.data-gen-test.outputs.result == 'Test failed' && 'Data Generation Pipeline Unit tests failed' || 'Data Generation Pipeline Unit tests passed succesfully' }}
@@ -107,7 +107,7 @@ jobs:
           run: pytest tests/
         
         - name: Log data ingestion test result
-          uses: .github/actions/log-results
+          uses: ./.github/actions/log-results
           with:
             severity: ${{ steps.data-ing-test.outputs.result == 'Test failed' && 'ERROR' || 'INFO' }}
             message: ${{ steps.data-ing-test.outputs.result == 'Test failed' && 'Data Ingestion Pipeline Unit tests failed' || 'Data Ingestion Pipeline Unit tests passed succesfully' }}
