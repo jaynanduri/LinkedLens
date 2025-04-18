@@ -81,7 +81,7 @@ jobs:
         run: |
           echo "ConfigMap not found. Applying..."
           sed -e "s/__PINECONE_ENVIRONMENT__/${{ secrets.PINECONE_ENVIRONMENT }}/g" \
-            -e "s/__GCP_PROJECT_ID__/${{ vars.GCP_PROJECT_ID }}/g" \
+            -e "s/__GCP_PROJECT_ID__/${{ secrets.GOOGLE_PROJECT_ID }}/g" \
             -e "s/__PROMPT_VERSION_QUERY_ANALYZER__/${{ vars.PROMPT_VERSION_QUERY_ANALYZER }}/g" \
             -e "s/__PROMPT_ID_QUERY_ANALYZER__/${{ secrets.PROMPT_ID_QUERY_ANALYZER }}/g" \
             -e "s/__PROMPT_VERSION_FINAL_RESPONSE__/${{ vars.PROMPT_VERSION_FINAL_RESPONSE }}/g" \
