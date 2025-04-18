@@ -12,7 +12,7 @@ import json
 
 def get_logger(env: str="prod", name:str =settings.LOG_NAME):
     # Initialize Google Cloud Logging client
-    gcp_client = gcloud_logging.Client()
+    gcp_client = gcloud_logging.Client(project=settings.GOOGLE_PROJECT_ID)
     gcp_handler = CloudLoggingHandler(gcp_client, name=name)
 
     logger = logging.getLogger(name)

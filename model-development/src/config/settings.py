@@ -68,5 +68,7 @@ class Settings(BaseModel):
     TEST_RUN_ENV:str=constants.TEST_RUN_ENV
     TEST_METRIC_THRESHOLD: Dict[str, float] = constants.TEST_METRIC_THRESHOLD
     LOG_LEVEL:str=os.getenv("LOG_LEVEL", "INFO")
+    GOOGLE_PROJECT_ID:str=os.getenv("GOOGLE_PROJECT_ID")
+    COMMIT_SHA:str=os.getenv("COMMIT_SHA", "")
 
 settings = Settings()

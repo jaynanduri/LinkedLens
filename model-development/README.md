@@ -26,6 +26,13 @@ The model pipeline is set up to process queries, retrieve relevant users posts, 
     - If `query_type` is generic, generates a general response.
     - If `query_type` is retrieval, generates a response based on the retrieved context.
 
+
+<!-- # 
+- query analyzer: Bind with tool(retrieval) :
+- check query analyzer: if prev call was tool call: pass "retrieve" else return output
+- retrieval tool 
+- augmentation node.. 
+- final respomse - case of  -->
 ## Evaluation Strategy
 
 The evaluaton of the model is done at two phases, before and after deployment. 

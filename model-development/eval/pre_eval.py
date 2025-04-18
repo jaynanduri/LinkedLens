@@ -200,6 +200,7 @@ def main():
                   "GEMINI_MODEL_NAME": settings.GEMINI_MODEL_NAME,
                   "GEMINI_EMBEDDING_MODEL": settings.GEMINI_EMBEDDING_MODEL,
                   "GEMINI_API_KEY": settings.GEMINI_API_KEY,
+                  "COMMIT_SHA": settings.COMMIT_SHA
               })
               logger.info("Running evaluation")
               post_evaluator.evaluate()
