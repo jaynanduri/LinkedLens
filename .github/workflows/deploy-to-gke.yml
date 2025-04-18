@@ -74,7 +74,7 @@ jobs:
       - name: Check if ConfigMap exists
         id: check-configmap
         run: |
-          kubectl get configmap model-config -n app || echo "ConfigMap not found"
+          kubectl get configmap model-config -n app || echo "ConfigMap not found" >> $GITHUB_OUTPUT
 
       - name: Apply ConfigMap if it doesn't exist
         if: steps.check-configmap.outputs.result == 'ConfigMap not found'
@@ -91,7 +91,7 @@ jobs:
       - name: Check if Secrets exist
         id: check-secrets
         run: |
-            kubectl get secrets api-secrets -n app || echo "Secrets not found"
+            kubectl get secrets api-secrets -n app || echo "Secrets not found" >> $GITHUB_OUTPUT
   
       - name: Apply Secrets if it doesn't exist
         if: steps.check-secrets.outputs.result == 'Secrets not found'
