@@ -50,7 +50,7 @@ def set_logger(name:str=settings.LOG_NAME, env:str="prod"):
     """
     global logger
     logger = get_logger(name=name, env=env)
-    print(f"Logger HANDLERS : {logger.handlers}")
+    # print(f"Logger HANDLERS : {logger.handlers}")
 
 def with_logging(func):
     @wraps(func)

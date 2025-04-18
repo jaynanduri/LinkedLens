@@ -27,8 +27,8 @@ class TestPineconeClient(unittest.TestCase):
         self.client = PineconeClient()
         self.client._pinecone = MagicMock()
         
-
-    def test_get_index(self):
+    @patch("clients.pinecone_client.logger")
+    def test_get_index(self, mock_logger):
         """Test retrieving index"""
         mock_index = MagicMock()
     
@@ -40,8 +40,9 @@ class TestPineconeClient(unittest.TestCase):
         index = self.client.get_index("dummy-index")
         self.assertEqual(index, mock_index)
 
+    @patch("clients.pinecone_client.logger")
     @patch.object(PineconeClient, "get_index")
-    def test_get_stats(self, mock_get_index):
+    def test_get_stats(self, mock_get_index, mock_logger):
         """Test fetching index stats"""
         mock_index = MagicMock()
         mock_index.describe_index_stats.return_value = DummyStats()
@@ -51,8 +52,9 @@ class TestPineconeClient(unittest.TestCase):
         self.assertEqual(stats["totalVectorCount"], 10300)
         self.assertDictEqual(stats["namespaces"], {"namespace1": 10000, "namespace2": 300})
 
+    @patch("clients.pinecone_client.logger")
     @patch.object(PineconeClient, "get_index")
-    def test_query_similar(self, mock_get_index):
+    def test_query_similar(self, mock_get_index, mock_logger):
         """Test querying similar vectors"""
         mock_index = MagicMock()
         mock_index.query.return_value = MagicMock(matches=[
@@ -68,8 +70,9 @@ class TestPineconeClient(unittest.TestCase):
         self.assertTrue(hasattr(results, "matches"))
         self.assertEqual(results.matches[0]["id"], "id1_chunk_3")
 
+    @patch("clients.pinecone_client.logger")
     @patch.object(PineconeClient, "get_index")
-    def test_fetch_by_vector_ids(self, mock_get_index):
+    def test_fetch_by_vector_ids(self, mock_get_index, mock_logger):
         """Test fetching vectors by ID"""
         mock_index = MagicMock()
         mock_index.fetch.return_value = DummyFetchResponse("namespace", ["dummy_id"])
@@ -80,8 +83,9 @@ class TestPineconeClient(unittest.TestCase):
 
 class TestEmbeddingClient(unittest.TestCase):
     
+    @patch("clients.embedding_client.logger")
     @patch("clients.embedding_client.SentenceTransformer")
-    def test_generate_embedding(self, mock_transformer):
+    def test_generate_embedding(self, mock_transformer, mock_logger):
         """Test SentenceTransformer embedding generation"""
         mock_instance = MagicMock()
         mock_instance.encode.return_value = torch.ones(384)  
