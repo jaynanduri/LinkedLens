@@ -49,7 +49,7 @@ jobs:
       - name: Run unittests
         id: model-unit-test
         working-directory: model-development
-        run: python -m unittest discover -s test || echo "Test failed"
+        run: python -m unittest discover -s tests || echo "Test failed"
       
       # - name: Log model unit test results
       #   uses: actions/log-results
@@ -64,7 +64,7 @@ jobs:
       
       - name: Model evaluation
         working-directory: model-development
-        run: python pre_eval.py
+        run: python eval/pre_eval.py
           
     
     run-data-pipeline-tests:
@@ -104,7 +104,9 @@ jobs:
         - name: Run data ingestion unittests
           id: data-ing-test
           working-directory: data-pipelines/data-ingestion/dags
-          run: pytest tests/
+          run: |
+            pip install pytest
+            pytest tests/
         
         # - name: Log data ingestion test result
         #   uses: actions/log-results
