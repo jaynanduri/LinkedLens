@@ -2,6 +2,29 @@ name: Setup, Build, Deploy
 
 on:
   workflow_call:
+    secrets:
+      GCP_CREDENTIALS_JSON:
+        required: true
+      GCP_WORKLOAD_IDENTITY_PROVIDER:
+        required: true
+      SERVICE_ACCOUNT:
+        required: true
+      PINECONE_ENVIRONMENT:
+        required: true
+      GOOGLE_PROJECT_ID:
+        required: true
+      PROMPT_ID_QUERY_ANALYZER:
+        required: true
+      PROMPT_ID_FINAL_RESPONSE:
+        required: true
+      PINECONE_API_KEY:
+        required: true
+      HF_TOKEN:
+        required: true
+      GEMINI_API_KEY:
+        required: true
+      LANGSMITH_API_KEY:
+        required: true
   # push:
   #   branches:
   #     - main
@@ -147,6 +170,8 @@ jobs:
       message: 'Deployment of Model version "$(COMMIT_SHA) successful'
       workflow_type: 'Deployment'
       success: true
+    secrets:
+        GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
   
   log-failure:
     needs: setup-build-deploy-push
@@ -157,3 +182,5 @@ jobs:
       message: 'Deployment of Model version "$(COMMIT_SHA) unsuccessful'
       workflow_type: 'Deployment'
       success: false
+    secrets:
+        GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}

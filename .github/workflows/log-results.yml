@@ -19,10 +19,14 @@ on:
             required: false
             type: boolean
             default: false
+    secrets:
+      GCP_CREDENTIALS_JSON:
+        required: true
 
 jobs:
-    notify-email:
+    log-workflow-results:
         runs-on: ubuntu-latest
+        
         steps:
             - name: Checkout repo
               uses: actions/checkout@v3

@@ -20,12 +20,12 @@ jobs:
         LANGSMITH_PROJECT: "linkedlens-test"
         LANGSMITH_TRACING: "true"
         LANGSMITH_ENDPOINT: "https://api.smith.langchain.com"
-        #GOOGLE_PROJECT_ID: ${{ vars.GOOGLE_PROJECT_ID }}
+        GOOGLE_PROJECT_ID: ${{ secrets.GOOGLE_PROJECT_ID }}
         PROMPT_VERSION_QUERY_ANALYZER: ${{ vars.PROMPT_VERSION_QUERY_ANALYZER }}
         PROMPT_ID_QUERY_ANALYZER: ${{ secrets.PROMPT_ID_QUERY_ANALYZER }}
         PROMPT_VERSION_FINAL_RESPONSE: ${{ vars.PROMPT_VERSION_FINAL_RESPONSE }}
         PROMPT_ID_FINAL_RESPONSE: ${{ secrets.PROMPT_ID_FINAL_RESPONSE }}
-        #GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS_JSON }}
+        GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS_JSON }}
     
       name: Model Unit Tests
       runs-on: ubuntu-latest
@@ -135,7 +135,19 @@ jobs:
         message: 'Model Unit Tests and Evaluation passed'
         workflow_type: 'Model Unit Tests'
         success: true
-    
+      secrets:
+        GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
+        GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+        SERVICE_ACCOUNT: ${{ secrets.SERVICE_ACCOUNT }}
+        PINECONE_ENVIRONMENT: ${{ secrets.PINECONE_ENVIRONMENT }}
+        GOOGLE_PROJECT_ID: ${{ secrets.GOOGLE_PROJECT_ID }}
+        PROMPT_ID_QUERY_ANALYZER: ${{ secrets.PROMPT_ID_QUERY_ANALYZER }}
+        PROMPT_ID_FINAL_RESPONSE: ${{ secrets.PROMPT_ID_FINAL_RESPONSE }}
+        PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
+
     log-model-test-failure:
       needs: run-model-tests
       if: failure()
@@ -145,6 +157,8 @@ jobs:
         message: 'Model Unit Tests and Evaluation failed'
         workflow_type: 'Model Unit Tests'
         success: false
+      secrets:
+        GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
     
     log-data-tests:
       needs: run-data-pipeline-tests
@@ -155,6 +169,8 @@ jobs:
         message: 'Data Pipelines Unit Tests passed'
         workflow_type: 'Data Pipelines Unit Tests'
         success: true
+      secrets:
+        GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
     
     log-data-test-failure:
       needs: run-data-pipeline-tests
@@ -165,3 +181,5 @@ jobs:
         message: 'Data Pipelines Unit Tests failed'
         workflow_type: 'Data Pipelines Unit Tests'
         success: false
+      secrets:
+        GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
