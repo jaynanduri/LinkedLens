@@ -125,16 +125,6 @@ jobs:
       needs: run-model-tests
       if: success()
       uses: ./.github/workflows/deploy-to-gke.yml
-    
-    log-model-tests:
-      needs: run-model-tests
-      if: success()
-      uses: ./.github/workflows/log-results.yml
-      with:
-        severity: INFO
-        message: 'Model Unit Tests and Evaluation passed'
-        workflow_type: 'Model Unit Tests'
-        success: true
       secrets:
         GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
         GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -147,6 +137,18 @@ jobs:
         HF_TOKEN: ${{ secrets.HF_TOKEN }}
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
+    
+    log-model-tests:
+      needs: run-model-tests
+      if: success()
+      uses: ./.github/workflows/log-results.yml
+      with:
+        severity: INFO
+        message: 'Model Unit Tests and Evaluation passed'
+        workflow_type: 'Model Unit Tests'
+        success: true
+      secrets:
+        GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
 
     log-model-test-failure:
       needs: run-model-tests
