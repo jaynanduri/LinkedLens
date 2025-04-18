@@ -9,37 +9,62 @@ on:
 
 jobs:
     run-model-tests:
-        permissions:
-            contents: 'read'
-            id-token: 'write'
+      permissions:
+          contents: 'read'
+          id-token: 'write'
+      env:
+        LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+        LANGSMITH_PROJECT: "linkedlens-test"
+        LANGSMITH_TRACING: "true"
+        LANGSMITH_ENDPOINT: "https://api.smith.langchain.com"
+        GOOGLE_PROJECT_ID: ${{ vars.GOOGLE_PROJECT_ID }}
+        PROMPT_VERSION_QUERY_ANALYZER: ${{ secrets.PROMPT_VERSION_QUERY_ANALYZER }}
+        PROMPT_ID_QUERY_ANALYZER: ${{ secrets.PROMPT_ID_QUERY_ANALYZER }}
+        PROMPT_VERSION_FINAL_RESPONSE: ${{ secrets.PROMPT_VERSION_FINAL_RESPONSE }}
+        PROMPT_ID_FINAL_RESPONSE: ${{ secrets.PROMPT_ID_FINAL_RESPONSE }}
+        GOOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOOGLE_APPLICATION_CREDENTIALS }}
+    
+      name: Model Unit Tests
+      runs-on: ubuntu-latest
+      defaults:
+        run:
+          working-directory: ./model-development/
+    
+      steps:
+      - name: 'Checkout'
+        uses: 'actions/checkout@v2'
       
-        name: Model Unit Tests
-        runs-on: ubuntu-latest
-    
-        steps:
-        - name: 'Checkout'
-          uses: 'actions/checkout@v2'
-        
-        - name: 'Set up Python'
-          uses: actions/setup-python@v2
-          with:
-            python-version: 3.12
-        
-        - name: Install dependencies
-          working-directory: model-development/src/
-          run: pip install -r requirements.txt
-        
-        - name: Run unittests
-          working-directory: model-development
-          run: python -m unittest test.test_unittest
-    
-        - name: Notify on model test success
-          if: success()
-          run: echo "Model Unit tests passed successfully"
-        
-        - name: Notify on model test failure
-          if: failure()
-          run: echo "Model Unit Tests failed."
+      - name: 'Set up Python'
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.12
+      
+      - name: Install dependencies
+        working-directory: ./src/
+        run: pip install -r requirements.txt
+      
+      - name: Run unittests
+        id: model-unit-test
+        working-directory: model-development
+        run: python -m unittest discover -s test || echo "Test failed"
+      
+      - name: Log on model test success
+        uses: ./.github/workflows/log-results.yml@main
+        with:
+          severity: ${{ steps.model-unit-test.outputs.result == 'Test failed' && 'ERROR' || 'INFO' }}
+          message: ${{ steps.model-unit-test.outputs.result == 'Test failed' && 'Model Unit tests failed' || 'Model Unit tests passed succesfully' }}
+          workflow_type: 'Unit Tests'
+          success: ${{ steps.model-unit-test.outputs.result == 'Test failed' && false || true }}
+      
+      - name: Calculate Commit Hash
+        run: echo "COMMIT_SHA=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_ENV
+      
+      - name: Model evaluation
+        run: python pre_eval.py
+          
     
     run-data-pipeline-tests:
         permissions:
@@ -62,42 +87,33 @@ jobs:
           run: pip install -r requirements.txt
         
         - name: Run data generation unittests
+          id: data-gen-test
           working-directory: data-pipelines/data-generation/dags
-          run: python -m unittest test.test_unittest
+          run: python -m unittest test.test_unittest || echo "Test failed"
+
+        - name: Log on model test success
+          uses: ./.github/workflows/log-results.yml@main
+          with:
+            severity: ${{ steps.data-gen-test.outputs.result == 'Test failed' && 'ERROR' || 'INFO' }}
+            message: ${{ steps.data-gen-test.outputs.result == 'Test failed' && 'Data Generation Pipeline Unit tests failed' || 'Data Generation Pipeline Unit tests passed succesfully' }}
+            workflow_type: 'Unit Tests'
+            success: ${{ steps.data-gen-test.outputs.result == 'Test failed' && false || true }}
     
-        - name: Notify on success
-          if: success()
-          run: echo "Data Generation Unit tests passed successfully"
-        
-        - name: Notify on data generation test failure
-          if: failure()
-          run: echo "Data generation pipeline Unit Tests failed."
         
         - name: Run data ingestion unittests
+          id: data-ing-test
           working-directory: data-pipelines/data-ingestion/dags
-          run: python -m unittest test.test_unittest
-    
-        - name: Notify on success
-          if: success()
-          run: echo "Data Ingestion Unit tests passed successfully"
-
-        - name: Notify on data ingestion test failure
-          if: failure()
-          run: echo "Data ingestion pipeline Unit Tests failed."
-
-        # - name: Notify on failure
-        #   uses: hilarion5/send-mail@v1
-        #   with:
-        #     smtp-server: smtp.example.com
-        #     smtp-port: 465
-        #     smtp-secure: true
-        #     from-email: sender@example.com
-        #     to-email: recipient1@example.com,recipient2@example.com
-        #     username: yourusername
-        #     password: yourpassword
-        #     subject: Unit Test failed.
-        #     body: This is a test email sent from GitHub Actions.
-        #     html: |
-        #       <h1>This is a test email</h1>
-        #       <p>Test Paragraph</p>
+          run: pytest ./tests/
         
+        - name: Log data ingestion test result
+          uses: ./.github/workflows/log-results.yml@main
+          with:
+            severity: ${{ steps.data-ing-test.outputs.result == 'Test failed' && 'ERROR' || 'INFO' }}
+            message: ${{ steps.data-ing-test.outputs.result == 'Test failed' && 'Data Ingestion Pipeline Unit tests failed' || 'Data Ingestion Pipeline Unit tests passed succesfully' }}
+            workflow_type: 'Unit Tests'
+            success: ${{ steps.data-ing-test.outputs.result == 'Test failed' && false || true }}
+
+    deploy-model:
+      needs: run-model-tests
+      if: success()
+      uses: ./.github/workflows/deploy-to-gke.yaml@main

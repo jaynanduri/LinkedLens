@@ -1,13 +1,14 @@
 name: Setup, Build, Deploy
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'model-development/src/**'
-      - '.github/workflows/deploy-to-gke.yml'
-  workflow_dispatch:
+  workflow_call:
+  # push:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - 'model-development/src/**'
+  #     - '.github/workflows/deploy-to-gke.yml'
+  # workflow_dispatch:
 
 jobs:
   setup-build-deploy-push:
@@ -73,13 +74,42 @@ jobs:
       - name: Check if ConfigMap exists
         id: check-configmap
         run: |
-          kubectl get configmap model-config -n default || echo "ConfigMap not found"
+          kubectl get configmap model-config -n app || echo "ConfigMap not found"
 
       - name: Apply ConfigMap if it doesn't exist
         if: steps.check-configmap.outputs.result == 'ConfigMap not found'
         run: |
           echo "ConfigMap not found. Applying..."
-          kubectl apply -f ../../kubernetes/config.yaml
+          sed -e "s/__PINECONE_ENVIRONMENT__/${{ secrets.PINECONE_ENVIRONMENT }}/g" \
+            -e "s/__GCP_PROJECT_ID__/${{ vars.GCP_PROJECT_ID }}/g" \
+            -e "s/__PROMPT_VERSION_QUERY_ANALYZER__/${{ vars.PROMPT_VERSION_QUERY_ANALYZER }}/g" \
+            -e "s/__PROMPT_ID_QUERY_ANALYZER__/${{ secrets.PROMPT_ID_QUERY_ANALYZER }}/g" \
+            -e "s/__PROMPT_VERSION_FINAL_RESPONSE__/${{ vars.PROMPT_VERSION_FINAL_RESPONSE }}/g" \
+            -e "s/__PROMPT_ID_FINAL_RESPONSE__/${{ secrets.PROMPT_ID_FINAL_RESPONSE }}/g" ./kubernetes/config.template.yaml > config.yaml
+          kubectl apply -f config.yaml -n app
+
+      - name: Check if Secrets exist
+        id: check-secrets
+        run: |
+            kubectl get secrets api-secrets -n app || echo "Secrets not found"
+  
+      - name: Apply Secrets if it doesn't exist
+        if: steps.check-secrets.outputs.result == 'Secrets not found'
+        run: |
+          echo "Secrets not found. Applying..."
+          set +x
+          echo "PINECONE_API_KEY=$(echo -n '${{ secrets.PINECONE_API_KEY }}' | base64)" >> secrets.env
+          echo "HF_TOKEN=$(echo -n '${{ secrets.HF_TOKEN }}' | base64)" >> secrets.env
+          echo "GEMINI_API_KEY=$(echo -n '${{ secrets.GEMINI_API_KEY }}' | base64)" >> secrets.env
+          echo "LANGSMITH_API_KEY=$(echo -n '${{ secrets.LANGSMITH_API_KEY }}' | base64)" >> secrets.env
+
+          source secrets.env
+          sed -e "s|__PINECONE_API_KEY__|$PINECONE_API_KEY|g" \
+            -e "s|__HF_TOKEN__|$HF_TOKEN|g" \
+            -e "s|__GEMINI_API_KEY__|$GEMINI_API_KEY|g" \
+            -e "s|__LANGSMITH_API_KEY__|$LANGSMITH_API_KEY|g"  ./kubernetes/secrets.template.yaml > secrets.yaml
+          set -x
+          kubectl apply -f secrets.yaml -n app
 
       - name: Apply image tag
         run: |-
@@ -94,9 +124,34 @@ jobs:
       - name: Restart deployment
         run: kubectl rollout restart deployment model-dev-deployment -n app
       
-      # - name: Status of deployment
-      #   run: | 
-      #     if ! kubectl rollout status deployment model-dev-deployment; then
-      #       exit 1
-      #     else
-      #       echo "Deployment successful"
+      - name: Cleanup temp files
+        run: rm -f secrets.env secrets.yaml config.yaml deployment.yaml
+        if: always()
+
+      - name: Check deployed Image Tag
+        id: check-deployed-tag
+        run: |-
+          echo "DEPLOY_SHA=kubectl describe deployments/model-dev-deployment -n app | grep Image | sed  -E "s/.*(.......)/\1/g" >> $GITHUB_ENV
+          if [ "$COMMIT_SHA" == "$DEPLOY_SHA" ]; then
+            echo "Deployment Succesful.."
+          else
+            echo "Deployment Unsuccessful.."
+          fi
+      
+      - name: Log Success
+        if: steps.check-deployed-tag.outputs.result == 'Deployment Succesful..'
+        uses: ./.github/workflows/log-results.yml@main
+        with:
+          severity: INFO
+          message: 'Deployment of Model version "$(COMMIT_SHA) successful"'
+          workflow_type: 'Deployment'
+          success: true
+      
+      - name: Log Success
+        if: steps.check-deployed-tag.outputs.result == 'Deployment Unsuccesful..'
+        uses: ./.github/workflows/log-results.yml@main
+        with:
+          severity: ERROR
+          message: 'Deployment of Model version "$(COMMIT_SHA) unsuccessful"'
+          workflow_type: 'Deployment'
+          success: false

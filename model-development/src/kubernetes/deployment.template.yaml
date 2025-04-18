@@ -34,3 +34,5 @@ spec:
         envFrom:
             - configMapRef:
                 name: 'model-config'
+            - secretRef:
+                name: api-secrets 
