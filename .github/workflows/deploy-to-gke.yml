@@ -140,7 +140,7 @@ jobs:
       
       - name: Log Success
         if: steps.check-deployed-tag.outputs.result == 'Deployment Succesful..'
-        uses: ./.github/workflows/log-results.yml@main
+        uses: ./.github/workflows/log-results.yml
         with:
           severity: INFO
           message: 'Deployment of Model version "$(COMMIT_SHA) successful"'
@@ -149,7 +149,7 @@ jobs:
       
       - name: Log Success
         if: steps.check-deployed-tag.outputs.result == 'Deployment Unsuccesful..'
-        uses: ./.github/workflows/log-results.yml@main
+        uses: ./.github/workflows/log-results.yml
         with:
           severity: ERROR
           message: 'Deployment of Model version "$(COMMIT_SHA) unsuccessful"'

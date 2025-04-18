@@ -52,7 +52,7 @@ jobs:
         run: python -m unittest discover -s test || echo "Test failed"
       
       - name: Log on model test success
-        uses: ./.github/workflows/log-results.yml@main
+        uses: ./.github/workflows/log-results.yml
         with:
           severity: ${{ steps.model-unit-test.outputs.result == 'Test failed' && 'ERROR' || 'INFO' }}
           message: ${{ steps.model-unit-test.outputs.result == 'Test failed' && 'Model Unit tests failed' || 'Model Unit tests passed succesfully' }}
@@ -92,7 +92,7 @@ jobs:
           run: python -m unittest test.test_unittest || echo "Test failed"
 
         - name: Log on model test success
-          uses: ./.github/workflows/log-results.yml@main
+          uses: ./.github/workflows/log-results.yml
           with:
             severity: ${{ steps.data-gen-test.outputs.result == 'Test failed' && 'ERROR' || 'INFO' }}
             message: ${{ steps.data-gen-test.outputs.result == 'Test failed' && 'Data Generation Pipeline Unit tests failed' || 'Data Generation Pipeline Unit tests passed succesfully' }}
@@ -106,7 +106,7 @@ jobs:
           run: pytest ./tests/
         
         - name: Log data ingestion test result
-          uses: ./.github/workflows/log-results.yml@main
+          uses: ./.github/workflows/log-results.yml
           with:
             severity: ${{ steps.data-ing-test.outputs.result == 'Test failed' && 'ERROR' || 'INFO' }}
             message: ${{ steps.data-ing-test.outputs.result == 'Test failed' && 'Data Ingestion Pipeline Unit tests failed' || 'Data Ingestion Pipeline Unit tests passed succesfully' }}
@@ -116,4 +116,4 @@ jobs:
     deploy-model:
       needs: run-model-tests
       if: success()
-      uses: ./.github/workflows/deploy-to-gke.yaml@main
+      uses: ./.github/workflows/deploy-to-gke.yaml
