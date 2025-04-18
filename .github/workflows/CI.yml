@@ -20,12 +20,12 @@ jobs:
         LANGSMITH_PROJECT: "linkedlens-test"
         LANGSMITH_TRACING: "true"
         LANGSMITH_ENDPOINT: "https://api.smith.langchain.com"
-        GOOGLE_PROJECT_ID: ${{ vars.GOOGLE_PROJECT_ID }}
+        #GOOGLE_PROJECT_ID: ${{ vars.GOOGLE_PROJECT_ID }}
         PROMPT_VERSION_QUERY_ANALYZER: ${{ secrets.PROMPT_VERSION_QUERY_ANALYZER }}
         PROMPT_ID_QUERY_ANALYZER: ${{ secrets.PROMPT_ID_QUERY_ANALYZER }}
         PROMPT_VERSION_FINAL_RESPONSE: ${{ secrets.PROMPT_VERSION_FINAL_RESPONSE }}
         PROMPT_ID_FINAL_RESPONSE: ${{ secrets.PROMPT_ID_FINAL_RESPONSE }}
-        GOOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOOGLE_APPLICATION_CREDENTIALS }}
+        #GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
     
       name: Model Unit Tests
       runs-on: ubuntu-latest
@@ -45,6 +45,11 @@ jobs:
       - name: Install dependencies
         working-directory: model-development/src/
         run: pip install -r requirements.txt
+      
+      - name: Authenticate with GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}'
       
       - name: Run unittests
         id: model-unit-test
@@ -120,3 +125,43 @@ jobs:
       needs: run-model-tests
       if: success()
       uses: ./.github/workflows/deploy-to-gke.yml
+    
+    log-model-tests:
+      needs: run-model-tests
+      if: success()
+      uses: ./.github/workflows/log-results.yml
+      with:
+        severity: INFO
+        message: 'Model Unit Tests and Evaluation passed'
+        workflow_type: 'Model Unit Tests'
+        success: true
+    
+    log-model-test-failure:
+      needs: run-model-tests
+      if: failure()
+      uses: ./.github/workflows/log-results.yml
+      with:
+        severity: ERROR
+        message: 'Model Unit Tests and Evaluation failed'
+        workflow_type: 'Model Unit Tests'
+        success: false
+    
+    log-data-tests:
+      needs: run-data-pipeline-tests
+      if: success()
+      uses: ./.github/workflows/log-results.yml
+      with:
+        severity: INFO
+        message: 'Data Pipelines Unit Tests passed'
+        workflow_type: 'Data Pipelines Unit Tests'
+        success: true
+    
+    log-data-test-failure:
+      needs: run-model-tests
+      if: failure()
+      uses: ./.github/workflows/log-results.yml
+      with:
+        severity: ERROR
+        message: 'Data Pipelines Unit Tests failed'
+        workflow_type: 'Data Pipelines Unit Tests'
+        success: false

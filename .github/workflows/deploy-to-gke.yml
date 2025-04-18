@@ -144,7 +144,7 @@ jobs:
     uses: ./.github/workflows/log-results.yml
     with:
       severity: INFO
-      message: 'Deployment of Model version "$(COMMIT_SHA) successful"'
+      message: 'Deployment of Model version "$(COMMIT_SHA) successful'
       workflow_type: 'Deployment'
       success: true
   
@@ -154,6 +154,6 @@ jobs:
     uses: ./.github/workflows/log-results.yml
     with:
       severity: ERROR
-      message: 'Deployment of Model version "$(COMMIT_SHA) unsuccessful"'
+      message: 'Deployment of Model version "$(COMMIT_SHA) unsuccessful'
       workflow_type: 'Deployment'
       success: false
