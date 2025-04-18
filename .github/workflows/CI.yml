@@ -157,7 +157,7 @@ jobs:
         success: true
     
     log-data-test-failure:
-      needs: run-model-tests
+      needs: run-data-pipeline-tests
       if: failure()
       uses: ./.github/workflows/log-results.yml
       with:
