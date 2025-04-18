@@ -51,13 +51,13 @@ jobs:
         working-directory: model-development
         run: python -m unittest discover -s test || echo "Test failed"
       
-      - name: Log model unit test results
-        uses: actions/log-results
-        with:
-          severity: ${{ steps.model-unit-test.outputs.result == 'Test failed' && 'ERROR' || 'INFO' }}
-          message: ${{ steps.model-unit-test.outputs.result == 'Test failed' && 'Model Unit tests failed' || 'Model Unit tests passed succesfully' }}
-          workflow_type: 'Unit Tests'
-          success: ${{ steps.model-unit-test.outputs.result == 'Test failed' && false || true }}
+      # - name: Log model unit test results
+      #   uses: actions/log-results
+      #   with:
+      #     severity: ${{ steps.model-unit-test.outputs.result == 'Test failed' && 'ERROR' || 'INFO' }}
+      #     message: ${{ steps.model-unit-test.outputs.result == 'Test failed' && 'Model Unit tests failed' || 'Model Unit tests passed succesfully' }}
+      #     workflow_type: 'Unit Tests'
+      #     success: ${{ steps.model-unit-test.outputs.result == 'Test failed' && false || true }}
       
       - name: Calculate Commit Hash
         run: echo "COMMIT_SHA=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_ENV
@@ -92,13 +92,13 @@ jobs:
           working-directory: data-pipelines/data-generation/dags
           run: python -m unittest test.test_unittest || echo "Test failed"
 
-        - name: Log data generation test result
-          uses:   actions/log-results
-          with:
-            severity: ${{ steps.data-gen-test.outputs.result == 'Test failed' && 'ERROR' || 'INFO' }}
-            message: ${{ steps.data-gen-test.outputs.result == 'Test failed' && 'Data Generation Pipeline Unit tests failed' || 'Data Generation Pipeline Unit tests passed succesfully' }}
-            workflow_type: 'Unit Tests'
-            success: ${{ steps.data-gen-test.outputs.result == 'Test failed' && false || true }}
+        # - name: Log data generation test result
+        #   uses:   actions/log-results
+        #   with:
+        #     severity: ${{ steps.data-gen-test.outputs.result == 'Test failed' && 'ERROR' || 'INFO' }}
+        #     message: ${{ steps.data-gen-test.outputs.result == 'Test failed' && 'Data Generation Pipeline Unit tests failed' || 'Data Generation Pipeline Unit tests passed succesfully' }}
+        #     workflow_type: 'Unit Tests'
+        #     success: ${{ steps.data-gen-test.outputs.result == 'Test failed' && false || true }}
     
         
         - name: Run data ingestion unittests
@@ -106,13 +106,13 @@ jobs:
           working-directory: data-pipelines/data-ingestion/dags
           run: pytest tests/
         
-        - name: Log data ingestion test result
-          uses: actions/log-results
-          with:
-            severity: ${{ steps.data-ing-test.outputs.result == 'Test failed' && 'ERROR' || 'INFO' }}
-            message: ${{ steps.data-ing-test.outputs.result == 'Test failed' && 'Data Ingestion Pipeline Unit tests failed' || 'Data Ingestion Pipeline Unit tests passed succesfully' }}
-            workflow_type: 'Unit Tests'
-            success: ${{ steps.data-ing-test.outputs.result == 'Test failed' && false || true }}
+        # - name: Log data ingestion test result
+        #   uses: actions/log-results
+        #   with:
+        #     severity: ${{ steps.data-ing-test.outputs.result == 'Test failed' && 'ERROR' || 'INFO' }}
+        #     message: ${{ steps.data-ing-test.outputs.result == 'Test failed' && 'Data Ingestion Pipeline Unit tests failed' || 'Data Ingestion Pipeline Unit tests passed succesfully' }}
+        #     workflow_type: 'Unit Tests'
+        #     success: ${{ steps.data-ing-test.outputs.result == 'Test failed' && false || true }}
 
     deploy-model:
       needs: run-model-tests
