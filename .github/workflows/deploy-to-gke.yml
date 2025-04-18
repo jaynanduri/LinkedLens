@@ -102,7 +102,7 @@ jobs:
           echo "HF_TOKEN=$(echo -n '${{ secrets.HF_TOKEN }}' | base64)" >> secrets.env
           echo "GEMINI_API_KEY=$(echo -n '${{ secrets.GEMINI_API_KEY }}' | base64)" >> secrets.env
           echo "LANGSMITH_API_KEY=$(echo -n '${{ secrets.LANGSMITH_API_KEY }}' | base64)" >> secrets.env
-
+          cat -A secrets.env
           source secrets.env
           sed -e "s|__PINECONE_API_KEY__|$PINECONE_API_KEY|g" \
             -e "s|__HF_TOKEN__|$HF_TOKEN|g" \
