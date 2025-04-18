@@ -98,9 +98,7 @@ jobs:
         run: |
           echo "Secrets not found. Applying..."
           set +x
-          echo -n "PINECONE_API_KEY=" >> secrets.env
-          echo -n "${{ secrets.PINECONE_API_KEY }}" | base64 >> secrets.env
-          echo >> secrets.env
+          echo "PINECONE_API_KEY=$(echo -n '${{ secrets.PINECONE_API_KEY }}' | base64 -w 0)" >> secrets.env
           echo "HF_TOKEN=$(echo -n '${{ secrets.HF_TOKEN }}' | base64)" >> secrets.env
           echo "GEMINI_API_KEY=$(echo -n '${{ secrets.GEMINI_API_KEY }}' | base64)" >> secrets.env
           echo "LANGSMITH_API_KEY=$(echo -n '${{ secrets.LANGSMITH_API_KEY }}' | base64)" >> secrets.env
@@ -133,7 +131,7 @@ jobs:
       - name: Check deployed Image Tag
         id: check-deployed-tag
         run: |-
-          echo "DEPLOY_SHA=kubectl describe deployments/model-dev-deployment -n app | grep Image | sed  -E "s/.*(.......)/\1/g" >> $GITHUB_ENV
+          echo "DEPLOY_SHA=$(kubectl describe deployments/model-dev-deployment -n app | grep Image | sed  -E 's/.*(.......)/\1/g')" >> $GITHUB_ENV
           if [ "$COMMIT_SHA" == "$DEPLOY_SHA" ]; then
             echo "Deployment Succesful.."
           else
