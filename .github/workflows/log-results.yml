@@ -30,7 +30,7 @@ jobs:
             - name: Set up gcloud CLI
               uses: google-github-actions/auth@v2
               with:
-                credentials_json: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}'
+                credentials_json: '${{ secrets.GOOGLE_CREDENTIALS_JSON }}'
             
             - name: Install gcloud logging components
               run: |
