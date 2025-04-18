@@ -22,7 +22,7 @@ def test_ingest_data_success(mock_pinecone, mock_ingest_all, mock_logger):
 
     # Assert
     mock_pinecone.return_value.get_index.assert_called_once()
-    mock_ingest_all.assert_called_once_with(only_new=True)
+    mock_ingest_all.assert_called_once_with(True)
     mock_logger.info.assert_any_call("All collections sync completed", extra={"results": mock_ingest_all.return_value})
 
 

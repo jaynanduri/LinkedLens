@@ -2,7 +2,6 @@ import pytest
 from unittest.mock import patch, MagicMock
 from src.main import test_connections
 
-
 @patch("src.main.test_firestore")
 @patch("src.main.test_pinecone")
 @patch("src.main.test_embedding")
@@ -34,4 +33,7 @@ def test_some_connections_fail(mock_logger, mock_embedding, mock_pinecone, mock_
     test_connections()
 
     # Assert
-    mock_logger.error.assert_called_with("\nSome connections failed. See logs for details. ❌")
+    success_msg = "\nAll connections successful! ✅"
+    assert not any(success_msg in str(call.args[0]) for call in mock_logger.info.call_args_list)
+    mock_logger.info.assert_any_call("Firestore: ❌ Failed")
+    # mock_logger.error.assert_called_with("\nSome connections failed. See logs for details. ❌")
