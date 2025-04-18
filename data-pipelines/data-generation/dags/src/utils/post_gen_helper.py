@@ -48,15 +48,16 @@ def get_post_and_user_chain_type(user_type:str)->Tuple[str, str]:
 
 def create_posts(input_df: pd.DataFrame, db_client: FirestoreClient, 
                  user_ids: set, post_ids: set, job_ids:set, user_type: str, 
-                 company_user_cnt_map: dict[str, int]=None, user_list_by_company: defaultdict[str, List[str]]=None)->None:
+                 company_user_cnt_map: dict[str, int]=None, 
+                 user_list_by_company: defaultdict[str, List[str]]=None, provider_name:str='gemini')->None:
 
     try:
         post_chain_type, user_chain_type = get_post_and_user_chain_type(user_type)
-        post_chain, post_format_instructions = get_llm_chain(post_chain_type)
-        user_chain, user_format_instructions = get_llm_chain(user_chain_type)
+        post_chain, post_format_instructions = get_llm_chain(post_chain_type, provider_name)
+        user_chain, user_format_instructions = get_llm_chain(user_chain_type, provider_name)
         
-        req_rate_limiter = get_request_limiter()
-        logger.info(f"Rate Limiter: {req_rate_limiter.num_requests}")
+        req_rate_limiter = get_request_limiter(provider_name)
+        # logger.info(f"Rate Limiter: {req_rate_limiter.num_requests}")
         generated_post_count = 0
         for _, row in input_df.iterrows():
             job_id = row['job_id']
@@ -122,7 +123,7 @@ def create_posts(input_df: pd.DataFrame, db_client: FirestoreClient,
 
 
 # invoked by DAG
-def generate_posts(bucket_filepath: str, column_names: List[str], filter: bool, num_rows: int, user_type: str)->None:
+def generate_posts(bucket_filepath: str, column_names: List[str], filter: bool, num_rows: int, user_type: str, provider_name:str='gemini')->None:
     input_df = read_input_file(bucket_filepath, column_names, filter, num_rows)
     logger.info(f"Number of jobs to generate post {len(input_df)}")
     # Get map of required recruiters per conpany
@@ -162,7 +163,9 @@ def generate_posts(bucket_filepath: str, column_names: List[str], filter: bool, 
     logger.info(f"User Ids: \n {len(user_ids)}")
     logger.info(f"Post Ids: \n {len(post_ids)}")
     
-    create_posts(input_df, db_client, user_ids, post_ids, job_ids, user_type, company_user_cnt_map, user_list_by_company)
+    create_posts(input_df, db_client, user_ids, post_ids, job_ids, 
+                 user_type, company_user_cnt_map, user_list_by_company, 
+                 provider_name)
 
 
 

@@ -8,7 +8,13 @@ Both DAGs are deployed on a VM on GCP. [Deployment details link]
 - A Cloud Run function is set up to detect any changes in FirestoreDB.
 - When a change is detected, the Cloud Run function triggers the Data Ingestion Pipeline.
 
-For details on setting up the required GCP resources to run these pipelines, refer to [GCP Setup](/docs/DATA_PIPELINES_Setup.md)
+
+## Prerequisites & Related Docs
+- [Data Exploration](/docs/DATA_EXPLORE.md)
+- [Data Preprocessing](/docs/DATA_PREPROCESS.md)
+- [GCP Setup](/docs/GCP_SETUP.md)
+- [Pinecone & Docker Setup](/docs/ESSENTIAL_SERVICES_SETUP.md)
+
 
 ## Data Generation Pipeline
 
@@ -25,6 +31,8 @@ For details on setting up the required GCP resources to run these pipelines, ref
 - `create_recruiter_posts`: Leverages basic details from the preprocessed dataset (company name, job description, job title) to generate recruiter profiles and corresponding hiring posts.
 
 - `create_interview_exp_posts`: Uses company name and job title from the dataset to create user profiles and generate posts about their interview experiences for specific roles and companies.
+
+*Note: Prompts for generating data are in `prompts.py` file*
 
 ### Visualization
 
@@ -137,16 +145,36 @@ All DAGs send an email notification updating the status. The email notifications
 ![Notification Email Example](/images/image_10.png)
 
 ## GitHub Workflows
-There are two workflows triggered on a push to the main branch. These workflows perform the following tasks:
 
-- SSH into the VM.
+Two GitHub Actions workflows are configured to ensure that the latest code is always available on the VMs hosting the data pipelines. These workflows are triggered on every push to the main branch and handle syncing code to the VM and restarting relevant services.
 
-- Pull the latest code from the repository.
+For more details on each workflow, refer to the [CI/CD Workflows](/docs/CI_CD_Workflows.md) README.
 
-- Ensure that all required files, such as the .env file and GCP credentials JSON, are available. If not, they are added.
 
-- Restart the Docker containers and ensure the Airflow endpoint is up and running.
+### Trigger DAGs Locally
+Ensure Docker and Docker Compose is setup. Follow instructions [here](/docs/ESSENTIAL_SERVICES_SETUP.md)
 
-The workflow definitions can be found in the corresponding YAML files:
-- [data-generation-workflow](../.github/workflows/trigger_airflow_generation.yml)
-- [data-generation-workflow](../.github/workflows/trigger_airflow_data_pipeline.yml)
+Navigate to the DAGs directory:
+```bash
+cd data-pipelines/data-generation/dags
+```
+or
+```bash
+cd data-pipelines/data-ingestion/dags
+```
+
+Initialize Airflow(first time)
+```bash
+docker compose up airflow-init
+```
+
+Run
+```bash
+docker compose up
+```
+Once running, visit http://localhost:8080 (or your configured port) to access the Airflow UI.
+
+Stop docker containers
+```bash
+docker compose down
+```

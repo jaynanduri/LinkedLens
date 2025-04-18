@@ -13,9 +13,10 @@ from langchain_core.runnables import RunnableSerializable
 from google.cloud.firestore import DocumentSnapshot
 from src.schema.user import BasicUser
 from src.schema.post import LinkedInPost
-from src.llm.llm_client import get_open_router_llm
+from src.llm.llm_client import get_llm
 from typing import Any, List, Tuple
 import pandas as pd
+
 
 def read_input_file(filepath: str, column_names: List[str], filter=False, num_rows=20)->pd.DataFrame:
     """Reads specific column file from GCP bucket(filepath) """
@@ -62,11 +63,11 @@ def connect_to_db()->FirestoreClient:
         raise RuntimeError(f"Error connecting to DB: {e}")
     
 
-
-def get_request_limiter()->RateLimiter:
+"""Add model_provider=gemini"""
+def get_request_limiter(provider_name: str = 'gemini')->RateLimiter:
     """Creates and returns a RateLimiter object for managing API request limits.""" 
     try:
-        request_limiter = RateLimiter(settings.MAX_OPEN_AI_REQUEST_PER_MIN, settings.MAX_OPEN_AI_REQUEST_PER_DAY)
+        request_limiter = RateLimiter(settings.MAX_OPEN_AI_REQUEST_PER_MIN, settings.MAX_OPEN_AI_REQUEST_PER_DAY, provider_name)
         return request_limiter
     except Exception as e:
         raise RuntimeError(f"Error creating request limiter: {e}")
@@ -81,11 +82,11 @@ def get_docs_list_by_field(docs: List[DocumentSnapshot], field_name: str)->set:
     return field_list
 
 
-def get_llm_chain(chain_type: str)-> Tuple[RunnableSerializable[dict, Any], str]:
-    """Creates and returns an LLM processing chain and response format instructions."""
+def get_llm_chain(chain_type: str, provider_name: str = 'gemini')-> Tuple[RunnableSerializable[dict, Any], str]:
+    """Creates and returns an LLM processing chain and response format instructions."""   
     try:
         if chain_type == 'recruiter-post':
-            llm = get_open_router_llm(chain_type)
+            llm = get_llm(chain_type, provider_name)
             logger.info(f"\nLLM for posts: \n {llm}")
             parser = PydanticOutputParser(pydantic_object=LinkedInPost)
             format_instructions = parser.get_format_instructions()
@@ -93,7 +94,7 @@ def get_llm_chain(chain_type: str)-> Tuple[RunnableSerializable[dict, Any], str]
             chain = post_template | llm | parser
             return chain, format_instructions
         elif chain_type == 'user-post-generation':
-            llm = get_open_router_llm(chain_type)
+            llm = get_llm(chain_type, provider_name)
             logger.info(f"\nLLM for posts: \n {llm}")
             parser = PydanticOutputParser(pydantic_object=LinkedInPost)
             format_instructions = parser.get_format_instructions()
@@ -101,7 +102,7 @@ def get_llm_chain(chain_type: str)-> Tuple[RunnableSerializable[dict, Any], str]
             chain = post_template | llm | parser
             return chain, format_instructions
         elif chain_type == 'basic-user-details':
-            llm = get_open_router_llm(chain_type)
+            llm = get_llm(chain_type, provider_name)
             user_template = PromptTemplate.from_template(PROMTPS[chain_type])
             parser = PydanticOutputParser(pydantic_object=BasicUser)
             user_chain = user_template | llm | parser

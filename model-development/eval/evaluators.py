@@ -2,6 +2,7 @@ from settings import logger
 from langsmith_client import LangsmithTraceExtractor
 from typing import List, Dict, Any, Optional, Union
 import pandas as pd
+import os
 from datasets import Dataset
 from ragas import evaluate
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -56,7 +57,8 @@ class Evaluator:
         else:
             logger.info("Using default Gemini embedding model", 
                         extra={"json_fields": {"model": self.config.get("GEMINI_EMBEDDING_MODEL")}})
-            self.embedding_model = GoogleGenerativeAIEmbeddings(model=self.config.get("GEMINI_EMBEDDING_MODEL"))
+            self.embedding_model = GoogleGenerativeAIEmbeddings(google_api_key=self.config.get("GEMINI_API_KEY"),
+                                                                model=self.config.get("GEMINI_EMBEDDING_MODEL"))
         
         logger.info("Wrapping models for RAGAS compatibility")
         self.evaluator_llm = LangchainLLMWrapper(self.llm)
@@ -183,7 +185,12 @@ class Evaluator:
         4. Merges results back to the original data
         """
 
-        logger.info("Starting Evidently evaluation for context relevance")
+        logger.info("Starting Evidently evaluation for context relevance", extra={
+            "json_fields": {
+                "dataframe": len(self.data)
+            }
+        })
+
         eval_df = self.data[
             (self.data["retrieved_context"].notnull() | self.data["messages_context"].notnull())
             & self.data["response"].notnull()
@@ -203,25 +210,24 @@ class Evaluator:
 
         eval_df = eval_df[["run_id", "query", "contexts", "response"]]
         eval_df = eval_df.rename(columns={"query": "question"})
+
         logger.info("Running Evidently evaluations", extra={"json_fields": {"records": len(eval_df)}})
 
-        logger.info("Processing Evidently evaluation")
         evidently_dataset = EvidentlyDataset.from_pandas(
             eval_df,
             data_definition=DataDefinition(id_column="run_id", text_columns=["question", "contexts", "response"]),
             descriptors=[ContextRelevance("question", contexts="contexts", 
                                           output_scores=True, 
-                                          method="llm", 
-                                          method_params={
-                                              "provider": "vertex_ai",
-                                                "model": self.config.get("GEMINI_MODEL_NAME"),
-                                          },
+                                        #   method="llm", 
+                                        #   method_params={
+                                        #       "provider": "gemini",#"vertex_ai", # gemini
+                                        #       "model": "gemini/gemini-1.5-flash"#self.config.get("GEMINI_MODEL_NAME"),
+                                        #   },
                                            aggregation_method= "mean", alias="Relevance")]
         )
         
         logger.info("Evidently evaluation completed successfully")
         context_score_df = evidently_dataset.as_dataframe()
-
         logger.info("Merging Evidently scores back to original data")
         self.data["run_id"] = self.data["run_id"].astype(str).str.strip()
         context_score_df["run_id"] = context_score_df["run_id"].astype(str).str.strip()
@@ -257,6 +263,7 @@ class Evaluator:
         logger.info("Logging individual evaluation records")
         for _, row in self.data.iterrows():
             row_dict = row.to_dict()
+            row_dict['COMMIT_SHA'] = self.config.get("COMMIT_SHA")
             logger.info(f"Eval Entry for RunID: {row_dict['run_id']}", extra={"json_fields": row_dict})
 
         logger.info("Completed logging evaluation summary")

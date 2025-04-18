@@ -1,11 +1,11 @@
 name: Run Tests
 
 on:
-    push:
-      branches:
-        - main
-        - model-dev
-    workflow_dispatch:
+  push:
+    branches:
+      - main
+      - model-dev
+  workflow_dispatch:
 
 jobs:
     run-model-tests:

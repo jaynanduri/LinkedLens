@@ -26,17 +26,6 @@ class PineconeSettings(BaseModel):
     index_name: str = "linked-lens-index"
     batch_size: int = 200
     dimension: int = 384  # Dimension for 'all-MiniLM-L6-v2' model
-    # collections: Dict[str, str] = {
-    #     "users": "user",
-    #     "jobs": "job",
-    #     "posts": "post",
-    # }
-    namespace_collection: Dict[str, str] = {
-        "user": "users",
-        "user_post" : "posts",
-        "recruiter_post": "posts",
-        "job": "jobs"
-    }
     namespace_collection: Dict[str, str] = {
         "user": "users",
         "user_post" : "posts",
@@ -57,9 +46,10 @@ class FirestoreSettings(BaseModel):
     
     collections: List[str] = ["users", "jobs", "posts"]
     credentials_path: str = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-    database_id: Optional[str] = Field(
-        default_factory=lambda: os.getenv("DB_NAME")
-    )
+    # database_id: Optional[str] = Field(
+    #     default_factory=lambda: os.getenv("DB_NAME")
+    # )
+    database_id: Optional[str] = "linked-lens"
     batch_size: int = 500  # Maximum documents to process in one batch
 
 

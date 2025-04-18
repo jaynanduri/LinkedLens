@@ -64,15 +64,11 @@ class Settings(BaseModel):
     NAMESPACE_URLS: Dict[str, str] = constants.NAMESPACE_URLS
     LANGSMITH_API_KEY:str = os.getenv("LANGSMITH_API_KEY")
     LANGSMITH_PROJECT: str = os.getenv("LANGSMITH_PROJECT")
-    GOOGLE_PROJECT_ID: str = os.getenv("GOOGLE_PROJECT_ID")
     PROD_RUN_ENV:str=constants.PROD_RUN_ENV
     TEST_RUN_ENV:str=constants.TEST_RUN_ENV
     TEST_METRIC_THRESHOLD: Dict[str, float] = constants.TEST_METRIC_THRESHOLD
     LOG_LEVEL:str=os.getenv("LOG_LEVEL", "INFO")
-    # LANGSMITH_PROJECT_NAME_TEST: str = "linkedlens-test"
-    # LANGSMITH_DATASET_NAME_PROD: str = "LinkedLens"
-    # LANGSMITH_DATASET_NAME_TEST: str = "LinkedLensTest"
-    # LANGSMITH_EXPERIMENT_PREFIX_PROD: str = "prod_eval"
-    # LANGSMITH_EXPERIMENT_PREFIX_TEST: str = "test_eval"
+    GOOGLE_PROJECT_ID:str=os.getenv("GOOGLE_PROJECT_ID")
+    COMMIT_SHA:str=os.getenv("COMMIT_SHA", "")
 
 settings = Settings()

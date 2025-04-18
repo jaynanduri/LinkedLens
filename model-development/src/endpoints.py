@@ -73,7 +73,7 @@ def prepare_state_object(messages: List[Message]) -> State:
 def convert_response_state(response_state: State)->Dict[str, Any]:
     response_dict = {}
     response_dict["query"] = response_state.get("query", "")
-    response_dict["final_context"] = response_state.get("final_context", "")
+    response_dict["retrieved_docs"] = response_state.get("retrieved_docs", "")
     response_dict["response"] = response_state.get("response", "")
     return response_dict
 

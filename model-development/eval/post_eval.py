@@ -1,6 +1,7 @@
 from settings import config, logger
 from langsmith_client import LangsmithTraceExtractor
 from evaluators import Evaluator
+import pandas as pd
 
 def main():
     """
@@ -12,7 +13,7 @@ def main():
     3. Logs the evaluation results
     """
     try:
-
+        # try adding cofing here
         logger.info("Starting post-evaluation script...", extra={
             "json_fields": {
                 "run_env": config.PROD_RUN_ENV,
@@ -32,6 +33,7 @@ def main():
                                     api_key = config.LANGSMITH_API_KEY)
         # Extract trace data
         logger.info("Extracting trace data from Langsmith")
+        trace_df = pd.DataFrame()
         trace_df = trace_extractor.extract_trace_as_dataframe()
         # check if data then eval
         if not (trace_df is None or trace_df.empty):
@@ -42,6 +44,7 @@ def main():
                 "GEMINI_MODEL_NAME": config.GEMINI_MODEL_NAME,
                 "GEMINI_EMBEDDING_MODEL": config.GEMINI_EMBEDDING_MODEL,
                 "GEMINI_API_KEY": config.GEMINI_API_KEY,
+                "COMMIT_SHA": ""
             })
             logger.info("Starting evaluation process")
             post_evaluator.evaluate()

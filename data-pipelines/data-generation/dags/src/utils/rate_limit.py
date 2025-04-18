@@ -6,12 +6,13 @@ class RateLimiter:
     
     """A rate limiter to restrict the number of requests per minute and per day."""
 
-    def __init__(self, max_requests_per_minute, max_request_per_day):
+    def __init__(self, max_requests_per_minute, max_request_per_day, provider_name:str='gemini'):
         self.max_requests_per_minute = max_requests_per_minute
         self.max_request_per_day = max_request_per_day
         self.timestamps = deque()
         self.num_requests = 0
         self.start_time = None
+        self.provider_name = provider_name
 
     def request(self):
         """Handles request rate limiting by enforcing both per-minute and per-day constraints.
@@ -19,7 +20,10 @@ class RateLimiter:
         Returns:
             bool: True if the request is allowed, False if the limit is exceeded.
         """
-
+        if self.provider_name == 'gemini':
+            self.num_requests += 1
+            return True
+        
         current_time = time.time()
         if self.num_requests == 0:
             self.start_time = current_time
