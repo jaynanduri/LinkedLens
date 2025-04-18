@@ -98,7 +98,9 @@ jobs:
         run: |
           echo "Secrets not found. Applying..."
           set +x
-          echo "PINECONE_API_KEY=$(echo -n '${{ secrets.PINECONE_API_KEY }}' | base64)" >> secrets.env
+          echo -n "PINECONE_API_KEY=" >> secrets.env
+          echo -n "${{ secrets.PINECONE_API_KEY }}" | base64 >> secrets.env
+          echo >> secrets.env
           echo "HF_TOKEN=$(echo -n '${{ secrets.HF_TOKEN }}' | base64)" >> secrets.env
           echo "GEMINI_API_KEY=$(echo -n '${{ secrets.GEMINI_API_KEY }}' | base64)" >> secrets.env
           echo "LANGSMITH_API_KEY=$(echo -n '${{ secrets.LANGSMITH_API_KEY }}' | base64)" >> secrets.env
