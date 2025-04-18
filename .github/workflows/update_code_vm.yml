@@ -44,10 +44,10 @@ jobs:
   
 
               echo "Updating code from git.."
-              git fetch origin dev-data-generation
-              git reset --hard origin/dev-data-generation
+              git fetch origin main
+              git reset --hard origin/main
               git clean -fd
-              git pull origin dev-data-generation
+              git pull origin main
   
               # Rewrite .env file
               echo "Creating/Re-writing .env file"

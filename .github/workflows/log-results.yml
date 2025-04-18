@@ -1,0 +1,65 @@
+name: Logging Results
+
+on:
+  workflow_call:
+    inputs:
+        severity:
+            required: false
+            type: string
+            default: ERROR
+        message:
+            required: true
+            type: string
+            default: 'Workflow failed! :failed-success:'
+        workflow_type:
+            required: false
+            type: string
+            default: 'Unit tests'
+        success:
+            required: false
+            type: boolean
+            default: false
+
+jobs:
+    notify-email:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repo
+              uses: actions/checkout@v3
+
+            - name: Set up gcloud CLI
+              uses: google-github-actions/auth@v2
+              with:
+                credentials_json: '${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}'
+            
+            - name: Install gcloud logging components
+              run: |
+                gcloud components install logging
+            
+            - name: Install jq
+              run: sudo apt-get update && sudo apt-get install -y jq
+              
+            
+            - name: Logs to Google Cloud Logging
+              env:
+                SEVERITY: ${{ inputs.severity }}
+                MESSAGE: ${{ inputs.message }}
+                WORKFLOW_TYPE: ${{ inputs.workflow_type }}
+                SUCCESS: ${{ inputs.success }}
+                PROJECT_ID: ${{ secrets.GOOGLE_PROJECT_ID }}  
+              run: |
+                echo "COMMIT_SHA=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_ENV
+                echo "TIMESTAMP=$(date -Iseconds)" >> $GITHUB_ENV
+                gcloud logging write github-actions-log \
+                --payload-type=json \
+                --log-name=github-actions-logs \
+                --severity=$SEVERITY \
+                --project=$PROJECT_ID \
+                "$(jq -n \
+                    --arg msg "$MESSAGE" \
+                    --arg time "$TIMESTAMP" \
+                    --arg tag "$COMMIT_SHA" \
+                    --arg wrkflw "$WORKFLOW_TYPE" \
+                    --arg success "$SUCCESS" \
+                    '{message: $msg, timestamp: $ts, image_tag: $tag, workflow:$wrkflw, success:$success}')"
+    

@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model-dev-deployment
+  namespace: app
+  labels:
+    app: model-dev
+
+spec:
+  selector:
+    matchLabels:
+      app: model-dev
+  template:
+    metadata:
+      labels:
+        app: model-dev
+    spec:
+      serviceAccountName: linkedlens-ksa
+      nodeSelector:
+        iam.gke.io/gke-metadata-server-enabled: "true"
+      containers:
+      - name: model-dev
+        image: us-east1-docker.pkg.dev/linkedlens-452503/linkedlens-repo/model-dev:IMAGE_TAG
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1"
+        ports:
+        - containerPort: 80
+        envFrom:
+            - configMapRef:
+                name: 'model-config'
+            - secretRef:
+                name: api-secrets 
