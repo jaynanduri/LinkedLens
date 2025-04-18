@@ -36,10 +36,6 @@ jobs:
               with:
                 credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
             
-            - name: Install gcloud logging components
-              run: |
-                gcloud components install logging
-            
             - name: Install jq
               run: sudo apt-get update && sudo apt-get install -y jq
               
