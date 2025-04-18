@@ -85,7 +85,7 @@ jobs:
             -e "s/__PROMPT_VERSION_QUERY_ANALYZER__/${{ vars.PROMPT_VERSION_QUERY_ANALYZER }}/g" \
             -e "s/__PROMPT_ID_QUERY_ANALYZER__/${{ secrets.PROMPT_ID_QUERY_ANALYZER }}/g" \
             -e "s/__PROMPT_VERSION_FINAL_RESPONSE__/${{ vars.PROMPT_VERSION_FINAL_RESPONSE }}/g" \
-            -e "s/__PROMPT_ID_FINAL_RESPONSE__/${{ secrets.PROMPT_ID_FINAL_RESPONSE }}/g" ./kubernetes/config.template.yaml > config.yaml
+            -e "s/__PROMPT_ID_FINAL_RESPONSE__/${{ secrets.PROMPT_ID_FINAL_RESPONSE }}/g" ../../kubernetes/config.template.yaml > config.yaml
           kubectl apply -f config.yaml -n app
 
       - name: Check if Secrets exist
@@ -107,7 +107,7 @@ jobs:
           sed -e "s|__PINECONE_API_KEY__|$PINECONE_API_KEY|g" \
             -e "s|__HF_TOKEN__|$HF_TOKEN|g" \
             -e "s|__GEMINI_API_KEY__|$GEMINI_API_KEY|g" \
-            -e "s|__LANGSMITH_API_KEY__|$LANGSMITH_API_KEY|g"  ./kubernetes/secrets.template.yaml > secrets.yaml
+            -e "s|__LANGSMITH_API_KEY__|$LANGSMITH_API_KEY|g"  ../../kubernetes/secrets.template.yaml > secrets.yaml
           set -x
           kubectl apply -f secrets.yaml -n app
 
