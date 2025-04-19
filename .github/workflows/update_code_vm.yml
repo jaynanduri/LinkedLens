@@ -1,12 +1,11 @@
 name: Push DAGs changes to VM
 
 on:
-  #push:
-    # branches:
-    #   - main
-    #   - dev-data-generation
-    # paths:
-    #  - "./data-pipelines/data-generation/**"
+  push:
+    branches:
+      - main
+    paths:
+     - "./data-pipelines/**"
   workflow_dispatch:
 
 jobs:
@@ -20,14 +19,14 @@ jobs:
 
       - name: Test Network Connection
         run: |
-          nslookup 34.10.218.22 || echo "DNS Lookup Failed"
+          nslookup ${{ secrets.SERVER_IP }} || echo "DNS Lookup Failed"
           
       - name: execute remote ssh commands with password
         uses: appleboy/ssh-action@v1.2.1
         with:
-          host: 34.10.218.22
-          # username: ${{ secrets.SERVER_USERNAME }}
-          username: apeksha.suhas.joshi
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          # username: apeksha.suhas.joshi
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SSH_PORT }}
           debug: true
@@ -37,7 +36,6 @@ jobs:
               echo "Repo path is: $REPO_PATH"
               if [ ! -d "$REPO_PATH" ]; then
                 echo "Repo not found, cloning..."
-                # cd /home/apeksha.suhas.joshi/
                 git clone https://github.com/jaynanduri/LinkedLens.git
               fi
               REPO_PATH = $(find /home -type d -name "LinkedLens" 2>/dev/null | head -n 1)
