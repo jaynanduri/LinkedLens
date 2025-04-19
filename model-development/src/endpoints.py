@@ -136,7 +136,7 @@ async def invoke(payload: InvokePayload = Body(...)):
             metrics = clapp.rag_evaluator.evaluate(
                 query=response_json["query"],
                 standalone_query=response_state["standalone_query"],
-                context=response_json["final_context"],
+                context=response_state["final_context"],
                 response=response_json["response"]
             )
         except Exception as e:

@@ -41,7 +41,6 @@ class RAGEvaluator:
     def evaluate(self, query: str, standalone_query: str, context: str, response: str) -> dict:
         cleaned_context = self._clean_text_for_similarity(context, source="context")
         cleaned_response = self._clean_text_for_similarity(response, source="response")
-
         metrics = {
             "retrieval_relevance": None,
             "response_relevance": None,
