@@ -8,7 +8,7 @@ DISK_SIZE=100
 IMAGE="projects/debian-cloud/global/images/debian-12-bookworm-v20250415"
 DISK_POLICY="projects/linkedlens/regions/us-central1/resourcePolicies/default-schedule-1"
 SERVICE_ACCOUNT="1099036781287-compute@developer.gserviceaccount.com"
-SSH_KEY_PATH="$HOME/.ssh/gcp_vm_key.pub"
+SSH_KEY_PATH="$HOME/.ssh/gcp_vm_key.pub" # modify path as needed
 OPS_AGENT_POLICY="v2-x86-template-1-4-0"
 POLICY_NAME="goog-ops-agent-${OPS_AGENT_POLICY}-${ZONE}"
 

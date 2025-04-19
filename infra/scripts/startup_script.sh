@@ -19,6 +19,8 @@ systemctl enable docker
 DOCKER_USER="apeksha.suhas.joshi"
 DOCKER_HOME="/home/$DOCKER_USER/.docker"
 
+sudo chmod 666 /var/run/docker.sock
+
 if [ -d "$DOCKER_HOME" ]; then
 echo "Setting permissions for Docker home directory..."
 chown "$DOCKER_USER:$DOCKER_USER" "$DOCKER_HOME" -R
