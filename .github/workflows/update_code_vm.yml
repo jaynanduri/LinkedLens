@@ -38,10 +38,8 @@ jobs:
                 echo "Repo not found, cloning..."
                 git clone https://github.com/jaynanduri/LinkedLens.git
                 echo "Repo cloned.."
-                REPO_PATH = $(find /home -type d -name "LinkedLens" 2>/dev/null | head -n 1)
-                echo $REPO_PATH
               fi
-              REPO_PATH = $(find /home -type d -name "LinkedLens" 2>/dev/null | head -n 1)
+              REPO_PATH = "$(find /home -type d -name "LinkedLens" 2>/dev/null | head -n 1)"
               echo $REPO_PATH
               cd $REPO_PATH
               
@@ -84,11 +82,10 @@ jobs:
                 echo "Repository not found. Exiting.."
                 exit 1
               fi
-              
-              cd data-generation
+
               echo "Current directory: $(pwd)"
-              
               mkdir -p credentials
           
               echo "Creating/Re-writing linkedlens-firestore-srvc-acc.json..."
               echo '${{ secrets.GCP_CREDENTIALS_JSON }}' > ./credentials/linkedlens-firestore-srvc-acc.json
+              
