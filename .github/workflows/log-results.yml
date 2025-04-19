@@ -46,7 +46,7 @@ jobs:
                 MESSAGE: ${{ inputs.message }}
                 WORKFLOW_TYPE: ${{ inputs.workflow_type }}
                 SUCCESS: ${{ inputs.success }}
-                PROJECT_ID: ${{ secrets.GOOGLE_PROJECT_ID }}  
+                PROJECT_ID: 'linkedlens' 
               run: |
                 echo "COMMIT_SHA=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_ENV
                 echo "TIMESTAMP=$(date -Iseconds)" >> $GITHUB_ENV
