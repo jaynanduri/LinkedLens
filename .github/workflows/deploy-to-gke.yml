@@ -154,7 +154,7 @@ jobs:
       - name: Check deployed Image Tag
         id: check-deployed-tag
         run: |-
-          echo "DEPLOY_SHA=$(kubectl describe deployments/model-dev-deployment -n app | grep Image | sed  -E 's/.*(.......)/\1/g')" >> $GITHUB_ENV
+          DEPLOY_SHA=$(kubectl describe deployments/model-dev-deployment -n app | grep Image | sed  -E 's/.*(.......)/\1/g')
           echo $COMMIT_SHA
           echo "Deployed model"
           echo $DEPLOY_SHA
