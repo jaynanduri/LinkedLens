@@ -155,6 +155,8 @@ jobs:
         id: check-deployed-tag
         run: |-
           echo "DEPLOY_SHA=$(kubectl describe deployments/model-dev-deployment -n app | grep Image | sed  -E 's/.*(.......)/\1/g')" >> $GITHUB_ENV
+          echo $COMMIT_SHA
+          echo $DEPLOY_SHA
           if [ "$COMMIT_SHA" == "$DEPLOY_SHA" ]; then
             echo "Deployment Succesful.."
           else

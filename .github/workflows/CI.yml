@@ -26,6 +26,7 @@ jobs:
         PROMPT_VERSION_FINAL_RESPONSE: ${{ vars.PROMPT_VERSION_FINAL_RESPONSE }}
         PROMPT_ID_FINAL_RESPONSE: ${{ secrets.PROMPT_ID_FINAL_RESPONSE }}
         GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS_JSON }}
+        DB_NAME: 'linked-lens'
     
       name: Model Unit Tests
       runs-on: ubuntu-latest
