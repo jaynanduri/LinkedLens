@@ -23,7 +23,7 @@ jobs:
           nslookup 34.10.218.22 || echo "DNS Lookup Failed"
           
       - name: execute remote ssh commands with password
-        uses: appleboy/ssh-action@v1.2.1
+        uses: appleboy/ssh-action@v0.1.4
         with:
           host: 34.10.218.22
           # username: ${{ secrets.SERVER_USERNAME }}
