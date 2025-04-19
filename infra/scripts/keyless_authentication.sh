@@ -1,3 +1,4 @@
+#!/bin/bash
 # This script contains the commands required to setup keyless authetication with GCP and GItHub Actions
 
 # 1. Set the project for which the cluster is to be created

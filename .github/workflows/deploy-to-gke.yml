@@ -144,6 +144,10 @@ jobs:
           kubectl rollout status deployment/model-dev-deployment -n app && \
           kubectl apply -f ./kubernetes/service.yaml --namespace app
       
+      - name: Apply HPA
+        run: |-
+          kubectl apply -f ../../kubernetes/hpa/model-hpa.yaml -n app
+
       - name: Restart deployment
         run: kubectl rollout restart deployment model-dev-deployment -n app
       
