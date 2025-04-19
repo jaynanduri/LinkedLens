@@ -35,6 +35,7 @@ jobs:
               REPO_PATH="$(find /home -type d -name "LinkedLens" 2>/dev/null | head -n 1)"
               echo "Repo path is: $REPO_PATH"
               if [ ! -d "$REPO_PATH" ]; then
+                cd $HOME
                 echo "Repo not found, cloning..."
                 git clone https://github.com/jaynanduri/LinkedLens.git
                 echo "Repo cloned.."
