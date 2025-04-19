@@ -174,7 +174,7 @@ docker compose up
 ```
 Once running, visit http://localhost:8080 (or your configured port) to access the Airflow UI.
 
-Stop docker containers
+Stop docker container
 ```bash
 docker compose down
 ```
