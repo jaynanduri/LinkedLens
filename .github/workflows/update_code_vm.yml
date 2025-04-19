@@ -38,7 +38,7 @@ jobs:
                 git clone https://github.com/jaynanduri/LinkedLens.git
                 echo "Repo cloned.."
               fi
-              REPO_PATH = "$(find /home -type d -name "LinkedLens" 2>/dev/null | head -n 1)"
+              REPO_PATH="$(find /home -type d -name "LinkedLens" 2>/dev/null | head -n 1)"
               echo $REPO_PATH
               cd $REPO_PATH
               
