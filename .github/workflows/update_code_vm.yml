@@ -37,11 +37,13 @@ jobs:
               echo "Repo path is: $REPO_PATH"
               if [ ! -d "$REPO_PATH" ]; then
                 echo "Repo not found, cloning..."
-                cd /home/apeksha.suhas.joshi/mlops
+                # cd /home/apeksha.suhas.joshi/
                 git clone https://github.com/jaynanduri/LinkedLens.git
               fi
-              echo "Did not clone repo"
-              cd "$REPO_PATH"
+              REPO_PATH = $(find /home -type d -name "LinkedLens" 2>/dev/null | head -n 1)
+              echo $REPO_PATH
+              cd $REPO_PATH
+              
   
 
               echo "Updating code from git.."
@@ -55,7 +57,7 @@ jobs:
               cat > .env <<EOF
               OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
               DB_NAME=${{ secrets.DB_NAME }}
-              GOOGLE_APPLICATION_CREDENTIALS=$HOME/mlops/LinkedLens/credentials/linkedlens-firestore-srvc-acc.json
+              GOOGLE_APPLICATION_CREDENTIALS=$HOME/LinkedLens/credentials/linkedlens-firestore-srvc-acc.json
               GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
               AIRFLOW_UID=${{ secrets.AIRFLOW_UID }}
               MAX_OPEN_AI_REQUEST_PER_MIN=${{ secrets.MAX_OPEN_AI_REQUEST_PER_MIN }}
