@@ -5,6 +5,7 @@
 /data-generation/working_data
 /data-generation/config/
 /data-generation/dags/src/credentials/
+.pytest_cache
 *pyc
 __pycache__
 *.log

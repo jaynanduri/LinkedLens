@@ -34,21 +34,21 @@ class FirestoreClient:
         """Initialize the Firestore client."""
         try:
             # Get credentials path from settings
-            creds_path = settings.GOOGLE_APPLICATION_CREDENTIALS
-            creds_path = Path(creds_path).resolve()
+            # creds_path = settings.GOOGLE_APPLICATION_CREDENTIALS
+            # creds_path = Path(creds_path).resolve()
             
-            logger.info(f"Found credentials file at: {creds_path}")
+            # logger.info(f"Found credentials file at: {creds_path}")
             
-            if not creds_path.exists():
-                raise FileNotFoundError(f"Firestore credentials file not found at: {creds_path}")
+            # if not creds_path.exists():
+            #     raise FileNotFoundError(f"Firestore credentials file not found at: {creds_path}")
             
             # Get database ID from settings
             db_name = settings.firestore_setting.database_name
             if db_name:
                 logger.info(f"Using database ID: {db_name}")
             
-            # Load credentials
-            cred = credentials.Certificate(str(creds_path))
+            # # Load credentials
+            # cred = credentials.Certificate(str(creds_path))
             
             # Initialize Firebase Admin if not already initialized
             try:
@@ -56,7 +56,7 @@ class FirestoreClient:
                     logger.debug("Firebase Admin already initialized")
                 else:
                     # Initialize Firebase app
-                    firebase_admin.initialize_app(cred)
+                    firebase_admin.initialize_app()
             except ValueError as e:
                 if "already exists" in str(e):
                     logger.debug("Firebase Admin already initialized")

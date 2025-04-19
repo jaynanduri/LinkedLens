@@ -19,10 +19,14 @@ on:
             required: false
             type: boolean
             default: false
+    secrets:
+      GCP_CREDENTIALS_JSON:
+        required: true
 
 jobs:
-    notify-email:
+    log-workflow-results:
         runs-on: ubuntu-latest
+        
         steps:
             - name: Checkout repo
               uses: actions/checkout@v3
@@ -46,13 +50,12 @@ jobs:
                 MESSAGE: ${{ inputs.message }}
                 WORKFLOW_TYPE: ${{ inputs.workflow_type }}
                 SUCCESS: ${{ inputs.success }}
-                PROJECT_ID: ${{ secrets.GOOGLE_PROJECT_ID }}  
+                PROJECT_ID: 'linkedlens' 
               run: |
                 echo "COMMIT_SHA=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_ENV
                 echo "TIMESTAMP=$(date -Iseconds)" >> $GITHUB_ENV
                 gcloud logging write github-actions-log \
                 --payload-type=json \
-                --log-name=github-actions-logs \
                 --severity=$SEVERITY \
                 --project=$PROJECT_ID \
                 "$(jq -n \
@@ -61,5 +64,5 @@ jobs:
                     --arg tag "$COMMIT_SHA" \
                     --arg wrkflw "$WORKFLOW_TYPE" \
                     --arg success "$SUCCESS" \
-                    '{message: $msg, timestamp: $ts, image_tag: $tag, workflow:$wrkflw, success:$success}')"
+                    '{message: $msg, timestamp: $time, image_tag: $tag, workflow:$wrkflw, success:$success}')"
     

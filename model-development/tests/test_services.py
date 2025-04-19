@@ -27,6 +27,9 @@ class TestServices(unittest.TestCase):
         LLMProvider._llm = None
         PromptManager._instance = None
 
+        self.logger_patcher = patch("services.llm_provider.logger")
+        self.mock_logger = self.logger_patcher.start()
+
         self.chat_llm_patcher = patch('services.llm_provider.ChatGoogleGenerativeAI')
         self.mock_chat_llm = self.chat_llm_patcher.start()
 
@@ -87,9 +90,10 @@ class TestServices(unittest.TestCase):
         self.addCleanup(self.prompts_list_patcher.stop)
         self.addCleanup(self.prompts_get_patcher.stop)
         self.addCleanup(self.prompt_template_patcher.stop)
+        self.addCleanup(self.logger_patcher.stop)
         # self.addCleanup(self.chat_prompt_template_patcher.stop)
 
-
+    # @patch("services.llm_provider.logger")
     def test_singleton_behavior(self):
         """Test that LLMProvider is a singleton and returns the same instance."""
         another_instance = LLMProvider(api_key="new_key", model_name="new_model")
@@ -98,10 +102,12 @@ class TestServices(unittest.TestCase):
         self.assertEqual(id(self.mock_llm_provider), id(another_instance), "LLMProvider should be a singleton.")
         self.assertEqual(id(self.prompt_manager), id(another_prompt_instance), "PromptManager should be a singleton.")
 
+    # @patch("services.llm_provider.logger")
     def test_llm_provider_init(self):
         """Test that LLMProvider initializes ChatGoogleGenerativeAI with correct parameters."""
         self.mock_chat_llm.assert_called_once_with(api_key="test_api_key", model="test_model")
 
+    # @patch("services.llm_provider.logger")
     def test_get_llm(self):
         """Test that get_llm returns the initialized LLM instance."""
         llm_instance = self.mock_llm_provider.get_llm()
@@ -117,6 +123,7 @@ class TestServices(unittest.TestCase):
         prompt_data = self.prompt_manager.get_prompt('test_prompt')
         self.assertEqual(prompt_data, 'Mocked prompt data')
 
+    # @patch("services.llm_chain_factory.logger")
     def test_create_query_analysis_chain(self):
         """Test create_query_analysis_chain in LLMChainFactory."""
         mock_output_model = MagicMock()
@@ -132,6 +139,7 @@ class TestServices(unittest.TestCase):
         # Ensure the return value was piped correctly
         self.assertIsNotNone(result, "The query analysis chain should not be None")
 
+    # @patch("services.llm_chain_factory.logger")
     def test_create_final_response_chain(self):
         """Test create_final_response_chain in LLMChainFactory."""
         system_prompt = "Test system prompt"

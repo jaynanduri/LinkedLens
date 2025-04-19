@@ -1,5 +1,5 @@
 from graph.state import State
-from logger import *
+from logger import logger, with_logging
 from pydantic import BaseModel, Field
 from typing import List, Literal, Dict, Any
 from langchain.schema import HumanMessage, AIMessage
@@ -8,7 +8,7 @@ from clients.pinecone_client import PineconeClient
 from collections import defaultdict
 from datetime import datetime, timezone
 from langsmith import traceable
-
+from config.settings import settings
 
 class QueryAnalysis(BaseModel):
     standalone_query: str = Field(..., description="A rewritten, standalone query that is clear and self-contained.")

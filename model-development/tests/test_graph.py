@@ -26,6 +26,18 @@ class TestGraph(unittest.TestCase):
     def setUp(self):
         """Set up mocks for dependencies."""
 
+        self.logger_core_patcher = patch("logger.logger")
+        self.mock_logger_core = self.logger_core_patcher.start()
+
+        self.logger_patcher = patch("graph.nodes.logger")
+        self.mock_logger = self.logger_patcher.start()
+
+        self.logger_patcher_embed = patch("clients.embedding_client.logger")
+        self.mock_logger_embed = self.logger_patcher_embed.start()
+
+        self.logger_patcher_pinecone = patch("clients.pinecone_client.logger")
+        self.mock_logger_pinecone = self.logger_patcher_pinecone.start()
+
         self.mock_embedding_client = MagicMock(spec=EmbeddingClient)
         self.mock_pinecone_client = MagicMock(spec=PineconeClient)
 
@@ -51,6 +63,7 @@ class TestGraph(unittest.TestCase):
         self.mock_settings.NAMESPACE_URLS = {'job': 'https://example.com/jobs'}
         self.mock_settings.GEMINI_API_KEY = "fake_api_key"
         self.mock_settings.GEMINI_MODEL_NAME = "gemini-model"
+        os.environ['LANGSMITH_TRACING'] = "false"
 
         self.mock_chain = MagicMock()
         
@@ -102,6 +115,10 @@ class TestGraph(unittest.TestCase):
         self.mock_llm_provider_patcher.stop()
         self.mock_chain_factory_patcher.stop()
         self.mock_prompt_manager_patcher.stop()
+        self.addCleanup(self.logger_patcher.stop)
+        self.addCleanup(self.logger_patcher_embed.stop)
+        self.addCleanup(self.logger_patcher_pinecone.stop)
+        self.addCleanup(self.logger_core_patcher.stop)
 
     def test_initialize_components(self):
         """Test if components are initialized correctly in Graph."""
@@ -145,7 +162,7 @@ class TestGraph(unittest.TestCase):
         # Verify graph compilation
         self.mock_builder.compile.assert_called_once_with()
 
-
+    # @patch("graph.nodes.logger")
     def test_query_analyzer_node_success(self):
         """Test query_analyzer_node function when chain.invoke succeeds."""
         # Mock successful LLM response
@@ -163,7 +180,8 @@ class TestGraph(unittest.TestCase):
         self.assertEqual(result["standalone_query"], "What is AI?")
         self.assertEqual(result["query_type"], "retrieve")
         self.assertEqual(result["vector_namespace"], ["user"])
-
+    
+    # @patch("graph.nodes.logger")
     def test_query_analyzer_node_success_generic(self):
         """Test query_analyzer_node when LLM returns query_type as 'generic'."""
         mock_parsed_result = MagicMock()
@@ -179,6 +197,7 @@ class TestGraph(unittest.TestCase):
         self.assertEqual(result["query_type"], "generic")
         self.assertEqual(result["vector_namespace"], [])
 
+    # @patch("graph.nodes.logger")
     def test_query_analyzer_node_exception(self):
         """Test query_analyzer_node function when chain.invoke raises an exception."""
         self.mock_chain.invoke.side_effect = Exception("Mocked error")
@@ -191,13 +210,14 @@ class TestGraph(unittest.TestCase):
         self.assertEqual(result["query_type"], "retrieve")
         self.assertEqual(result["vector_namespace"], ["user", "job", "user_post", "recruiter_post"])
 
-
+    # @patch("graph.nodes.logger")
     def test_check_query_type_retrieve(self):
         """Test check_query_type when query_type is 'retrieve'."""
         state = State(query_type="retrieve") 
         result = check_query_type(state)
         self.assertEqual(result, "retrieve")
 
+    # @patch("graph.nodes.logger")
     def test_check_query_type_generic(self):
         """Test check_query_type when query_type is 'generic'."""
         state = State(query_type="generic") 
@@ -205,6 +225,7 @@ class TestGraph(unittest.TestCase):
         self.assertEqual(result, "generic")
 
 
+    # @patch("graph.nodes.logger")
     def test_retrieval_node_single_namespace_job(self):
         """Test retrieval_node retrieves documents correctly for 'job' namespace."""
         # self.state.vector_namespace = ["job"]  # Set namespace to 'job'
@@ -219,7 +240,7 @@ class TestGraph(unittest.TestCase):
         self.assertIn("retrieved_docs", result)
         self.assertEqual(result["retrieved_docs"], expected_docs)
 
-
+    # @patch("graph.nodes.logger")
     def test_retrieval_node_single_namespace_recruiter_post(self):
         """Test retrieval_node retrieves documents correctly for 'recruiter_post' namespace."""
         # self.state.vector_namespace = ["recruiter_post"]  # Set namespace to 'recruiter_post'
@@ -234,7 +255,7 @@ class TestGraph(unittest.TestCase):
         self.assertIn("retrieved_docs", result)
         self.assertEqual(result["retrieved_docs"], expected_docs)
 
-
+    # @patch("graph.nodes.logger")
     def test_retrieval_node_multiple_namespaces(self):
         """Test retrieval_node retrieves documents from multiple namespaces."""
         # self.state.vector_namespace = ["job", "recruiter_post"]  # Both namespaces
@@ -251,7 +272,7 @@ class TestGraph(unittest.TestCase):
         self.assertIn("retrieved_docs", result)
         self.assertEqual(result["retrieved_docs"], expected_docs)
 
-
+    # @patch("graph.nodes.logger")
     def test_retrieval_node_no_matches(self):
         """Test retrieval_node when no matches are returned from Pinecone."""
         self.mock_pinecone_client.query_similar = MagicMock(return_value={"matches": []})
@@ -264,7 +285,7 @@ class TestGraph(unittest.TestCase):
         self.assertIn("retrieved_docs", result)
         self.assertEqual(result["retrieved_docs"], expected_docs)
 
-
+    # @patch("graph.nodes.logger")
     def test_retrieval_node_with_threshold_filtering(self):
         """Test retrieval_node where some results are below the threshold and get filtered out."""
         self.mock_pinecone_client.query_similar = MagicMock(return_value={
@@ -284,6 +305,7 @@ class TestGraph(unittest.TestCase):
         self.assertIn("retrieved_docs", result)
         self.assertEqual(result["retrieved_docs"], expected_docs)
 
+    # @patch("graph.nodes.logger")
     @patch("graph.nodes.format_context_for_llm")
     def test_augmentation_node(self, mock_format_context):
         """Test augmentation_node updates final_context correctly."""
@@ -316,7 +338,7 @@ class TestGraph(unittest.TestCase):
         mock_format_context.assert_called_once_with(self.state["retrieved_docs"], self.mock_settings.pinecone.max_docs)
         #mock_format_context.assert_called_once_with(mock_process_docs.return_value, self.mock_settings.pinecone.max_docs)
 
-    
+    # @patch("graph.nodes.logger")
     def test_format_context_for_llm(self):
         """Test formatting processed documents into context for LLM."""
 
@@ -358,6 +380,7 @@ class TestGraph(unittest.TestCase):
         result = format_context_for_llm(retrieved_docs)
         self.assertEqual(result.strip(), expected_output.strip())
 
+    # @patch("graph.nodes.logger")
     def test_format_context_for_llm_with_limit(self):
         """Test formatting processed documents into context for LLM."""
 
@@ -384,6 +407,7 @@ class TestGraph(unittest.TestCase):
         result = format_context_for_llm(retrieved_docs, 1)
         self.assertEqual(result.strip(), expected_output.strip())
 
+    # @patch("graph.nodes.logger")
     def test_final_response_node(self):
         
         self.mock_chain.invoke.return_value.content = "AI is the simulation of human intelligence in machines."
