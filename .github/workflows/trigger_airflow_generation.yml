@@ -1,13 +1,13 @@
 name: Trigger Data Generation DAGs
 
 on:
-  workflow_run:
-    workflows: ["Push DAGs changes to VM"]
-    types: [completed]
-    branches:
-      - 'main/**'
-      - 'dev-data-generation/**'
-  # workflow_dispatch:
+  # workflow_run:
+  #   workflows: ["Push DAGs changes to VM"]
+  #   types: [completed]
+  #   branches:
+  #     - 'main/**'
+  #     - 'dev-data-generation/**'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -26,13 +26,13 @@ jobs:
 
       - name: Test Network Connection
         run: |
-          nslookup ${{ secrets.SERVER_IP }} || echo "DNS Lookup Failed"
+          nslookup 34.136.81.6 || echo "DNS Lookup Failed"
           
       - name: execute remote ssh commands with password
         if: steps.verify-changed-path.outputs.any_changed == 'true'
         uses: appleboy/ssh-action@v1.2.1
         with:
-          host: ${{ secrets.SERVER_IP }}
+          host: 34.136.81.6
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SSH_PORT }}
@@ -45,15 +45,14 @@ jobs:
               cd "$REPO_PATH"
               
               # navigate to data-generation folder
-              #Verifying PWD
               if [ -d "./data-pipelines/data-generation" ]; then
                 echo "Correct directory"
               else
                 echo "Repository not found. Exiting.."
                 exit 1
               fi
-              
-              cd data-generation
+              echo "Current directory bfr: $(pwd)"
+              cd data-pipelines/data-generation
               echo "Current directory: $(pwd)"
 
               echo "Check if docker is running.."
@@ -75,8 +74,8 @@ jobs:
               done
 
               echo "All services are up and healthy!"
-              while ! curl -sSf "http://${{ secrets.SERVER_IP }}:8080" > /dev/null; do
+              while ! curl -sSf "http://34.136.81.6:8080" > /dev/null; do
                 echo "Airflow UI not ready yet..."
                 sleep 10
               done
-              echo "Airflow UI is available at: http://${{ secrets.SERVER_IP }}:8080"
+              echo "Airflow UI is available at: http://34.136.81.6:8080"
