@@ -26,7 +26,11 @@ jobs:
 
       - name: Test Network Connection
         run: |
-          nslookup 34.136.81.6 || echo "DNS Lookup Failed"
+          if nslookup 34.136.81.6; then
+            echo "DNS Lookup succeeded"
+          else
+            echo "DNS Lookup Failed"
+          fi
           
       - name: execute remote ssh commands with password
         if: steps.verify-changed-path.outputs.any_changed == 'true'
