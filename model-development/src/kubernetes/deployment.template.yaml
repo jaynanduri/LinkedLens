@@ -7,7 +7,7 @@ metadata:
     app: model-dev
 
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: model-dev
@@ -29,7 +29,7 @@ spec:
             cpu: "250m"
           limits:
             memory: "1.5Gi"
-            cpu: "0.5"
+            cpu: "1"
         ports:
         - containerPort: 80
         envFrom:
