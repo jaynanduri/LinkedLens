@@ -87,7 +87,6 @@ jobs:
           
           pwd
           docker build . --file ./Dockerfile --tag us-east1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.ARTIFACT_REPO }}/model-dev:$COMMIT_SHA
-          #working-directory: ./model-development/src
       
       - name: Docker push
         run: |-
