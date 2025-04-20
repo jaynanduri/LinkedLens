@@ -22,14 +22,14 @@ jobs:
         uses: tj-actions/changed-files@v45
         id: verify-changed-path
         with:
-          files: 'data-pipelines/data-preprocessing/**'
+          files: 'data-pipelines/data-ingestion/**'
 
       - name: Test Network Connection
         run: |
           nslookup ${{ secrets.SERVER_IP }} || echo "DNS Lookup Failed"
           
       - name: execute remote ssh commands with password
-        # if: steps.verify-changed-path.outputs.any_changed == 'true'
+        if: steps.verify-changed-path.outputs.any_changed == 'true'
         uses: appleboy/ssh-action@v1.2.1
         with:
           host: ${{ secrets.SERVER_IP }}

@@ -1,11 +1,11 @@
 name: Push DAGs changes to VM
 
 on:
-  # push:
-  #   branches:
-  #     - main
-  #   paths:
-  #    - "./data-pipelines/**"
+  push:
+    branches:
+      - main
+    paths:
+     - "./data-pipelines/**"
   workflow_dispatch:
 
 jobs:
@@ -19,12 +19,12 @@ jobs:
 
       - name: Test Network Connection
         run: |
-          nslookup 35.238.94.54 || echo "DNS Lookup Failed"
+          nslookup ${{ secrets.SERVER_IP }} || echo "DNS Lookup Failed"
           
       - name: execute remote ssh commands with password
         uses: appleboy/ssh-action@v1.2.1
         with:
-          host: 35.238.94.54
+          host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SSH_PORT }}
