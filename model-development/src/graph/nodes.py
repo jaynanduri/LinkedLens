@@ -16,7 +16,7 @@ class QueryAnalysis(BaseModel):
     query_type: str = Field(..., description="The type of the query: either 'generic' or 'retrieve'.")
     vector_namespace: List[str] = Field(
         ...,
-        description="List of relevant namespaces chosen from ['user', 'job', 'user_post', 'recruiter_post']. If unsure, include all."
+        description="List of relevant namespaces chosen from ['job', 'user_post', 'recruiter_post']. If unsure, include all."
     )
     response: str = Field("", description="The final response to the user.")
 
@@ -31,7 +31,7 @@ def query_analyzer_node(state: State, chain)->dict:
   # Assuming a pair is two messages, take the last 6 messages.
   dialogue_msgs = [
       f"{'User' if isinstance(msg, HumanMessage) else 'Assistant'}: {msg.content}"
-      for msg in state["messages"][-6:]
+      for msg in state["messages"]
       if isinstance(msg, (HumanMessage, AIMessage))
   ]
   dialogue_context = "\n".join(dialogue_msgs)
@@ -56,7 +56,7 @@ def query_analyzer_node(state: State, chain)->dict:
                 # print(f"====INSIDE IF TOOL CALL===: {tool_call}")
                 args = tool_call.get("args", {})
                 standalone_query = args.get("standalone_query", state["query"])
-                vector_namespaces = args.get("vector_namespace", ["user", "job", "user_post", "recruiter_post"])
+                vector_namespaces = args.get("vector_namespace", ["job", "user_post", "recruiter_post"])
                 
                 # print(f"=====In Query step: query_type when tool called: {query_type}=====")
                 # Create analysis structure to return
@@ -74,19 +74,22 @@ def query_analyzer_node(state: State, chain)->dict:
         direct_response = response.content
         state["messages"].append(AIMessage(content=direct_response))
 
-        return {
+        analysis_output = {
             "standalone_query": standalone_query,
             "query_type": "generic",
             "vector_namespace": [],
             "response": direct_response
         }
+        validated_analysis = QueryAnalysis(**analysis_output)
+        # print(validated_analysis.dict())
+        return validated_analysis.model_dump()
 
   except Exception as e:
     logger.warning(f"Using default response for query_analyzer node. Error in query_analyzer_node: {e}")
     return {
             "standalone_query": state["query"],
             "query_type": "retrieve",
-            "vector_namespace": ["user", "job", "user_post", "recruiter_post"],
+            "vector_namespace": ["job", "user_post", "recruiter_post"],
             "response": ""
         }
 
@@ -263,7 +266,7 @@ def final_response_node(state: State, chain):
     """
     dialogue_msgs = [
       f"{'User' if isinstance(msg, HumanMessage) else 'Assistant'}: {msg.content}"
-      for msg in state["messages"][-6:]
+      for msg in state["messages"]
       if isinstance(msg, (HumanMessage, AIMessage))
     ]
     dialogue_context = "\n".join(dialogue_msgs)

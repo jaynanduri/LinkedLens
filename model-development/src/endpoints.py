@@ -104,6 +104,8 @@ async def invoke(payload: InvokePayload = Body(...)):
     # ensure user type
     if payload.messages[-1].type == "user":
         new_query = payload.messages[-1].content
+    else:
+        raise HTTPException(status_code=400, detail="Last message expected as type [user] for new query not found.")
 
     state["query"] = new_query
     

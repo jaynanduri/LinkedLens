@@ -170,7 +170,7 @@ class TestGraph(unittest.TestCase):
             "name": "retrieval_tool",
             "args": {
                 "standalone_query": "What is AI?",
-                "vector_namespace": ["user"]
+                "vector_namespace": ["job"]
             }
         }
 
@@ -182,7 +182,7 @@ class TestGraph(unittest.TestCase):
 
         self.assertEqual(result["standalone_query"], "What is AI?")
         self.assertEqual(result["query_type"], "retrieve")
-        self.assertEqual(result["vector_namespace"], ["user"])
+        self.assertEqual(result["vector_namespace"], ["job"])
     
     # @patch("graph.nodes.logger")
     def test_query_analyzer_node_success_generic(self):
@@ -210,7 +210,7 @@ class TestGraph(unittest.TestCase):
         # Assertions: Expecting fallback values
         self.assertEqual(result["standalone_query"], self.state["query"])
         self.assertEqual(result["query_type"], "retrieve")
-        self.assertEqual(result["vector_namespace"], ["user", "job", "user_post", "recruiter_post"])
+        self.assertEqual(result["vector_namespace"], ["job", "user_post", "recruiter_post"])
 
     # # @patch("graph.nodes.logger")
     def test_check_query_type_retrieve(self):
