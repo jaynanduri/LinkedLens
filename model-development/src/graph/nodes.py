@@ -10,13 +10,15 @@ from datetime import datetime, timezone
 from langsmith import traceable
 from config.settings import settings
 
+
 class QueryAnalysis(BaseModel):
     standalone_query: str = Field(..., description="A rewritten, standalone query that is clear and self-contained.")
     query_type: str = Field(..., description="The type of the query: either 'generic' or 'retrieve'.")
     vector_namespace: List[str] = Field(
         ...,
-        description="List of relevant namespaces chosen from ['job', 'user_post', 'recruiter_post']. If unsure, include all."
+        description="List of relevant namespaces chosen from ['user', 'job', 'user_post', 'recruiter_post']. If unsure, include all."
     )
+    response: str = Field("", description="The final response to the user.")
 
 
 @with_logging
@@ -34,24 +36,76 @@ def query_analyzer_node(state: State, chain)->dict:
   ]
   dialogue_context = "\n".join(dialogue_msgs)
   query = state["query"]
-  
   try:
-        # Run the LLM chain with the conversation context and latest query.
-        result: QueryAnalysis = chain.invoke({"conversation":dialogue_context, "query":query})
-        parsed_obj = result['parsed']
-        output = {
-            "standalone_query": parsed_obj.standalone_query,
-            "query_type": parsed_obj.query_type,
-            "vector_namespace": parsed_obj.vector_namespace
-        }
-  except Exception as e:
-      output = {
-          "standalone_query": query,
-          "query_type": "retrieve",
-          "vector_namespace": ["user", "job", "user_post", "recruiter_post"]
-      }
-  return output
+    response = chain.invoke({
+        "conversation": dialogue_context, 
+        "query": query
+    })
 
+    vector_namespaces = []
+    standalone_query = state["query"]
+    direct_response = None
+    query_type = "generic"
+
+    if hasattr(response, 'tool_calls') and response.tool_calls:
+        query_type = "retrieve"
+        for tool_call in response.tool_calls:
+            # print(f"====TOOL CALL===: {tool_call.get('name')}")
+            if tool_call.get('name') == "retrieval_tool":
+                # Extract parameters from the tool call
+                # print(f"====INSIDE IF TOOL CALL===: {tool_call}")
+                args = tool_call.get("args", {})
+                standalone_query = args.get("standalone_query", state["query"])
+                vector_namespaces = args.get("vector_namespace", ["user", "job", "user_post", "recruiter_post"])
+                
+                # print(f"=====In Query step: query_type when tool called: {query_type}=====")
+                # Create analysis structure to return
+                analysis = {
+                    "standalone_query": standalone_query,
+                    "query_type": query_type,
+                    "vector_namespace": vector_namespaces,
+                    "response": ""
+                }
+                validated_analysis = QueryAnalysis(**analysis)
+                # print(validated_analysis.dict())
+                return validated_analysis.model_dump()
+    else:
+        # No tool call. LLM provides a direct response
+        direct_response = response.content
+        state["messages"].append(AIMessage(content=direct_response))
+
+        return {
+            "standalone_query": standalone_query,
+            "query_type": "generic",
+            "vector_namespace": [],
+            "response": direct_response
+        }
+
+  except Exception as e:
+    logger.warning(f"Using default response for query_analyzer node. Error in query_analyzer_node: {e}")
+    return {
+            "standalone_query": state["query"],
+            "query_type": "retrieve",
+            "vector_namespace": ["user", "job", "user_post", "recruiter_post"],
+            "response": ""
+        }
+
+    #   try:
+#         # Run the LLM chain with the conversation context and latest query.
+#         result: QueryAnalysis = chain.invoke({"conversation":dialogue_context, "query":query})
+#         parsed_obj = result['parsed']
+#         output = {
+#             "standalone_query": parsed_obj.standalone_query,
+#             "query_type": parsed_obj.query_type,
+#             "vector_namespace": parsed_obj.vector_namespace
+#         }
+#   except Exception as e:
+#       output = {
+#           "standalone_query": query,
+#           "query_type": "retrieve",
+#           "vector_namespace": ["user", "job", "user_post", "recruiter_post"]
+#       }
+#   return output
 
 @with_logging
 def check_query_type(state: State) -> Literal['retrieve', 'generic']:
@@ -115,112 +169,6 @@ def retrieval_node(
                     retrieved_results.append(match_dict)
     return {'retrieved_docs': retrieved_results}
 
-# @traceable
-# def fetch_complete_doc_text(matches: List[dict], pinecone_client: PineconeClient)-> Dict[str, str]:
-#     """
-#     Fetch all chunks for each retrieved doc and returns the complete raw_data of each doc.
-#     """
-#     # extract all firestorIds and total #chunks of the doc
-#     unique_ids = defaultdict(list)
-#     for doc in matches:
-#         metadata = doc.get("metadata", {})
-#         firestore_id = metadata.get("firestoreId")
-#         total_chunks = int(metadata.get("total_chunks"))
-#         namespace = metadata.get("docType")
-#         unique_ids[namespace].append((firestore_id, total_chunks))
-
-#     # prepare list of vector ids for all chunks of each doc
-#     ns_vector_ids = {}
-#     for namespace, ids in unique_ids.items():
-#       vector_ids = set()
-#       for firestoreId, total_chunks in ids:
-#         for i in range(1, total_chunks + 1):
-#           vector_ids.add(f"{firestoreId}_chunk_{i}")
-#       ns_vector_ids[namespace] = list(vector_ids)
-
-#     # Fetch all chunks for each doc and extract chunk number and raw_data
-#     all_docs_dict = {}
-#     for namespace, vector_ids in ns_vector_ids.items():
-#         response = pinecone_client.fetch_by_vector_ids(vector_id_list=vector_ids, namespace=namespace)
-#         for vector_id, vector_obj in response.vectors.items():
-#             metadata = vector_obj.metadata
-#             firestore_id = metadata.get("firestoreId")
-#             chunk_id = int(metadata.get("chunk"))
-#             raw_text = metadata.get("raw_data")
-            
-#             if firestore_id not in all_docs_dict:
-#                 all_docs_dict[firestore_id] = []
-            
-#             all_docs_dict[firestore_id].append((chunk_id, raw_text))
-    
-#     # Sort the chunks in order adn combine the raw_data for each doc
-#     for firestore_id in all_docs_dict:
-#         all_docs_dict[firestore_id].sort(key=lambda x: x[0])
-#         final_text = " ".join(text for _, text in all_docs_dict[firestore_id])
-#         all_docs_dict[firestore_id] = final_text
-#     return all_docs_dict
-
-# @traceable
-# def process_retrieved_docs(matches: List[dict], pinecone_client: PineconeClient) -> Dict[str, dict]:
-#     """
-#     Processes a list of Pinecone matches and aggregates them by unique Firestore ID.
-#     For each unique Firestore ID (within its namespace):
-#       - Groups the retrieved chunks.
-#       - Sorts chunks by their "chunk" number.
-#       - Combines the 'raw_data' fields.
-#       - Cleans metadata based on namespace rules.
-#           * For 'job': remove "chunk", "total_chunks", "createdAt", "updatedAt", "ttl", and remove "author" if blank.
-#           * For 'user_post' and 'recruiter_post': similar cleanup (author remains).
-#           * For 'user': remove "createdAt" and "updatedAt".
-#       - Extracts the creation date (if available) and converts it to a YYYY-MM-DD string.
-#       - Generates a URL based on the namespace.
-    
-#     Returns:
-#         A dictionary where each key is a Firestore ID and its value is the processed document data.
-#     """
-#     final_doc_text = fetch_complete_doc_text(matches, pinecone_client)
-    
-#     final_docs = {}
-
-#     for doc in matches:
-#         metadata = doc.get("metadata", {})
-#         namespace = metadata.get("docType")
-#         firestore_id = metadata.get("firestoreId")
-#         if not (firestore_id and namespace):
-#             continue
-        
-#         # If this is the first chunk seen for this Firestore ID, create a new entry.
-#         if firestore_id not in final_docs:
-#             base_score = doc.get("score", 0)
-#             combined_raw_text = final_doc_text.get(firestore_id, "")
-#             # Copy metadata and remove unwanted fields.
-#             doc_metadata = dict(metadata)
-#             for field in ["chunk", "total_chunks", "createdAt", "updatedAt", "ttl", "firestoreId"]:
-#                 doc_metadata.pop(field, None)
-#             # For 'job' namespace, remove 'author' if it's blank. - check
-#             if namespace == "job" and not doc_metadata.get("author"):
-#                 doc_metadata.pop("author", None)
-#             # # Convert creation timestamp to a date string, if available.
-#             # created_at = metadata.get("createdAt")
-#             # date_str = datetime.fromtimestamp(created_at).strftime("%Y-%m-%d") if created_at else "N/A"
-#             # Generate URL.
-#             base_url = settings.NAMESPACE_URLS.get(namespace)
-#             url = f"{base_url}/{firestore_id}"
-            
-#             final_docs[firestore_id] = {
-#                 "score": base_score,
-#                 **doc_metadata,
-#                 "combined_raw_text": combined_raw_text,
-#                 "url": url,
-#             }
-#         else:
-#             # If the Firestore ID already exists, update the entry.
-#             entry = final_docs[firestore_id]
-#             new_score = doc.get("score", 0)
-#             # Update the score if the new chunk has a higher score.
-#             if new_score > entry["score"]:
-#                 entry["score"] = new_score
-#     return final_docs
 
 @traceable
 def format_context_for_llm(matches: List[Dict], max_docs: int = 20) -> str:
@@ -259,13 +207,13 @@ def format_context_for_llm(matches: List[Dict], max_docs: int = 20) -> str:
 
         elif namespace == "user_post" or namespace == "recruiter_post":
             # Author id-> url
-            author = metadata.get("author", "")
+            # author = metadata.get("author", "")
             # job id if exists
             job_id = metadata.get("job_id", "")
-            if author:
-                base_url = settings.NAMESPACE_URLS.get("user")
-                author_url = f"{base_url}/{author}"
-                doc_metadata += f"Author Profile URL: {author_url}, "
+            # if author:
+            #     base_url = settings.NAMESPACE_URLS.get("user")
+            #     author_url = f"{base_url}/{author}"
+            #     doc_metadata += f"Author Profile URL: {author_url}, "
             if job_id:
                 base_url = settings.NAMESPACE_URLS.get("job")
                 job_url = f"{base_url}/{job_id}"
@@ -280,9 +228,9 @@ def format_context_for_llm(matches: List[Dict], max_docs: int = 20) -> str:
                 doc_metadata += f"User Type: {user_type}, "
 
         # add url
-        base_url = settings.NAMESPACE_URLS.get(namespace)
-        url = f"{base_url}/{firestore_id}"
-        doc_metadata = f"Source: {url}, " + doc_metadata
+        # base_url = settings.NAMESPACE_URLS.get(namespace)
+        # url = f"{base_url}/{firestore_id}"
+        # doc_metadata = f"Source: {url}, " + doc_metadata
 
         # add score
         score = doc.get("score", 0)
