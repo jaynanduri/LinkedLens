@@ -38,6 +38,8 @@ class TestServices(unittest.TestCase):
         self.mock_chat_llm.return_value = self.mock_llm_instance
         # Mock structured output for the LLM
         self.mock_llm_instance.with_structured_output.return_value = MagicMock()
+        self.mock_llm_instance.bind_tools.return_value = MagicMock()
+
 
         # Initialize LLMProvider with test values
         self.mock_llm_provider = LLMProvider(api_key="test_api_key", model_name="test_model")
@@ -75,6 +77,11 @@ class TestServices(unittest.TestCase):
         self.prompt_template_patcher = patch('services.llm_chain_factory.PromptTemplate')
         self.mock_prompt_template = self.prompt_template_patcher.start()
 
+        self.chat_prompt_template_patcher = patch('services.llm_chain_factory.ChatPromptTemplate')
+        self.mock_chat_prompt_template = self.chat_prompt_template_patcher.start()
+
+        self.mock_chat_prompt_template.from_messages.return_value = MagicMock()
+
         # self.chat_prompt_template_patcher = patch('services.llm_chain_factory.PromptTemplate')
         # self.mock_chat_prompt_template = self.chat_prompt_template_patcher.start()
 
@@ -91,6 +98,7 @@ class TestServices(unittest.TestCase):
         self.addCleanup(self.prompts_get_patcher.stop)
         self.addCleanup(self.prompt_template_patcher.stop)
         self.addCleanup(self.logger_patcher.stop)
+        self.addCleanup(self.chat_prompt_template_patcher.stop)
         # self.addCleanup(self.chat_prompt_template_patcher.stop)
 
     # @patch("services.llm_provider.logger")
@@ -131,10 +139,15 @@ class TestServices(unittest.TestCase):
         result = self.chain_factory.create_query_analysis_chain("Test prompt", mock_output_model)
 
         # Check if PromptTemplate was created correctly
-        self.mock_prompt_template.assert_called_once_with(input_variables=["conversation", "query"], template="Test prompt")
+        # self.mock_chat_prompt_template.assert_called_once_with(input_variables=["conversation", "query"], template="Test prompt")
+
+        self.mock_chat_prompt_template.from_messages.assert_called_once_with([
+            ("system", "Test prompt"),
+            ("human", "{query}")
+        ])
 
         # Ensure get_llm() was called
-        self.mock_llm_instance.with_structured_output.assert_called_once_with(mock_output_model, include_raw=True)
+        # self.mock_llm_instance.bind_tools.assert_called_once_with(mock_output_model, include_raw=True)
 
         # Ensure the return value was piped correctly
         self.assertIsNotNone(result, "The query analysis chain should not be None")

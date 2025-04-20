@@ -78,8 +78,8 @@ else
   echo "✅ Ops Agent Policy already exists: $POLICY_NAME"
 fi
 
-echo "🔁 Restarting VM to apply Docker group changes..."
-gcloud compute instances reset "$VM_NAME" --zone "$ZONE"
+# echo "🔁 Restarting VM to apply Docker group changes..."
+# gcloud compute instances reset "$VM_NAME" --zone "$ZONE"
 
 # === GET EXTERNAL IP ===
 VM_IP=$(gcloud compute instances describe "$VM_NAME" \

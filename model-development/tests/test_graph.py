@@ -164,40 +164,42 @@ class TestGraph(unittest.TestCase):
 
     # @patch("graph.nodes.logger")
     def test_query_analyzer_node_success(self):
-        """Test query_analyzer_node function when chain.invoke succeeds."""
-        # Mock successful LLM response
-        mock_parsed_result = MagicMock()
-        mock_parsed_result.standalone_query = "What is AI?"
-        mock_parsed_result.query_type = "retrieve"
-        mock_parsed_result.vector_namespace = ["user"]
+        """Test query_analyzer_node function when LLM returns a tool call."""
 
-        self.mock_chain.invoke.return_value = {"parsed": mock_parsed_result}
+        mock_tool_call = {
+            "name": "retrieval_tool",
+            "args": {
+                "standalone_query": "What is AI?",
+                "vector_namespace": ["job"]
+            }
+        }
 
-        # Run the function
+        mock_response = MagicMock()
+        mock_response.tool_calls = [mock_tool_call]
+        self.mock_chain.invoke.return_value = mock_response
+
         result = query_analyzer_node(self.state, self.mock_chain)
 
-        # Assertions
         self.assertEqual(result["standalone_query"], "What is AI?")
         self.assertEqual(result["query_type"], "retrieve")
-        self.assertEqual(result["vector_namespace"], ["user"])
+        self.assertEqual(result["vector_namespace"], ["job"])
     
     # @patch("graph.nodes.logger")
     def test_query_analyzer_node_success_generic(self):
         """Test query_analyzer_node when LLM returns query_type as 'generic'."""
-        mock_parsed_result = MagicMock()
-        mock_parsed_result.standalone_query = self.state["query"]
-        mock_parsed_result.query_type = "generic"
-        mock_parsed_result.vector_namespace = [] 
-
-        self.mock_chain.invoke.return_value = {"parsed": mock_parsed_result}
+        mock_response = MagicMock()
+        mock_response.tool_calls = []
+        mock_response.content = "AI is the simulation of human intelligence in machines."
+        self.mock_chain.invoke.return_value = mock_response
 
         result = query_analyzer_node(self.state, self.mock_chain)
 
-        self.assertEqual(result["standalone_query"], self.state["query"]) 
+        self.assertEqual(result["standalone_query"], self.state["query"])
         self.assertEqual(result["query_type"], "generic")
         self.assertEqual(result["vector_namespace"], [])
+        self.assertEqual(result["response"], "AI is the simulation of human intelligence in machines.")
 
-    # @patch("graph.nodes.logger")
+    # # @patch("graph.nodes.logger")
     def test_query_analyzer_node_exception(self):
         """Test query_analyzer_node function when chain.invoke raises an exception."""
         self.mock_chain.invoke.side_effect = Exception("Mocked error")
@@ -208,16 +210,16 @@ class TestGraph(unittest.TestCase):
         # Assertions: Expecting fallback values
         self.assertEqual(result["standalone_query"], self.state["query"])
         self.assertEqual(result["query_type"], "retrieve")
-        self.assertEqual(result["vector_namespace"], ["user", "job", "user_post", "recruiter_post"])
+        self.assertEqual(result["vector_namespace"], ["job", "user_post", "recruiter_post"])
 
-    # @patch("graph.nodes.logger")
+    # # @patch("graph.nodes.logger")
     def test_check_query_type_retrieve(self):
         """Test check_query_type when query_type is 'retrieve'."""
         state = State(query_type="retrieve") 
         result = check_query_type(state)
         self.assertEqual(result, "retrieve")
 
-    # @patch("graph.nodes.logger")
+    # # @patch("graph.nodes.logger")
     def test_check_query_type_generic(self):
         """Test check_query_type when query_type is 'generic'."""
         state = State(query_type="generic") 
@@ -225,7 +227,7 @@ class TestGraph(unittest.TestCase):
         self.assertEqual(result, "generic")
 
 
-    # @patch("graph.nodes.logger")
+    # # @patch("graph.nodes.logger")
     def test_retrieval_node_single_namespace_job(self):
         """Test retrieval_node retrieves documents correctly for 'job' namespace."""
         # self.state.vector_namespace = ["job"]  # Set namespace to 'job'
@@ -240,7 +242,7 @@ class TestGraph(unittest.TestCase):
         self.assertIn("retrieved_docs", result)
         self.assertEqual(result["retrieved_docs"], expected_docs)
 
-    # @patch("graph.nodes.logger")
+    # # @patch("graph.nodes.logger")
     def test_retrieval_node_single_namespace_recruiter_post(self):
         """Test retrieval_node retrieves documents correctly for 'recruiter_post' namespace."""
         # self.state.vector_namespace = ["recruiter_post"]  # Set namespace to 'recruiter_post'
@@ -255,7 +257,7 @@ class TestGraph(unittest.TestCase):
         self.assertIn("retrieved_docs", result)
         self.assertEqual(result["retrieved_docs"], expected_docs)
 
-    # @patch("graph.nodes.logger")
+    # # @patch("graph.nodes.logger")
     def test_retrieval_node_multiple_namespaces(self):
         """Test retrieval_node retrieves documents from multiple namespaces."""
         # self.state.vector_namespace = ["job", "recruiter_post"]  # Both namespaces
@@ -272,7 +274,7 @@ class TestGraph(unittest.TestCase):
         self.assertIn("retrieved_docs", result)
         self.assertEqual(result["retrieved_docs"], expected_docs)
 
-    # @patch("graph.nodes.logger")
+    # # @patch("graph.nodes.logger")
     def test_retrieval_node_no_matches(self):
         """Test retrieval_node when no matches are returned from Pinecone."""
         self.mock_pinecone_client.query_similar = MagicMock(return_value={"matches": []})
@@ -285,7 +287,7 @@ class TestGraph(unittest.TestCase):
         self.assertIn("retrieved_docs", result)
         self.assertEqual(result["retrieved_docs"], expected_docs)
 
-    # @patch("graph.nodes.logger")
+    # # @patch("graph.nodes.logger")
     def test_retrieval_node_with_threshold_filtering(self):
         """Test retrieval_node where some results are below the threshold and get filtered out."""
         self.mock_pinecone_client.query_similar = MagicMock(return_value={
@@ -305,7 +307,7 @@ class TestGraph(unittest.TestCase):
         self.assertIn("retrieved_docs", result)
         self.assertEqual(result["retrieved_docs"], expected_docs)
 
-    # @patch("graph.nodes.logger")
+    # # @patch("graph.nodes.logger")
     @patch("graph.nodes.format_context_for_llm")
     def test_augmentation_node(self, mock_format_context):
         """Test augmentation_node updates final_context correctly."""
@@ -326,19 +328,19 @@ class TestGraph(unittest.TestCase):
         ]
 
         # Mock the formatted context
-        mock_format_context.return_value = "[Metadata] Source: https://example.com/jobs/job123, Company Name: Tech corp, Title: AI Engineer, Location: USA, Relevance: 0.92\n[Content] This is chunk one.\n\n"
+        mock_format_context.return_value = "[Metadata] Company Name: Tech corp, Title: AI Engineer, Location: USA, Relevance: 0.92\n[Content] This is chunk one.\n\n"
 
         result = augmentation_node(self.state)
 
         self.assertIn("final_context", result)
         self.assertIsInstance(result["final_context"], str)
         self.assertNotEqual(result["final_context"], "")  # Ensure context is not empty
-        self.assertEqual(result["final_context"], "[Metadata] Source: https://example.com/jobs/job123, Company Name: Tech corp, Title: AI Engineer, Location: USA, Relevance: 0.92\n[Content] This is chunk one.\n\n")
+        self.assertEqual(result["final_context"], "[Metadata] Company Name: Tech corp, Title: AI Engineer, Location: USA, Relevance: 0.92\n[Content] This is chunk one.\n\n")
         # Verify mocks were called
         mock_format_context.assert_called_once_with(self.state["retrieved_docs"], self.mock_settings.pinecone.max_docs)
         #mock_format_context.assert_called_once_with(mock_process_docs.return_value, self.mock_settings.pinecone.max_docs)
 
-    # @patch("graph.nodes.logger")
+    # # @patch("graph.nodes.logger")
     def test_format_context_for_llm(self):
         """Test formatting processed documents into context for LLM."""
 
@@ -370,9 +372,9 @@ class TestGraph(unittest.TestCase):
         ]
 
         expected_output = (
-            "[Metadata] Source: https://example.com/jobs/job123, Company Name: Tech corp, Title: AI Engineer, Location: USA, Relevance: 0.92\n"
+            "[Metadata] Company Name: Tech corp, Title: AI Engineer, Location: USA, Relevance: 0.92\n"
             "[Content] This is chunk one.\n\n\n"
-            "[Metadata] Source: https://example.com/jobs/job456, Company Name: Tech corp 2, Title: Data Scientist, Location: USA, Relevance: 0.85\n"
+            "[Metadata] Company Name: Tech corp 2, Title: Data Scientist, Location: USA, Relevance: 0.85\n"
             "[Content] This is chunk two.\n\n"
         )
 
@@ -380,7 +382,7 @@ class TestGraph(unittest.TestCase):
         result = format_context_for_llm(retrieved_docs)
         self.assertEqual(result.strip(), expected_output.strip())
 
-    # @patch("graph.nodes.logger")
+    # # @patch("graph.nodes.logger")
     def test_format_context_for_llm_with_limit(self):
         """Test formatting processed documents into context for LLM."""
 
@@ -400,14 +402,14 @@ class TestGraph(unittest.TestCase):
         ]
 
         expected_output = (
-            "[Metadata] Source: https://example.com/jobs/job123, Company Name: Tech corp, Title: AI Engineer, Location: USA, Relevance: 0.92\n"
+            "[Metadata] Company Name: Tech corp, Title: AI Engineer, Location: USA, Relevance: 0.92\n"
             "[Content] This is chunk one.\n\n"
         )
 
         result = format_context_for_llm(retrieved_docs, 1)
         self.assertEqual(result.strip(), expected_output.strip())
 
-    # @patch("graph.nodes.logger")
+    # # @patch("graph.nodes.logger")
     def test_final_response_node(self):
         
         self.mock_chain.invoke.return_value.content = "AI is the simulation of human intelligence in machines."

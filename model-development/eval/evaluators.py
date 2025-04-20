@@ -218,11 +218,6 @@ class Evaluator:
             data_definition=DataDefinition(id_column="run_id", text_columns=["question", "contexts", "response"]),
             descriptors=[ContextRelevance("question", contexts="contexts", 
                                           output_scores=True, 
-                                        #   method="llm", 
-                                        #   method_params={
-                                        #       "provider": "gemini",#"vertex_ai", # gemini
-                                        #       "model": "gemini/gemini-1.5-flash"#self.config.get("GEMINI_MODEL_NAME"),
-                                        #   },
                                            aggregation_method= "mean", alias="Relevance")]
         )
         
