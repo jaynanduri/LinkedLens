@@ -28,8 +28,8 @@ spec:
             memory: "512Mi"
             cpu: "250m"
           limits:
-            memory: "2Gi"
-            cpu: "1"
+            memory: "1.5Gi"
+            cpu: "0.5"
         ports:
         - containerPort: 80
         envFrom:
