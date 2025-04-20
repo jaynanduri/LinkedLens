@@ -89,6 +89,5 @@ jobs:
               echo '${{ secrets.GCP_CREDENTIALS_JSON }}' > ./credentials/linkedlens-firestore-srvc-acc.json
               
               # Set airflow UID
-              echo"$(id -u)"
-              export AIRFLOW_UID=$(id -u)
-              echo "AIRFLOW_UID set to $AIRFLOW_UID"
+              # echo "$(id -u)"
+              # echo 'export AIRFLOW_UID='$(id -u) >> ~/.bashrc
