@@ -52,10 +52,10 @@ class LangsmithTraceExtractor:
         logger.info(f"Standard production cutoffs: {(start_cut_off)} to {end_cut_off}")
         print(f"Expected: Start cutoff: {start_cut_off}, End cutoff: {end_cut_off}")
         # for test
-        end_cut_off = datetime(2025, 4, 11, 2, 0, 0, tzinfo=timezone.utc)
-        end_cut_off = end_cut_off.replace(tzinfo=None)
-        start_cut_off = datetime(2025, 4, 11, 1, 0, 0, tzinfo=timezone.utc)
-        start_cut_off = start_cut_off.replace(tzinfo=None)
+        # end_cut_off = datetime(2025, 4, 11, 2, 0, 0, tzinfo=timezone.utc)
+        # end_cut_off = end_cut_off.replace(tzinfo=None)
+        # start_cut_off = datetime(2025, 4, 11, 1, 0, 0, tzinfo=timezone.utc)
+        # start_cut_off = start_cut_off.replace(tzinfo=None)
         return start_cut_off, end_cut_off
     
     def _set_cutoffs_test(self)->Tuple:

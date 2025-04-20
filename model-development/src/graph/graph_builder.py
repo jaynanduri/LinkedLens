@@ -42,9 +42,6 @@ class Graph:
         self.builder.add_node("retrieval_node", partial(retrieval_node, 
                                                         embedding_client=self.embedding_client, 
                                                         pinecone_client=self.pinecone_client))
-        
-        # self.builder.add_node("augmentation_node", partial(augmentation_node, 
-        #                                                    pinecone_client=self.pinecone_client))
 
         self.builder.add_node("augmentation_node", augmentation_node)
         
@@ -53,11 +50,17 @@ class Graph:
 
         # Define edges
         self.builder.add_edge(START, "query_analyzer_node")
-        self.builder.add_conditional_edges(
-            "query_analyzer_node",
-            check_query_type, 
-            {"retrieve": "retrieval_node", "generic": "final_response_node"}
-            )
+        self.builder.add_conditional_edges("query_analyzer_node", 
+        check_query_type, {
+            "retrieve": "retrieval_node", 
+            "generic": END
+        })
+
+        # self.builder.add_conditional_edges(
+        #     "query_analyzer_node",
+        #     check_query_type, 
+        #     {"retrieve": "retrieval_node", "generic": "final_response_node"}
+        #     )
         self.builder.add_edge("retrieval_node", "augmentation_node")
         self.builder.add_edge("augmentation_node", "final_response_node")
         self.builder.add_edge("final_response_node", END)

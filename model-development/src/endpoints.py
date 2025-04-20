@@ -104,6 +104,8 @@ async def invoke(payload: InvokePayload = Body(...)):
     # ensure user type
     if payload.messages[-1].type == "user":
         new_query = payload.messages[-1].content
+    else:
+        raise HTTPException(status_code=400, detail="Last message expected as type [user] for new query not found.")
 
     state["query"] = new_query
     
@@ -136,7 +138,7 @@ async def invoke(payload: InvokePayload = Body(...)):
             metrics = clapp.rag_evaluator.evaluate(
                 query=response_json["query"],
                 standalone_query=response_state["standalone_query"],
-                context=response_json["final_context"],
+                context=response_state["final_context"],
                 response=response_json["response"]
             )
         except Exception as e:

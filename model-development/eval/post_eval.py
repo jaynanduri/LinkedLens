@@ -13,7 +13,6 @@ def main():
     3. Logs the evaluation results
     """
     try:
-        # try adding cofing here
         logger.info("Starting post-evaluation script...", extra={
             "json_fields": {
                 "run_env": config.PROD_RUN_ENV,
