@@ -1,11 +1,3 @@
-<!-- # Data Generation, and Ingestion Pipelines
-
-We load preprocessed data from GCP and generate synthetic user profiles, recruiter job posts, and interview experience posts using LLM APIs. The generated data is validated using Pydantic before loading it into Firestore DB. The data stored in the FirestoreDB then makes use of the Data loading pipeline to ingest/sync the data into the Vector DB.
-
-There are two main DAGs:
-1. [Data Generation and Processing Pipeline](/data-pipelines/data-generation/)
-2. [Data Ingestion](/data-pipelines/data-generation/) -->
-
 ## Data Preprocessing
 
 This pipeline fetches job posting and company data from Kaggle, performs preprocessing, and prepares the data for analysis of tech job postings.
