@@ -19,7 +19,6 @@ usermod -aG docker $USER
 
 systemctl enable docker 
 
-sudo chmod 666 /var/run/docker.sock 
 
 if [ -d "$DOCKER_HOME" ]; then
 echo "Setting permissions for Docker home directory..."

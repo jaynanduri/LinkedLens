@@ -1,12 +1,11 @@
 name: Push DAGs changes to VM
 
 on:
-  #push:
-    # branches:
-    #   - main
-    #   - dev-data-generation
-    # paths:
-    #  - "./data-pipelines/data-generation/**"
+  # push:
+  #   branches:
+  #     - main
+  #   paths:
+  #    - "./data-pipelines/**"
   workflow_dispatch:
 
 jobs:
@@ -20,13 +19,14 @@ jobs:
 
       - name: Test Network Connection
         run: |
-          nslookup ${{ secrets.SERVER_IP }} || echo "DNS Lookup Failed"
+          nslookup 34.10.226.163 || echo "DNS Lookup Failed"
           
       - name: execute remote ssh commands with password
         uses: appleboy/ssh-action@v1.2.1
         with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USERNAME }}
+          host: 34.10.226.163
+          # username: ${{ secrets.SERVER_USERNAME }}
+          username: apeksha.suhas.joshi
           key: ${{ secrets.SERVER_KEY }}
           port: ${{ secrets.SSH_PORT }}
           debug: true
@@ -36,11 +36,13 @@ jobs:
               echo "Repo path is: $REPO_PATH"
               if [ ! -d "$REPO_PATH" ]; then
                 echo "Repo not found, cloning..."
-                cd /home/${{ secrets.SERVER_USERNAME }}/mlops
                 git clone https://github.com/jaynanduri/LinkedLens.git
+                echo "Repo cloned.."
               fi
-              echo "Did not clone repo"
-              cd "$REPO_PATH"
+              REPO_PATH = "$(find /home -type d -name "LinkedLens" 2>/dev/null | head -n 1)"
+              echo $REPO_PATH
+              cd $REPO_PATH
+              
   
 
               echo "Updating code from git.."
@@ -54,8 +56,8 @@ jobs:
               cat > .env <<EOF
               OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
               DB_NAME=${{ secrets.DB_NAME }}
-              DB_CREDENTIALS_PATH=${{ secrets.DB_CREDENTIALS_PATH }}
-              AIRFLOW_UID=${{ secrets.AIRFLOW_UID }}
+              GOOGLE_APPLICATION_CREDENTIALS=$HOME/LinkedLens/credentials/linkedlens-firestore-srvc-acc.json
+              GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
               MAX_OPEN_AI_REQUEST_PER_MIN=${{ secrets.MAX_OPEN_AI_REQUEST_PER_MIN }}
               MAX_OPEN_AI_REQUEST_PER_DAY=${{ secrets.MAX_OPEN_AI_REQUEST_PER_DAY }}
               OPEN_ROUTER_BASE_URL=${{ secrets.OPEN_ROUTER_BASE_URL }}
@@ -80,11 +82,10 @@ jobs:
                 echo "Repository not found. Exiting.."
                 exit 1
               fi
-              
-              cd data-generation
+
               echo "Current directory: $(pwd)"
-              
-              mkdir -p dags/src/credentials
+              mkdir -p credentials
           
               echo "Creating/Re-writing linkedlens-firestore-srvc-acc.json..."
-              echo '${{ secrets.GCP_CREDENTIALS_JSON }}' > dags/src/credentials/linkedlens-firestore-srvc-acc.json
+              echo '${{ secrets.GCP_CREDENTIALS_JSON }}' > ./credentials/linkedlens-firestore-srvc-acc.json
+              
