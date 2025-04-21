@@ -87,7 +87,6 @@ jobs:
           
           pwd
           docker build . --file ./Dockerfile --tag us-east1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.ARTIFACT_REPO }}/model-dev:$COMMIT_SHA
-          #working-directory: ./model-development/src
       
       - name: Docker push
         run: |-
@@ -186,7 +185,7 @@ jobs:
     uses: ./.github/workflows/log-results.yml
     with:
       severity: ERROR
-      message: 'Deployment of Model version "$(COMMIT_SHA)" unsuccessful'
+      message: "Deployment of Model version $(COMMIT_SHA) unsuccessful"
       workflow_type: 'Deployment'
       success: false
     secrets:

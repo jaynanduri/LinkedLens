@@ -2,7 +2,7 @@
 # This script contains the commands required to setup keyless authetication with GCP and GItHub Actions
 
 # 1. Set the project for which the cluster is to be created
-gcloud config set project linkedlens-45250
+gcloud config set project linkedlens-452503
 
 # 2. Obtain the project number and set the PROJECT_NUMBER variable with it.
 PROJECT_NUMBER=$(gcloud projects describe $(gcloud config get-value core/project) --format='value(projectNumber)')
