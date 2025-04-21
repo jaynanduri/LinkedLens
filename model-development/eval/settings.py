@@ -17,7 +17,7 @@ class Config(BaseModel):
     LANGSMITH_ENDPOINT: str = os.getenv("LANGSMITH_ENDPOINT")
     LANGSMITH_TRACING: str = os.getenv("LANGSMITH_TRACING")
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY")
-    # GOOGLE_APPLICATION_CREDENTIALS: str = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    GOOGLE_APPLICATION_CREDENTIALS: str = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     GEMINI_MODEL_NAME: str = "gemini-2.0-flash-001"
     GEMINI_EMBEDDING_MODEL: str = "models/text-embedding-004"
     PROD_RUN_ENV:str="prod"
