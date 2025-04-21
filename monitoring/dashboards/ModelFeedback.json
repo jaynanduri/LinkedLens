@@ -1,0 +1,461 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_GRAFANA-POSTGRESQL-DATASOURCE",
+      "label": "grafana-postgresql-datasource",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "grafana-postgresql-datasource",
+      "pluginName": "PostgreSQL"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "panel",
+      "id": "barchart",
+      "name": "Bar chart",
+      "version": ""
+    },
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "12.0.0-86517"
+    },
+    {
+      "type": "datasource",
+      "id": "grafana-postgresql-datasource",
+      "name": "PostgreSQL",
+      "version": "12.0.0-pre"
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${DS_GRAFANA-POSTGRESQL-DATASOURCE}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "light-orange",
+            "mode": "shades"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 8,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "12.0.0-86517",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_GRAFANA-POSTGRESQL-DATASOURCE}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH raw_feedback AS (\n  SELECT\n    f.id,\n    f.data::jsonb AS data,\n    f.meta::jsonb AS meta,\n    f.snapshot::jsonb AS snapshot,\n    meta->>'message_id' AS rated_message_id,\n    meta->>'chat_id' AS chat_id\n  FROM feedback f\n),\nrated_msg AS (\n  SELECT\n    rf.id,\n    rf.data,\n    rf.meta,\n    rf.snapshot,\n    rf.rated_message_id,\n    rf.chat_id,\n    msg_json AS message_json\n  FROM raw_feedback rf\n  LEFT JOIN LATERAL (\n    SELECT value AS msg_json\n    FROM jsonb_each(rf.snapshot -> 'chat' -> 'chat' -> 'history' -> 'messages')\n    WHERE key = rf.rated_message_id\n  ) AS rated ON true\n),\njoined_with_question AS (\n  SELECT\n    rm.id,\n    rm.data,\n    rm.meta,\n    rm.chat_id,\n    rm.rated_message_id,\n    COALESCE(rm.message_json->>'content', '[missing response]') AS response,\n    COALESCE(rm.message_json->>'parentId', '') AS parent_id,\n    COALESCE(rm.message_json->'annotation'->>'rating', '') AS internal_rating,\n    COALESCE(q.value->>'content', '[missing question]') AS question\n  FROM rated_msg rm\n  LEFT JOIN LATERAL (\n    SELECT value\n    FROM jsonb_each(rm.snapshot -> 'chat' -> 'chat' -> 'history' -> 'messages')\n    WHERE key = rm.message_json->>'parentId'\n  ) AS q ON true\n)\nSELECT\n  id,\n  chat_id,\n  COALESCE(question, '[no question]') AS question,\n  COALESCE(response, '[no response]') AS response,\n  COALESCE(data->>'rating', 'N/A') AS rating,\n  COALESCE(data->>'reason', 'unknown') AS reason,\n  COALESCE(data->>'comment', '') AS comment,\n  COALESCE(data->>'model_id', 'unknown') AS model_id,\n  COALESCE(data->'details'->>'rating', '') AS score\nFROM joined_with_question;\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [
+                  {
+                    "name": "snapshot",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              },
+              {
+                "parameters": [
+                  {
+                    "name": "data",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              },
+              {
+                "parameters": [
+                  {
+                    "name": "meta",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "feedback"
+        }
+      ],
+      "title": "Feedback Count",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "comment": true,
+              "id": true,
+              "model_id": true,
+              "question": true,
+              "reason": true,
+              "response": true,
+              "score": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "chat_id": 8,
+              "comment": 5,
+              "id": 0,
+              "model_id": 6,
+              "question": 1,
+              "rating": 3,
+              "reason": 4,
+              "response": 2,
+              "score": 7
+            },
+            "renameByName": {}
+          }
+        },
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "destinationType": "string",
+                "targetField": "rating"
+              }
+            ],
+            "fields": {}
+          }
+        },
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "chat_id": {
+                "aggregations": [
+                  "count"
+                ],
+                "operation": "aggregate"
+              },
+              "rating": {
+                "aggregations": [],
+                "operation": "groupby"
+              }
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "includeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "chat_id (count)": "Count",
+              "rating": "Rating"
+            }
+          }
+        }
+      ],
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "${DS_GRAFANA-POSTGRESQL-DATASOURCE}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": true
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Feedback"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 91
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "response"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 306
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Reason"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 184
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Question"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 205
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 16,
+        "x": 8,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "12.0.0-86517",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "${DS_GRAFANA-POSTGRESQL-DATASOURCE}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH raw_feedback AS (\n  SELECT\n    f.id,\n    f.data::jsonb AS data,\n    f.meta::jsonb AS meta,\n    f.snapshot::jsonb AS snapshot,\n    meta->>'message_id' AS rated_message_id,\n    meta->>'chat_id' AS chat_id\n  FROM feedback f\n),\nrated_msg AS (\n  SELECT\n    rf.id,\n    rf.data,\n    rf.meta,\n    rf.snapshot,\n    rf.rated_message_id,\n    rf.chat_id,\n    msg_json AS message_json\n  FROM raw_feedback rf\n  LEFT JOIN LATERAL (\n    SELECT value AS msg_json\n    FROM jsonb_each(rf.snapshot -> 'chat' -> 'chat' -> 'history' -> 'messages')\n    WHERE key = rf.rated_message_id\n  ) AS rated ON true\n),\njoined_with_question AS (\n  SELECT\n    rm.id,\n    rm.data,\n    rm.meta,\n    rm.chat_id,\n    rm.rated_message_id,\n    COALESCE(rm.message_json->>'content', '[missing response]') AS response,\n    COALESCE(rm.message_json->>'parentId', '') AS parent_id,\n    COALESCE(rm.message_json->'annotation'->>'rating', '') AS internal_rating,\n    COALESCE(q.value->>'content', '[missing question]') AS question\n  FROM rated_msg rm\n  LEFT JOIN LATERAL (\n    SELECT value\n    FROM jsonb_each(rm.snapshot -> 'chat' -> 'chat' -> 'history' -> 'messages')\n    WHERE key = rm.message_json->>'parentId'\n  ) AS q ON true\n)\nSELECT\n  id,\n  chat_id,\n  COALESCE(question, '[no question]') AS question,\n  COALESCE(response, '[no response]') AS response,\n  COALESCE(data->>'rating', 'N/A') AS rating,\n  COALESCE(data->>'reason', 'unknown') AS reason,\n  COALESCE(data->>'comment', '') AS comment,\n  COALESCE(data->>'model_id', 'unknown') AS model_id,\n  COALESCE(data->'details'->>'rating', '') AS score\nFROM joined_with_question;\n",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [
+                  {
+                    "name": "snapshot",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              },
+              {
+                "parameters": [
+                  {
+                    "name": "data",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              },
+              {
+                "parameters": [
+                  {
+                    "name": "meta",
+                    "type": "functionParameter"
+                  }
+                ],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "table": "feedback"
+        }
+      ],
+      "title": "Feedback",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "comment": true,
+              "id": true,
+              "model_id": true
+            },
+            "includeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "chat_id": "Chat ID",
+              "question": "Question",
+              "rating": "Feedback",
+              "reason": "Reason",
+              "response": "Response",
+              "score": "Score"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    }
+  ],
+  "schemaVersion": 41,
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Model Feedback",
+  "uid": "915b458d-7593-4c97-a9aa-e75ff91a97df",
+  "version": 6,
+  "weekStart": ""
+}

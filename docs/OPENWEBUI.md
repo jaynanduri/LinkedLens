@@ -28,3 +28,11 @@ We utilize a **PostgreSQL** database to store application data. The primary tabl
   - `snapshot`: json
   - `created_at`: datetime
   - ...
+
+## Deployment
+
+The OpenWebUI deployment is done on the same cluster as the model-development pipeline. The script [open-webui/k8s-run.sh](https://github.com/jaynanduri/open-webui/blob/main/k8s-run.sh) can be used to setup Kubernetes service account, along with its annotation ( for keyless authentication for Firestore access), Kubernetes deployment, and creating persistent volume claims, and a LoadBalancer service ([K8s Manifests](https://github.com/jaynanduri/open-webui/tree/main/kubernetes/frontend)). The script also builds and pushes a docker image to the Artifact Registry.
+
+The deployement is set to have 1 replica with a `rollingUpdate` strategy (`maxSurge:1, maxUnavailable:1`). The service endpoint uses a static IP and exposes the port 80 externally. A persistent volume claim of 2Gi is also created. 
+
+The deployment is hosted at: [http://linkedlens.duckdns.org/](http://linkedlens.duckdns.org/)
