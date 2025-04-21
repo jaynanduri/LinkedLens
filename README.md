@@ -23,6 +23,7 @@ The main components of this project can be broken down to the following:
 3. [CI/CD Workflows](/docs/CI_CD_Workflows.md)
 4. [GCP Infrastructure & Deployment](/infra/README.md)
 5. [Web Interface (OpenWebUI) – External Repo](https://github.com/jaynanduri/open-webui)
+6. [Logging Monitoring](/monitoring/README.md)
 
 
 ## Project Setup Guidelines
@@ -73,3 +74,9 @@ root/
 ```
 
 For detailed descriptions of each folder and key files, see the [[Folder Structure Details](/docs/FOLDER_STRUCTURE.md)]
+
+## Project Deployment
+
+The project deployment is available at:
+
+[http://linkedlens.duckdns.org/](http://linkedlens.duckdns.org/)

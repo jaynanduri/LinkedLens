@@ -83,7 +83,7 @@ cd model-development/eval
   
 ## Deployment
 
-The model pipeline is deployed to a [Google Kubernetes Engine cluster](/docs/GKE-Setup.md). The workflow `deploy-to-gke.yml` makes use of the `Dockerfile`, `deployment.yaml`, and `service.yaml` to deploy the model pipeline with 3 replicas and a LoadBalancer service that exposes port `6000` externally as an API endpoint.
+The model pipeline is deployed to a [Google Kubernetes Engine cluster](/docs/GKE-Setup.md). The workflow `deploy-to-gke.yml` makes use of the `Dockerfile`, `deployment.yaml`, and `service.yaml` to deploy the model pipeline with 3 replicas and a LoadBalancer service that exposes port `6000` externally as an API endpoint. The CD workflow [deploy-to-gke.yaml](/.github/workflows/deploy-to-gke.yml) is used to [automate deployment](/docs/CI_CD_Workflows.md) to the GKE cluster. 
 
 The model pipeline can be locally deployed by running the docker container with the following commands:
 
@@ -94,8 +94,9 @@ docker run -it -p 80:80 model-image:latest
 ```
 
 ## Logging & Tracing
-  - All steps are logged to GCP Cloud Logging.
+  - All steps are logged to GCP Cloud Logging. [Ref](/monitoring/README.md)
   - LangSmith tracks each graph run, including input, output, and metadata.
+  - Monitoring is done using Grafana. 
 
 ## FastAPI Endpoint
 

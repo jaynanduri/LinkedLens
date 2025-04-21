@@ -155,3 +155,37 @@ sudo usermod -aG docker $USER
     - Cloud Run is used to trigger DAG runs on the Compute Engine.
     - Follow the [steps](../infra/functions/dag-trigger/README.md) to set up and run functions
 
+## Prompt Management Setup
+To store and manage prompts used by the LLM, follow these steps to create prompts in the Prompt Management service on GCP:
+ 
+- Navigate to Prompt Management in the GCP Console.
+- In the left-hand panel, click "Create Prompt".
+- Create and save both prompts defined in prompts.json from the project repository.
+ 
+You can find this file under:
+`model-development/src/prompts/prompts.json`
+ 
+Ensure each prompt is named clearly
+ 
+This allows the model pipeline to dynamically retrieve the latest version of prompts at runtime.
+ 
+### Fetching Prompt ID
+After creating the prompts in the GCP Console, you’ll need the prompt IDs for use in your model pipeline.
+ 
+To list the created prompts and retrieve their IDs, run the following script in your local environment:
+ 
+```python
+import vertexai
+from vertexai.preview import prompts
+from vertexai.preview.prompts import Prompt
+ 
+vertexai.init(project='linkedlens')
+ 
+for prompt in prompts.list():
+    print(prompt)
+```
+ 
+The output will show details of each prompt.
+Note: The version for each newly created prompt will be 1.
+ 
+Use the prompt ID and version when loading prompts in your application.
