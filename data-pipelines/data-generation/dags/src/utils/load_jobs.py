@@ -11,7 +11,7 @@ def load_jobs(bucket_file_path: str, batch_size: int) -> int:
     Uses bulk validation/insertion when possible.
     """
     try:
-        df = read_input_file(bucket_file_path, None)
+        df = read_input_file(bucket_file_path, None, True, 5)
         logger.info(f"Total Len of Input DB read: {len(df)}")
         db_client = connect_to_db()
         docs_job = db_client.get_all_docs('jobs')
