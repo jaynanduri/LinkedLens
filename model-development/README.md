@@ -98,7 +98,59 @@ docker run -it -p 80:80 model-image:latest
   - LangSmith tracks each graph run, including input, output, and metadata.
 
 ## FastAPI Endpoint
-  - Accepts a list of user messages.
-  - Treats the latest message as the user query.
-  - Executes the LangGraph workflow and responds with the final response together with retrieved documents and other metadata
+
+We expose two FastAPI endpoints to support health checks and user query processing.
+
+### `GET /health`
+This endpoint is used for health checks to confirm that the service is up and running.
+
+Response
+```bash
+{ "status": "healthy" }
+```
+
+### POST /invoke
+This is the primary endpoint for processing user queries via our LangGraph-powered model pipeline.
+
+**Functionality:**
+  - Accepts a list of chat messages, where the latest message is treated as the active user query.
+  - Executes the LangGraph workflow, which includes query analysis, document retrieval, augmentation, and final response generation.
+  - Returns the model's response along with retrieved documents and relevant metadata.
   - Our [OpenwebUI deployment](/docs/) is calling this endpoint to get the response for the user query.
+
+**Request Input:**
+
+The /invoke endpoint expects a JSON payload containing user, session, and chat identifiers, along with a list of chat messages. The latest message in the list is treated as the active user query.
+
+```json
+{
+  "user_id": "<user_id>",
+  "session_id": "<session_id>",
+  "chat_id": "<chat_id>",
+  "messages": [
+    { "type": "user", "content": "What roles are open for data scientists?" }
+  ]
+}
+```
+**Important:**
+- The last message in the messages list must be of type "user" as it represents the current query.
+- The messages should reflect the full conversation history in alternating sequence of "user" and "ai" types, starting with a "user" message. This ensures the model can follow the context of the conversation accurately.
+
+Example:
+```json
+"messages": [
+  { "type": "user", "content": "Hi, I'm looking for job opportunities." },
+  { "type": "ai", "content": "Sure! Are you interested in any specific role or location?" },
+  { "type": "user", "content": "Yes, data scientist roles in California." }
+]
+```
+After receiving the LLM response, append it as an "ai" message to maintain this sequence for the next request. Only when running the backend separately.
+
+**Response Output:**
+```json
+{
+  "query": "What roles are open for data scientists?",
+  "retrieved_docs": [/* list of relevant retrieved chunks */],
+  "response": "Here are some current openings for data scientists at various companies..."
+}
+```
