@@ -33,6 +33,7 @@ root/
 ├─── infra/
 |    ├── functions/             # Cloud Run function scripts and container
 |    ├── scripts/               # Bash scripts for GKE deployment
+├─── monitoring/                # Monitoring Dashboards
 ├─── docs/                      # Readme files for the project
 ├─── images/                    # Images for the readme folder
 ├─── .env_template/             # .env file template

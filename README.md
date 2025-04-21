@@ -22,7 +22,7 @@ The main components of this project can be broken down to the following:
 2. [Model Development Pipeline](/model-development/README.md)
 3. [CI/CD Workflows](/docs/CI_CD_Workflows.md)
 4. [GCP Infrastructure & Deployment](/infra/README.md)
-5. [Web Interface (OpenWebUI) – External Repo](<insert new repo link>)
+5. [Web Interface (OpenWebUI) – External Repo](https://github.com/jaynanduri/open-webui)
 
 
 ## Project Setup Guidelines
@@ -73,58 +73,3 @@ root/
 ```
 
 For detailed descriptions of each folder and key files, see the [[Folder Structure Details](/docs/FOLDER_STRUCTURE.md)]
-
-
-<!-- ## Logging and Monitoring
-
-The logging for the project is currently being handled separately by Airflow Logger (data pipelines) and Cloud Logger. 
-
-## Folder Structure
-
-```
-LinkedLens
-   |- .github/              # GitHub workflow automations
-   |- data-pipelines/       # Airflow DAGs for data preprocessing and generation
-   |- infra/      # For any setup scripts, cloud functions/trigger
-   |- model-development/    # Model Development pipeline using LangGraph
-   |- images/               # Images for documentation and visualizations
-   |- docs/                 # Additional documentation and guides
-   |- README.md
-```
-## Installation
-
-The repo can be cloned using the following:
-
-```
-git clone https://github.com/jaynanduri/LinkedLens.git
-```
-
-The DAGs can be run on a local or hosted Docker installation of Airflow. To install Docker using Airflow, use the docker-compose.yml provided in the [pipeline folder](/data-pipelines/data-generation/docker-compose.yaml). 
-
-```
-docker-compose up
-```
-
-Navigate to the Airflow instance endpoint and run the required DAGs.
-
-The data gets pushed to Firestore DB by the data-generation pipeline and then to the Pinecone Vector DB for ingestion.
-
-The model development pipeline can be run by first installing the required libraries given in the `requirements.txt` in the `model-development/src` using:
-
-```
-pip install requirements.txt
-```
-
-and then the following command to run the model pipeline:
-
-```
-python main.py
-```
-
-Alternatively, the pipeline can be run using the Dockerfile providd. Navigate to the `model-development/src` folder and run:
-
-```
-docker build -t model-image:latest .
-
-docker run -it -p 80:80 model-image:latest
-``` -->

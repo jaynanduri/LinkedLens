@@ -18,3 +18,6 @@ The GCP services used in this project include the following:
     - FirestoreDB is used to store generated and processed user posts, job postings, and recruiter posts. This will receive the data from the data generation pipeline.[[Setup](/docs/GCP_Setup.md)] 
 8. Google Cloud Storage
     - Used to load the initial job postings from the Kaggle dataset. A bucket is also used to store the logs from Airflow Logger. [[Setup](/docs/GCP_Setup.md)] 
+9. Securely stores API keys and credentials such as `LANGSMITH_API_KEY`, `HF_TOKEN`, and `GEMINI_API_KEY`, which are used by services like the Cloud Run evaluation job.
+10. Cloud SQL (PostgreSQL)
+Serves as the backend database for the web interface and user-related metadata.

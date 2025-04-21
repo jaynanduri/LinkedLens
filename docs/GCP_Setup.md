@@ -97,6 +97,16 @@ Before creating the VM, generate an SSH key on your local machine to allow secur
 
 
 ### Create VM
+A script is made available to set this up or you can follow the steps below for Console setup:
+
+Run Script
+
+```bash
+cd infra/scripts
+./create_vm.sh
+```
+**Console Setup**
+
 1. Configure Machine Settings
     - Go to Compute Engine > VM Instances.
     - Click Create Instance.
@@ -145,14 +155,3 @@ sudo usermod -aG docker $USER
     - Cloud Run is used to trigger DAG runs on the Compute Engine.
     - Follow the [steps](../infra/functions/dag-trigger/README.md) to set up and run functions
 
-<!-- 7. Add Secrets to GitHub
-    - Go to GitHub Repository
-    - Navigate to Settings
-    - Select `Secrets` under Security
-    - Add New Secret
-  Add all .env variables and the ones mentioned below:
-  - `HOST_NAME`: VM name
-  - `SERVER_IP`: Public IP of VM
-  - `SERVER_USERNAME`: $USER
-  - `SSH_PORT`: 22
-  - `SERVER_KEY`: Private SSH Key -->

@@ -47,6 +47,13 @@ KEY=<value>
 Some values may require Google Cloud setup.
 Please refer to [GCP Setup](/docs/GCP_Setup.md) Instructions for details.
 
+Create HuggingFace API KEY
+
+Create Pinecone API KEY [Pinecone Setup](/docs/ESSENTIAL_SERVICES_SETUP.md)
+
+
+**Note:** `OPENAI_API_KEY` is optional
+
 ### 5. Run locally with Python
 
 and then the following command to run the model pipeline:
