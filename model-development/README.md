@@ -1,6 +1,6 @@
 # Model Pipeline
 
-The model pipeline is set up to process queries, retrieve relevant users posts, and repond to user queries. The pipeline receives a query at the API endpoint, and uses LangGraph to generate an appropriate response. The pipeline utilizes the LLM `gemini-1.5-pro`.
+The model pipeline is set up to process queries, retrieve relevant users posts, and repond to user queries. The pipeline receives a query at the API endpoint, and uses LangGraph to generate an appropriate response. The pipeline utilizes the LLM `gemini-flash-2.0`.
 
 ![Model Pipeline flow](/images/model_pipeline.png)
 
