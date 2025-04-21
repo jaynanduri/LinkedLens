@@ -1,3 +1,7 @@
+# RAG App Backend
+
+This section explains how the backend of the Retrieval-Augmented Generation (RAG) application functions.
+
 # Model Pipeline
 
 The model pipeline is set up to process queries, retrieve relevant users posts, and repond to user queries. The pipeline receives a user's chat history at the API endpoint, and runs LangGraph workflow to generate an appropriate response. The pipeline utilizes the LLM `gemini-2.0-flash`.
@@ -11,7 +15,7 @@ The model pipeline is set up to process queries, retrieve relevant users posts, 
     - the retrieval tool receives rewritten query and the types of content to search for `job`, `user_post` or `recruiter_post`.
 2. Retrieval Node
     - Generates embeddings for the rewritten query.
-    - Executes the query against the vector store.
+    - Executes the query against the vector store, ensuring that only relevant chunks that have not yet expired (based on their TTL) are retrieved.
 3. Augmentation Node
     - Filters and post-processses (enriches with metadata) the retrieved chunk for the final LLM call.
 4. Final Response Node
@@ -20,25 +24,62 @@ The model pipeline is set up to process queries, retrieve relevant users posts, 
 
 ## Evaluation Strategy
 
-The evaluaton of the model is done at two phases, before and after deployment. 
+Evaluation is an ongoing part of the model lifecycle and is carried out in three stages—real-time, pre-deployment, and post-deployment. Each stage plays a role in ensuring the quality and reliability of the system.
 
-### Pre-Deployment Evaluations:
-- We have test set targeted for each step (node) of the graph.
-- These queries are executed against the graph, and evaluations are conducted accordingly.
+## Evaluation Metrics
+We focus on three core metrics to assess the effectiveness of our RAG pipeline:
 
-### Post-Deployment Evaluations:
-- LangSmith is used to log all intermediary traces of the model pipeline.
-- Based on these logs, the evaluators, explained below, are run to evaluate the performance of the model in production.
+### Response Relevance: 
+Measures how well the model’s response aligns with the user’s query. Higher scores mean the response is more directly useful and complete.
 
-### Evaluators (`model-development\eval\evaluators.py`) :
-These evaluators are used to evaluate the performance of the responses provided by the LLM (post-deployment) checking for the following criterion:
-- FaithfulnessLLMEval(): Evaluates whether the response remains faithful to the given context, identifying hallucinations or unsupported claims.
-- CompletenessLLMEval(): Assesses whether the response fully utilizes the information provided in the context.
-- RetrievalEvaluator(): Aggregating chunk-level scores into a mean relevance metric, offering a system-wide performance snapshot. This dual approach, assessing individual chunks and computing an average, balances precision and scalability, ensuring high-quality retrievals and consistent overall performance.
+### Faithfulness: 
+Checks whether the response is factually consistent with the retrieved context. It ranges from 0 to 1, where 1 indicates high factual accuracy.
+
+### Context Relevance: 
+Evaluates how relevant each retrieved chunk is to the rewritten query. We compute chunk-level scores and aggregate them to get an overall measure of retrieval quality. This provides both fine-grained and system-level insights.
+
+We use LLM-as-a-judge for high-accuracy evaluations through platforms like **RAGAS** and **EvidentlyAI**.
+
+
+## Evaluation Stages
+### Real-Time Evaluation:
+During live queries, we compute cosine similarity as a lightweight proxy for relevance and consistency, allowing us to evaluate performance without invoking an LLM. This includes:
+- Response vs. Query: To approximate response relevance
+- Context vs. Query: To gauge context relevance
+- Response vs. Context: To estimate faithfulness
+
+
+### Pre-Evaluation (CI Testing):
+As part of our CI pipeline, we run synthetic tests on sample documents. Using RAGAS `TestGenerator`, we create test queries, pass them through the model, and evaluate the results. We’ve set strict thresholds for each metric, and the deployment proceeds only if all metrics meet the defined standards, ensuring the model maintains a high level of quality before going live.
+
+### Post-Evaluation (Daily Batch):
+A scheduled Cloud Run job runs daily at 1 AM to evaluate conversations from the previous day. This helps monitor performance trends, track regressions, and decide when adjustments or prompt tuning may be needed.
+
+To set this up, we use the script located at `model-development/eval/setup.sh`. This script:
+- Builds the evaluation container
+- Pushes it to Artifact Registry
+- Creates the Cloud Run job
+- Schedules it to run daily
+
+Before running the script, make sure to:
+
+Add the required secrets to Secret Manager:
+`LANGSMITH_API_KEY`, `HF_TOKEN`, `GEMINI_API_KEY`
+
+Ensure the `.env` file is properly configured
+
+Update script variables only if necessary
+
+Run Script:
+
+```bash
+cd model-development/eval
+./setup.sh
+```
 
 ## Models Used
-  - LLM: `gemini-1.5-pro`
-  - Embedding Model: sentence-transformers/all-MiniLM-L6-v2
+  - LLM: `gemini-2.0-flash`
+  - Embedding Model: `sentence-transformers/all-MiniLM-L6-v2`
   
 ## Deployment
 
